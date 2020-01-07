@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import time
+import subprocess
 import typing
 from pathlib import Path
 from uuid import uuid4
@@ -624,12 +625,14 @@ async def api_restart() -> str:
     assert core is not None
     logger.debug("Restarting Rhasspy")
 
-    # # Stop
-    # await core.shutdown()
+    pid_path = core.profile.read_path("supervisord.pid")
+    assert pid_path.is_file(), f"Missing PID file at {pid_path}"
 
-    # # Start
-    # await start_rhasspy()
-    # logger.info("Restarted Rhasspy")
+    pid = pid_path.read_text().strip()
+    restart_command = ["kill", "-SIGHUP", pid]
+    logger.debug(restart_command)
+
+    subprocess.check_call(restart_command)
 
     return "Restarted Rhasspy"
 

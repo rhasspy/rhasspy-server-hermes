@@ -61,6 +61,10 @@ parser.add_argument(
 parser.add_argument("--host", type=str, help="Host for web server", default="0.0.0.0")
 parser.add_argument("--port", type=int, help="Port for web server", default=12101)
 parser.add_argument(
+    "--mqtt-host", type=str, help="Host for MQTT broker", default="127.0.0.1"
+)
+parser.add_argument("--mqtt-port", type=int, help="Port for MQTT broker", default=1883)
+parser.add_argument(
     "--system-profiles", type=str, help="Directory with base profile files (read only)"
 )
 parser.add_argument(
@@ -78,6 +82,9 @@ parser.add_argument(
     "--ssl", nargs=2, help="Use SSL with <CERT_FILE <KEY_FILE>", default=None
 )
 parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
+parser.add_argument(
+    "--web-dir", default="dist", help="Directory with compiled Vue site (default: dist)"
+)
 
 args = parser.parse_args()
 
@@ -121,7 +128,13 @@ async def start_rhasspy() -> None:
     global core
 
     # Load core
-    core = RhasspyCore(args.profile, system_profiles_dir, user_profiles_dir)
+    core = RhasspyCore(
+        args.profile,
+        system_profiles_dir,
+        user_profiles_dir,
+        host=args.mqtt_host,
+        port=args.mqtt_port,
+    )
 
     # Set environment variables
     os.environ["RHASSPY_BASE_DIR"] = os.getcwd()
@@ -1007,7 +1020,7 @@ async def handle_error(err) -> typing.Tuple[str, int]:
 # Static Routes
 # ---------------------------------------------------------------------
 
-web_dir = Path("dist")
+web_dir = Path(args.web_dir)
 assert web_dir.is_dir(), f"Missing web directory {web_dir}"
 
 

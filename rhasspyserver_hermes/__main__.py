@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import atexit
+import concurrent.futures
 import json
 import logging
 import os
@@ -1176,6 +1177,8 @@ async def api_events_log() -> None:
         while True:
             text = await q.get()
             await websocket.send(text)
+    except concurrent.futures.CancelledError:
+        pass
     except Exception:
         _LOGGER.exception("api_events_log")
 
@@ -1234,6 +1237,9 @@ def to_intent_dict(message):
 loop.run_until_complete(start_rhasspy())
 
 # -----------------------------------------------------------------------------
+
+# Disable useless logging messages
+logging.getLogger("wsproto.utilities").setLevel(logging.CRITICAL)
 
 # Start web server
 if args.ssl is not None:

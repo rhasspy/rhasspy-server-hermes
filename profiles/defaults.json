@@ -22,6 +22,9 @@
       "vad_mode": 0
     }
   },
+  "dialogue": {
+    "system": "hermes"
+  },
   "handle": {
     "command": {
       "arguments": [],

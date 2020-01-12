@@ -1,4 +1,5 @@
 SHELL := bash
+PYTHON_FILES = rhasspyserver_hermes/*.py *.py
 
 .PHONY: check venv dist sdist pyinstaller debian docker
 
@@ -9,15 +10,16 @@ debian_package := rhasspy-server-hermes_$(version)_$(architecture)
 debian_dir := debian/$(debian_package)
 
 check:
-	flake8 rhasspyserver_hermes/*.py
-	pylint rhasspyserver_hermes/*.py
-	mypy rhasspyserver_hermes/*.py
+	flake8 $(PYTHON_FILES)
+	pylint $(PYTHON_FILES)
+	mypy $(PYTHON_FILES)
 
 venv:
 	rm -rf .venv/
 	python3 -m venv .venv
 	.venv/bin/pip3 install wheel setuptools
-	.venv/bin/pip3 install -r requirements_all.txt
+	.venv/bin/pip3 install -r requirements.txt
+	.venv/bin/pip3 install -r requirements_dev.txt
 
 dist: sdist debian
 

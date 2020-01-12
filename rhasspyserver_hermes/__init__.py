@@ -16,7 +16,7 @@ from paho.mqtt.matcher import MQTTMatcher
 from rhasspyprofile import Profile
 from rhasspyhermes.base import Message
 from rhasspyhermes.asr import AsrTextCaptured, AsrStartListening, AsrStopListening
-from rhasspyhermes.audioserver import AudioFrame
+from rhasspyhermes.audioserver import AudioFrame, AudioPlayFinished, AudioPlayBytes
 from rhasspyhermes.nlu import NluQuery, NluIntent, NluIntentNotRecognized
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
 
@@ -33,10 +33,13 @@ class RhasspyCore:
         profile_name: str,
         system_profiles_dir: typing.Union[str, Path],
         user_profiles_dir: typing.Union[str, Path],
-        host: str = "localhost",
-        port: int = 1883,
+        host: typing.Optional[str] = None,
+        port: typing.Optional[int] = None,
+        local_mqtt_port: int = 12183,
         siteIds: typing.Optional[typing.List[str]] = None,
         loop=None,
+        connection_retries: int = 10,
+        retry_seconds: float = 1,
     ):
         self.profile_name = profile_name
         self.system_profiles_dir = Path(system_profiles_dir)
@@ -50,8 +53,21 @@ class RhasspyCore:
         self.defaults = Profile.load_defaults(self.system_profiles_dir)
 
         self.client: typing.Optional[mqtt.Client] = None
-        self.host = host
-        self.port = port
+
+        if self.profile.get("mqtt.enabled", False):
+            # External broker
+            self.host = host or self.profile.get("mqtt.host", "localhost")
+            self.port = port or self.profile.get("mqtt.port", 1883)
+        else:
+            # Internal broker
+            self.host = host or "localhost"
+            self.port = port or local_mqtt_port
+
+        # MQTT retries
+        self.connection_retries = connection_retries
+        self.retry_seconds = retry_seconds
+        self.connect_event = asyncio.Event()
+
         self.siteIds: typing.List[str] = siteIds or []
 
         # Site ID to use when publishing
@@ -80,18 +96,30 @@ class RhasspyCore:
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
-
-        _LOGGER.debug("Connecting to %s:%s", self.host, self.port)
-        self.client.connect(self.host, self.port)
         self.client.loop_start()
+
+        retries = 0
+        while retries < self.connection_retries:
+            try:
+                _LOGGER.debug(
+                    "Connecting to %s:%s (retries: %s)", self.host, self.port, retries
+                )
+                self.client.connect(self.host, self.port)
+                await self.connect_event.wait()
+                break
+            except Exception:
+                _LOGGER.exception("mqtt connect")
+                retries += 1
+                await asyncio.sleep(self.retry_seconds)
 
     async def shutdown(self):
         """Disconnect from MQTT broker"""
         _LOGGER.debug("Shutting down core")
 
         if self.client:
-            self.client.loop_stop()
+            client = self.client
             self.client = None
+            client.loop_stop()
 
     # -------------------------------------------------------------------------
 
@@ -200,6 +228,35 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
+    async def play_wav_data(self, wav_data: bytes):
+        """Play WAV data through speakers."""
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                topic, message = yield
+
+                if (
+                    isinstance(message, AudioPlayFinished)
+                    and (message.siteId == self.siteId)
+                    and (message.id == requestId)
+                ):
+                    return True, None
+
+        def messages():
+            yield (
+                AudioPlayBytes(wav_data=wav_data),
+                {"siteId": self.siteId, "requestId": requestId},
+            )
+
+        topics = [AudioPlayFinished.topic(siteId=self.siteId)]
+
+        # Expecting only a single result
+        async for result in self.publish_wait(handle_finished(), messages(), topics):
+            return result
+
+    # -------------------------------------------------------------------------
+
     async def publish_wait(
         self,
         handler,
@@ -288,6 +345,9 @@ class RhasspyCore:
     def on_connect(self, client, userdata, flags, rc):
         """Connected to MQTT broker."""
         try:
+            # Signal start
+            self.loop.call_soon_threadsafe(self.connect_event.set)
+
             for topic in self.topics:
                 client.subscribe(topic)
                 _LOGGER.debug("Subscribed to %s", topic)
@@ -327,12 +387,13 @@ class RhasspyCore:
         except Exception:
             _LOGGER.exception("on_message")
 
-    def on_disconnect(client, userdata, flags, rc):
+    def on_disconnect(self, client, userdata, flags, rc):
         """Disconnected from MQTT broker."""
         try:
-            # Automatically reconnect
-            _LOGGER.info("Disconnected. Trying to reconnect...")
-            client.reconnect()
+            if self.client:
+                # Automatically reconnect
+                _LOGGER.info("Disconnected. Trying to reconnect...")
+                self.client.reconnect()
         except Exception:
             _LOGGER.exception("on_disconnect")
 
@@ -342,9 +403,14 @@ class RhasspyCore:
         """Publish a Hermes message to MQTT."""
         try:
             topic = message.topic(**topic_args)
-            if isinstance(message, AudioFrame):
+            if isinstance(message, (AudioFrame, AudioPlayBytes)):
                 # Handle binary payloads specially
-                _LOGGER.debug("-> AudioFrame(%s byte(s))", len(message.wav_data))
+                _LOGGER.debug(
+                    "-> %s(%s byte(s)) on %s",
+                    message.__class__.__name__,
+                    len(message.wav_data),
+                    topic,
+                )
                 payload = message.wav_data
             else:
                 _LOGGER.debug("-> %s", message)

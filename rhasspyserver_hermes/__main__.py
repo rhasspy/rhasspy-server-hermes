@@ -13,6 +13,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import rhasspysupervisor
 from quart import (
     Quart,
     Response,
@@ -26,6 +27,7 @@ from quart import (
 from quart_cors import cors
 from swagger_ui import quart_api_doc
 from rhasspyhermes.nlu import NluIntent
+from rhasspyprofile import Profile
 
 from . import RhasspyCore
 from .utils import (
@@ -43,7 +45,7 @@ from .utils import (
 # Quart Web App Setup
 # -----------------------------------------------------------------------------
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 loop = asyncio.get_event_loop()
 
@@ -61,10 +63,14 @@ parser.add_argument(
 )
 parser.add_argument("--host", type=str, help="Host for web server", default="0.0.0.0")
 parser.add_argument("--port", type=int, help="Port for web server", default=12101)
+parser.add_argument("--mqtt-host", type=str, help="Host for MQTT broker", default=None)
+parser.add_argument("--mqtt-port", type=int, help="Port for MQTT broker", default=None)
 parser.add_argument(
-    "--mqtt-host", type=str, help="Host for MQTT broker", default="127.0.0.1"
+    "--local-mqtt-port",
+    type=int,
+    default=12183,
+    help="Port to use for internal MQTT broker (default: 12183)",
 )
-parser.add_argument("--mqtt-port", type=int, help="Port for MQTT broker", default=1883)
 parser.add_argument(
     "--system-profiles", type=str, help="Directory with base profile files (read only)"
 )
@@ -94,7 +100,7 @@ log_level = getattr(logging, args.log_level.upper())
 logging.basicConfig(level=log_level)
 
 
-logger.debug(args)
+_LOGGER.debug(args)
 
 if args.system_profiles:
     system_profiles_dir = Path(args.system_profiles)
@@ -135,6 +141,7 @@ async def start_rhasspy() -> None:
         user_profiles_dir,
         host=args.mqtt_host,
         port=args.mqtt_port,
+        local_mqtt_port=args.local_mqtt_port,
     )
 
     # Set environment variables
@@ -150,7 +157,7 @@ async def start_rhasspy() -> None:
         except Exception:
             pass
 
-        logger.debug("Profile: %s=%s", key, value)
+        _LOGGER.debug("Profile: %s=%s", key, value)
         extra_settings[key] = value
         core.profile.set(key, value)
 
@@ -160,7 +167,7 @@ async def start_rhasspy() -> None:
 
     # await core.start(observer=observer)
     await core.start()
-    logger.info("Started")
+    _LOGGER.info("Started")
 
 
 # -----------------------------------------------------------------------------
@@ -279,6 +286,7 @@ async def api_listen_for_wake() -> str:
 # -----------------------------------------------------------------------------
 
 
+# TODO: listen-for-command
 @app.route("/api/listen-for-command", methods=["POST"])
 async def api_listen_for_command() -> Response:
     """Wake Rhasspy up and listen for a voice command"""
@@ -320,8 +328,19 @@ async def api_profile() -> typing.Union[str, Response]:
         with open(profile_path, "w") as profile_file:
             json.dump(profile_json, profile_file, indent=4)
 
-        msg = "Wrote profile to %s" % profile_path
-        logger.debug(msg)
+        msg = f"Wrote profile to {str(profile_path)}"
+        _LOGGER.debug(msg)
+
+        # Re-generate supevisord config
+        new_profile = Profile(args.profile, system_profiles_dir, user_profiles_dir)
+        supervisor_conf_path = new_profile.write_path("supervisord.conf")
+        _LOGGER.debug("Re-generating %s", str(supervisor_conf_path))
+
+        with open(supervisor_conf_path, "w") as supervisor_conf_file:
+            rhasspysupervisor.profile_to_conf(
+                new_profile, supervisor_conf_file, local_mqtt_port=args.local_mqtt_port
+            )
+
         return msg
 
     if layers == "defaults":
@@ -339,6 +358,7 @@ async def api_profile() -> typing.Union[str, Response]:
 # -----------------------------------------------------------------------------
 
 
+# TODO: lookup
 @app.route("/api/lookup", methods=["POST"])
 async def api_lookup() -> Response:
     """Get CMU phonemes from dictionary or guessed pronunciation(s)"""
@@ -360,6 +380,7 @@ async def api_lookup() -> Response:
 # -----------------------------------------------------------------------------
 
 
+# TODO: pronounce
 @app.route("/api/pronounce", methods=["POST"])
 async def api_pronounce() -> typing.Union[Response, str]:
     """Pronounce CMU phonemes or word using eSpeak"""
@@ -409,14 +430,14 @@ async def api_play_wav() -> str:
         # Interpret as URL
         data = await request.data
         url = data.decode()
-        logger.debug("Loading WAV data from %s", url)
+        _LOGGER.debug("Loading WAV data from %s", url)
 
         async with core.session.get(url) as response:
             wav_data = await response.read()
 
-    # # Play through speakers
-    # logger.debug("Playing %s byte(s)", len(wav_data))
-    # core.play_wav_data(wav_data)
+    # Play through speakers
+    _LOGGER.debug("Playing %s byte(s)", len(wav_data))
+    await core.play_wav_data(wav_data)
 
     return "OK"
 
@@ -439,7 +460,7 @@ def api_phonemes():
     )
 
     # phoneme -> { word, phonemes }
-    logger.debug("Loading phoneme examples from %s", examples_path)
+    _LOGGER.debug("Loading phoneme examples from %s", examples_path)
     examples_dict = load_phoneme_examples(examples_path)
 
     return jsonify(examples_dict)
@@ -468,7 +489,7 @@ async def api_sentences():
 
                 if sentences_text.strip():
                     # Overwrite file
-                    logger.debug("Writing %s", sentences_path)
+                    _LOGGER.debug("Writing %s", sentences_path)
 
                     sentences_path.parent.mkdir(parents=True, exist_ok=True)
                     sentences_path.write_text(sentences_text)
@@ -477,7 +498,7 @@ async def api_sentences():
                     paths_written.append(sentences_path)
                 elif sentences_path.is_file():
                     # Remove file
-                    logger.debug("Removing %s", sentences_path)
+                    _LOGGER.debug("Removing %s", sentences_path)
                     sentences_path.unlink()
 
             return "Wrote {} char(s) to {}".format(
@@ -605,7 +626,7 @@ async def api_train() -> str:
     assert core is not None
 
     start_time = time.time()
-    # logger.info("Starting training")
+    # _LOGGER.info("Starting training")
 
     # result = await core.train(no_cache=no_cache)
     # if isinstance(result, ProfileTrainingFailed):
@@ -623,14 +644,14 @@ async def api_train() -> str:
 async def api_restart() -> str:
     """Restart Rhasspy actors."""
     assert core is not None
-    logger.debug("Restarting Rhasspy")
+    _LOGGER.debug("Restarting Rhasspy")
 
     pid_path = core.profile.read_path("supervisord.pid")
     assert pid_path.is_file(), f"Missing PID file at {pid_path}"
 
     pid = pid_path.read_text().strip()
     restart_command = ["kill", "-SIGHUP", pid]
-    logger.debug(restart_command)
+    _LOGGER.debug(restart_command)
 
     subprocess.check_call(restart_command)
 
@@ -689,7 +710,7 @@ async def api_text_to_intent():
     intent["time_sec"] = intent_sec
 
     intent_json = json.dumps(intent)
-    logger.debug(intent_json)
+    _LOGGER.debug(intent_json)
     await add_ws_event(WS_EVENT_INTENT, intent_json)
 
     # if not no_hass:
@@ -715,7 +736,7 @@ async def api_speech_to_intent() -> Response:
     start_time = time.time()
     transcription = await core.transcribe_wav(wav_data)
     text = transcription.text
-    logger.debug(text)
+    _LOGGER.debug(text)
 
     # text -> intent
     intent = to_intent_dict(await core.recognize_intent(text))
@@ -725,7 +746,7 @@ async def api_speech_to_intent() -> Response:
     intent["time_sec"] = intent_sec
 
     intent_json = json.dumps(intent)
-    logger.debug(intent_json)
+    _LOGGER.debug(intent_json)
     await add_ws_event(WS_EVENT_INTENT, intent_json)
 
     # if not no_hass:
@@ -758,17 +779,17 @@ async def api_stop_recording() -> Response:
     # audio_data = (await core.stop_recording_wav(buffer_name)).data
 
     # wav_data = buffer_to_wav(audio_data)
-    # logger.debug("Recorded %s byte(s) of audio data", len(wav_data))
+    # _LOGGER.debug("Recorded %s byte(s) of audio data", len(wav_data))
 
     # transcription = await core.transcribe_wav(wav_data)
     # text = transcription.text
-    # logger.debug(text)
+    # _LOGGER.debug(text)
 
     # intent = (await core.recognize_intent(text)).intent
     # intent["speech_confidence"] = transcription.confidence
 
     # intent_json = json.dumps(intent)
-    # logger.debug(intent_json)
+    # _LOGGER.debug(intent_json)
     # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
     # if not no_hass:
@@ -855,7 +876,7 @@ async def api_slots() -> typing.Union[str, Response]:
                     try:
                         slots_path.unlink()
                     except Exception:
-                        logger.exception("api_slots")
+                        _LOGGER.exception("api_slots")
 
         for name, values in new_slot_values.items():
             if isinstance(values, str):
@@ -917,7 +938,7 @@ def api_slots_by_name(name: str) -> typing.Union[str, Response]:
                 try:
                     slots_path.unlink()
                 except Exception:
-                    logger.exception("api_slots_by_name")
+                    _LOGGER.exception("api_slots_by_name")
 
         slots_path = Path(
             core.profile.write_path(
@@ -1015,7 +1036,7 @@ def api_intents():
 @app.errorhandler(Exception)
 async def handle_error(err) -> typing.Tuple[str, int]:
     """Return error as text."""
-    logger.exception(err)
+    _LOGGER.exception(err)
     return (str(err), 500)
 
 
@@ -1117,7 +1138,7 @@ logging.root.addHandler(
 
 #             # Convert to JSON
 #             intent_json = json.dumps(message.intent)
-#             self._logger.debug(intent_json)
+#             self.__LOGGER.debug(intent_json)
 #             asyncio.run_coroutine_threadsafe(
 #                 add_ws_event(WS_EVENT_INTENT, intent_json), loop
 #             )
@@ -1136,7 +1157,7 @@ async def api_events_intent() -> None:
             text = await q.get()
             await websocket.send(text)
     except Exception:
-        logger.exception("api_events_intent")
+        _LOGGER.exception("api_events_intent")
 
     # Remove queue
     async with ws_locks[WS_EVENT_INTENT]:
@@ -1156,7 +1177,7 @@ async def api_events_log() -> None:
             text = await q.get()
             await websocket.send(text)
     except Exception:
-        logger.exception("api_events_log")
+        _LOGGER.exception("api_events_log")
 
     # Remove queue
     async with ws_locks[WS_EVENT_LOG]:
@@ -1216,7 +1237,7 @@ loop.run_until_complete(start_rhasspy())
 
 # Start web server
 if args.ssl is not None:
-    logger.debug("Using SSL with certfile, keyfile = %s", args.ssl)
+    _LOGGER.debug("Using SSL with certfile, keyfile = %s", args.ssl)
     certfile = args.ssl[0]
     keyfile = args.ssl[1]
     protocol = "https"
@@ -1225,7 +1246,7 @@ else:
     keyfile = None
     protocol = "http"
 
-logger.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)
+_LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)
 
 try:
     app.run(host=args.host, port=args.port, certfile=certfile, keyfile=keyfile)

@@ -1,4 +1,5 @@
 *
 !pyinstaller/dist
 !debian/bin
+!profiles
 !web

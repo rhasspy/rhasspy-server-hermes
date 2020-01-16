@@ -1,0 +1,4 @@
+*
+!pyinstaller/dist
+!debian/bin
+!web

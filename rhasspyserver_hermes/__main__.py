@@ -91,7 +91,7 @@ parser.add_argument(
 )
 parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
 parser.add_argument(
-    "--web-dir", default="dist", help="Directory with compiled Vue site (default: dist)"
+    "--web-dir", default="web", help="Directory with compiled Vue site (default: web)"
 )
 
 args = parser.parse_args()

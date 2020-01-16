@@ -1,6 +1,8 @@
 __pycache__/
 .mypy_cache/
 .venv/
+debian/rhasspy-server-hermes*
 dist/
 *.egg-info/
 pyinstaller/
+web/

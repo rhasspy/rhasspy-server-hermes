@@ -13,10 +13,8 @@ import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
 import rhasspynlu.intent
 from paho.mqtt.matcher import MQTTMatcher
-from rhasspyhermes.asr import (AsrStartListening, AsrStopListening,
-                               AsrTextCaptured)
-from rhasspyhermes.audioserver import (AudioFrame, AudioPlayBytes,
-                                       AudioPlayFinished)
+from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
+from rhasspyhermes.audioserver import AudioFrame, AudioPlayBytes, AudioPlayFinished
 from rhasspyhermes.base import Message
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
@@ -101,6 +99,7 @@ class RhasspyCore:
         self.client.loop_start()
 
         retries = 0
+        connected = False
         while retries < self.connection_retries:
             try:
                 _LOGGER.debug(
@@ -108,11 +107,18 @@ class RhasspyCore:
                 )
                 self.client.connect(self.host, self.port)
                 await self.connect_event.wait()
+                connected = True
                 break
             except Exception:
                 _LOGGER.exception("mqtt connect")
                 retries += 1
                 await asyncio.sleep(self.retry_seconds)
+
+        if not connected:
+            _LOGGER.fatal(
+                "Failed to connect to MQTT broker (%s:%s)", self.host, self.port
+            )
+            raise RuntimeError("Failed to connect to MQTT broker")
 
     async def shutdown(self):
         """Disconnect from MQTT broker"""

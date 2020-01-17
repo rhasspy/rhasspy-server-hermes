@@ -7,40 +7,25 @@ import json
 import logging
 import os
 import re
-import time
 import subprocess
+import time
 import typing
 from pathlib import Path
 from uuid import uuid4
 
 import attr
 import rhasspysupervisor
-from quart import (
-    Quart,
-    Response,
-    jsonify,
-    request,
-    safe_join,
-    send_file,
-    send_from_directory,
-    websocket,
-)
+from quart import (Quart, Response, jsonify, request, safe_join, send_file,
+                   send_from_directory, websocket)
 from quart_cors import cors
-from swagger_ui import quart_api_doc
 from rhasspyhermes.nlu import NluIntent
 from rhasspyprofile import Profile
+from swagger_ui import quart_api_doc
 
 from . import RhasspyCore
-from .utils import (
-    FunctionLoggingHandler,
-    buffer_to_wav,
-    get_all_intents,
-    get_ini_paths,
-    get_wav_duration,
-    load_phoneme_examples,
-    read_dict,
-    recursive_remove,
-)
+from .utils import (FunctionLoggingHandler, buffer_to_wav, get_all_intents,
+                    get_ini_paths, get_wav_duration, load_phoneme_examples,
+                    read_dict, recursive_remove)
 
 # -----------------------------------------------------------------------------
 # Quart Web App Setup

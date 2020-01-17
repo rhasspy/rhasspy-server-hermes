@@ -10,15 +10,17 @@ from uuid import uuid4
 
 import attr
 import paho.mqtt.client as mqtt
-import rhasspynlu.intent
 import rhasspyhermes.intent
+import rhasspynlu.intent
 from paho.mqtt.matcher import MQTTMatcher
-from rhasspyprofile import Profile
+from rhasspyhermes.asr import (AsrStartListening, AsrStopListening,
+                               AsrTextCaptured)
+from rhasspyhermes.audioserver import (AudioFrame, AudioPlayBytes,
+                                       AudioPlayFinished)
 from rhasspyhermes.base import Message
-from rhasspyhermes.asr import AsrTextCaptured, AsrStartListening, AsrStopListening
-from rhasspyhermes.audioserver import AudioFrame, AudioPlayFinished, AudioPlayBytes
-from rhasspyhermes.nlu import NluQuery, NluIntent, NluIntentNotRecognized
+from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
+from rhasspyprofile import Profile
 
 _LOGGER = logging.getLogger(__name__)
 

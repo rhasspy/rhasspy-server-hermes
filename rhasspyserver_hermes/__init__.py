@@ -11,7 +11,6 @@ from uuid import uuid4
 import attr
 import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
-import rhasspynlu.intent
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
 from rhasspyhermes.audioserver import AudioFrame, AudioPlayBytes, AudioPlayFinished
@@ -84,6 +83,9 @@ class RhasspyCore:
 
         # id -> async queue
         self.handler_queues: typing.Dict[str, asyncio.Queue] = {}
+
+        # External message queues
+        self.message_queues: typing.Set[asyncio.Queue] = set()
 
     # -------------------------------------------------------------------------
 
@@ -392,6 +394,12 @@ class RhasspyCore:
                     return
 
                 self.handle_message(msg.topic, AsrTextCaptured(**json_payload))
+
+            # Forward to external message queues
+            for queue in self.message_queues:
+                self.loop.call_soon_threadsafe(
+                    queue.put_nowait, (msg.topic, msg.payload)
+                )
         except Exception:
             _LOGGER.exception("on_message")
 

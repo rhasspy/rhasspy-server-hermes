@@ -2,7 +2,6 @@
 import argparse
 import asyncio
 import atexit
-import concurrent.futures
 import json
 import logging
 import os
@@ -10,22 +9,39 @@ import re
 import subprocess
 import time
 import typing
+from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 
 import attr
 import rhasspysupervisor
-from quart import (Quart, Response, jsonify, request, safe_join, send_file,
-                   send_from_directory, websocket)
+from paho.mqtt.matcher import MQTTMatcher
+from quart import (
+    Quart,
+    Response,
+    jsonify,
+    request,
+    safe_join,
+    send_file,
+    send_from_directory,
+    websocket,
+)
 from quart_cors import cors
 from rhasspyhermes.nlu import NluIntent
 from rhasspyprofile import Profile
 from swagger_ui import quart_api_doc
 
 from . import RhasspyCore
-from .utils import (FunctionLoggingHandler, buffer_to_wav, get_all_intents,
-                    get_ini_paths, get_wav_duration, load_phoneme_examples,
-                    read_dict, recursive_remove)
+from .utils import (
+    FunctionLoggingHandler,
+    buffer_to_wav,
+    get_all_intents,
+    get_ini_paths,
+    get_wav_duration,
+    load_phoneme_examples,
+    read_dict,
+    recursive_remove,
+)
 
 # -----------------------------------------------------------------------------
 # Quart Web App Setup
@@ -88,6 +104,7 @@ logging.basicConfig(level=log_level)
 
 _LOGGER.debug(args)
 
+# Convert profile directories to Paths
 if args.system_profiles:
     system_profiles_dir = Path(args.system_profiles)
 else:
@@ -185,6 +202,7 @@ async def api_profiles() -> Response:
             if profile_dir.is_dir():
                 profile_names.add(str(name))
 
+    # TODO: Check for missing profile files
     # missing_files = core.check_profile()
     missing_files = {}
     downloaded = len(missing_files) == 0
@@ -205,7 +223,9 @@ async def api_profiles() -> Response:
 async def api_download_profile() -> str:
     """Downloads the current profile."""
     assert core is not None
-    delete = request.args.get("delete", "false").lower() == "true"
+    # delete = request.args.get("delete", "false").lower() == "true"
+
+    # TODO: Download profile files
     # await core.download_profile(delete=delete)
 
     return "OK"
@@ -218,7 +238,10 @@ async def api_download_profile() -> str:
 async def api_problems() -> Response:
     """Returns any problems Rhasspy has found."""
     assert core is not None
+
+    # TODO: Detect problems at startup
     # return jsonify(await core.get_problems())
+
     return jsonify({})
 
 
@@ -229,8 +252,11 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
-    system = request.args.get("system", None)
+    # system = request.args.get("system", None)
+
+    # TODO: Request microphone details
     # return jsonify(await core.get_microphones(system))
+
     return jsonify({})
 
 
@@ -241,8 +267,11 @@ async def api_microphones() -> Response:
 async def api_test_microphones() -> Response:
     """Get a dictionary of available, functioning recording devices"""
     assert core is not None
-    system = request.args.get("system", None)
+    # system = request.args.get("system", None)
+
+    # TODO: Request microphone test
     # return jsonify(await core.test_microphones(system))
+
     return jsonify({})
 
 
@@ -253,8 +282,11 @@ async def api_test_microphones() -> Response:
 async def api_speakers() -> Response:
     """Get a dictionary of available playback devices"""
     assert core is not None
-    system = request.args.get("system", None)
+    # system = request.args.get("system", None)
+
+    # TODO: Request speaker details
     # return jsonify(await core.get_speakers(system))
+
     return jsonify({})
 
 
@@ -265,7 +297,10 @@ async def api_speakers() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
+
+    # TODO: hermes/hotword/toggleOn
     # core.listen_for_wake()
+
     return "OK"
 
 
@@ -277,7 +312,7 @@ async def api_listen_for_wake() -> str:
 async def api_listen_for_command() -> Response:
     """Wake Rhasspy up and listen for a voice command"""
     assert core is not None
-    no_hass = request.args.get("nohass", "false").lower() == "true"
+    # no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Seconds before timing out
     timeout = request.args.get("timeout")
@@ -285,14 +320,16 @@ async def api_listen_for_command() -> Response:
         timeout = float(timeout)
 
     # Key/value to set in recognized intent
-    entity = request.args.get("entity")
-    value = request.args.get("value")
+    # entity = request.args.get("entity")
+    # value = request.args.get("value")
 
+    # TODO: Start session, block for intent
     # return jsonify(
     #     await core.listen_for_command(
     #         handle=(not no_hass), timeout=timeout, entity=entity, value=value
     #     )
     # )
+
     return jsonify({})
 
 
@@ -305,6 +342,7 @@ async def api_profile() -> typing.Union[str, Response]:
     assert core is not None
     layers = request.args.get("layers", "all")
 
+    # Write profile on POST
     if request.method == "POST":
         # Ensure that JSON is valid
         profile_json = await request.json
@@ -327,6 +365,15 @@ async def api_profile() -> typing.Union[str, Response]:
                 new_profile, supervisor_conf_file, local_mqtt_port=args.local_mqtt_port
             )
 
+        # Re-genenerate Docker compose YAML
+        docker_compose_path = new_profile.write_path("docker-compose.yml")
+        _LOGGER.debug("Re-generating %s", str(docker_compose_path))
+
+        with open(docker_compose_path, "w") as docker_compose_file:
+            rhasspysupervisor.profile_to_compose(
+                new_profile, docker_compose_file, local_mqtt_port=args.local_mqtt_port
+            )
+
         return msg
 
     if layers == "defaults":
@@ -344,7 +391,6 @@ async def api_profile() -> typing.Union[str, Response]:
 # -----------------------------------------------------------------------------
 
 
-# TODO: lookup
 @app.route("/api/lookup", methods=["POST"])
 async def api_lookup() -> Response:
     """Get CMU phonemes from dictionary or guessed pronunciation(s)"""
@@ -356,6 +402,7 @@ async def api_lookup() -> Response:
     word = data.decode().strip().lower()
     assert word, "No word to look up"
 
+    # TODO: Look up word pronunciations
     # result = await core.get_word_pronunciations([word], n)
     # pronunciations = result.pronunciations
 
@@ -371,15 +418,16 @@ async def api_lookup() -> Response:
 async def api_pronounce() -> typing.Union[Response, str]:
     """Pronounce CMU phonemes or word using eSpeak"""
     assert core is not None
-    download = request.args.get("download", "false").lower() == "true"
+    # download = request.args.get("download", "false").lower() == "true"
 
     data = await request.data
     pronounce_str = data.decode().strip()
     assert pronounce_str, "No string to pronounce"
 
     # phonemes or word
-    pronounce_type = request.args.get("type", "phonemes")
+    # pronounce_type = request.args.get("type", "phonemes")
 
+    # TODO: Get phonemes
     # if pronounce_type == "phonemes":
     #     # Convert from Sphinx to espeak phonemes
     #     phoneme_result = await core.get_word_phonemes(pronounce_str)
@@ -461,7 +509,7 @@ async def api_sentences():
     assert core is not None
 
     if request.method == "POST":
-        # POST
+        # Write sentences on POST
         if request.mimetype == "application/json":
             # Update multiple ini files at once. Paths as keys (relative to
             # profile directory), sentences as values.
@@ -553,6 +601,7 @@ async def api_custom_words():
     speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
 
     if request.method == "POST":
+        # Write custom words on POST
         custom_words_path = Path(
             core.profile.write_path(
                 core.profile.get(
@@ -574,7 +623,7 @@ async def api_custom_words():
                 print(line, file=custom_words_file)
                 lines_written += 1
 
-            return "Wrote %s line(s) to %s" % (lines_written, custom_words_path)
+            return f"Wrote {lines_written} line(s) to {custom_words_path}"
 
     custom_words_path = Path(
         core.profile.read_path(
@@ -586,12 +635,14 @@ async def api_custom_words():
 
     # Return custom_words
     if prefers_json():
+        # Return JSON instead of plain text
         if not custom_words_path.is_file():
             return jsonify({})  # no custom_words yet
 
         with open(custom_words_path, "r") as words_file:
             return jsonify(read_dict(words_file))
     else:
+        # Return plain text
         if not custom_words_path.is_file():
             return ""  # no custom_words yet
 
@@ -607,13 +658,14 @@ async def api_custom_words():
 @app.route("/api/train", methods=["POST"])
 async def api_train() -> str:
     """Generate speech/intent artifacts for profile."""
-    no_cache = request.args.get("nocache", "false").lower() == "true"
+    # no_cache = request.args.get("nocache", "false").lower() == "true"
 
     assert core is not None
 
     start_time = time.time()
     # _LOGGER.info("Starting training")
 
+    # TODO: Start traning
     # result = await core.train(no_cache=no_cache)
     # if isinstance(result, ProfileTrainingFailed):
     #     raise Exception(f"Training failed: {result.reason}")
@@ -633,7 +685,9 @@ async def api_restart() -> str:
     _LOGGER.debug("Restarting Rhasspy")
 
     pid_path = core.profile.read_path("supervisord.pid")
-    assert pid_path.is_file(), f"Missing PID file at {pid_path}"
+    assert (
+        pid_path.is_file()
+    ), "Cannot restart Rhasspy when not running through supervisord"
 
     pid = pid_path.read_text().strip()
     restart_command = ["kill", "-SIGHUP", pid]
@@ -664,6 +718,7 @@ async def api_speech_to_text() -> str:
     end_time = time.perf_counter()
 
     if prefers_json():
+        # Return extra info in JSON
         return jsonify(
             {
                 "text": result.text,
@@ -685,7 +740,7 @@ async def api_text_to_intent():
     assert core is not None
     data = await request.data
     text = data.decode()
-    no_hass = request.args.get("nohass", "false").lower() == "true"
+    # no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Convert text to intent
     start_time = time.time()
@@ -697,8 +752,9 @@ async def api_text_to_intent():
 
     intent_json = json.dumps(intent)
     _LOGGER.debug(intent_json)
-    await add_ws_event(WS_EVENT_INTENT, intent_json)
+    # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
+    # TODO: Handle intent
     # if not no_hass:
     #     # Send intent to Home Assistant
     #     intent = (await core.handle_intent(intent)).intent
@@ -713,7 +769,7 @@ async def api_text_to_intent():
 async def api_speech_to_intent() -> Response:
     """Transcribe speech, recognize intent, and optionally handle."""
     assert core is not None
-    no_hass = request.args.get("nohass", "false").lower() == "true"
+    # no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
     wav_data = await request.data
@@ -733,8 +789,9 @@ async def api_speech_to_intent() -> Response:
 
     intent_json = json.dumps(intent)
     _LOGGER.debug(intent_json)
-    await add_ws_event(WS_EVENT_INTENT, intent_json)
+    # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
+    # TODO: Handle intent
     # if not no_hass:
     #     # Send intent to Home Assistant
     #     intent = (await core.handle_intent(intent)).intent
@@ -749,7 +806,9 @@ async def api_speech_to_intent() -> Response:
 async def api_start_recording() -> str:
     """Begin recording voice command."""
     assert core is not None
-    buffer_name = request.args.get("name", "")
+    # buffer_name = request.args.get("name", "")
+
+    # TODO: Begin session
     # core.start_recording_wav(buffer_name)
 
     return "OK"
@@ -759,8 +818,9 @@ async def api_start_recording() -> str:
 async def api_stop_recording() -> Response:
     """End recording voice command. Transcribe and handle."""
     assert core is not None
-    no_hass = request.args.get("nohass", "false").lower() == "true"
+    # no_hass = request.args.get("nohass", "false").lower() == "true"
 
+    # TODO: End session
     # buffer_name = request.args.get("name", "")
     # audio_data = (await core.stop_recording_wav(buffer_name)).data
 
@@ -778,6 +838,7 @@ async def api_stop_recording() -> Response:
     # _LOGGER.debug(intent_json)
     # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
+    # TODO: Handle intent
     # if not no_hass:
     #     # Send intent to Home Assistant
     #     intent = (await core.handle_intent(intent)).intent
@@ -804,6 +865,7 @@ async def api_unknown_words() -> Response:
     )
 
     if unknown_path.is_file():
+        # Load dictionary of unknown words
         for line in open(unknown_path, "r"):
             line = line.strip()
             if line:
@@ -826,11 +888,14 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
     language = request.args.get("language")
     voice = request.args.get("voice")
     data = await request.data
+
+    # Repeat last sentence or use incoming plain text
     sentence = last_sentence if repeat else data.decode().strip()
 
     assert core is not None
-    result = await core.speak_sentence(sentence, language=(language or voice))
+    await core.speak_sentence(sentence, language=(language or voice))
 
+    # Cache last sentence spoken
     last_sentence = sentence
 
     return sentence
@@ -845,6 +910,7 @@ async def api_slots() -> typing.Union[str, Response]:
     assert core is not None
 
     if request.method == "POST":
+        # Write slots on POST
         overwrite_all = request.args.get("overwrite_all", "false").lower() == "true"
         new_slot_values = await request.json
 
@@ -864,6 +930,7 @@ async def api_slots() -> typing.Union[str, Response]:
                     except Exception:
                         _LOGGER.exception("api_slots")
 
+        # Write new values
         for name, values in new_slot_values.items():
             if isinstance(values, str):
                 values = [values]
@@ -896,6 +963,7 @@ async def api_slots() -> typing.Union[str, Response]:
     slots_dict = {}
 
     if slots_dir.is_dir():
+        # Load slot values
         for slot_file_path in slots_dir.glob("*"):
             if slot_file_path.is_file():
                 slot_name = slot_file_path.name
@@ -1000,6 +1068,231 @@ def api_intents():
 # -----------------------------------------------------------------------------
 
 
+@app.route("/api/mqtt/<path:topic>", methods=["POST"])
+async def api_mqtt(topic: str):
+    """POST an MQTT message to a topic."""
+    assert core is not None
+    assert core.client is not None
+    payload = await request.data
+
+    # Publish directly to MQTT broker
+    core.client.publish(topic, payload)
+
+    return f"Published {len(payload)} byte(s) to {topic}"
+
+
+# -----------------------------------------------------------------------------
+# WebSocket API
+# -----------------------------------------------------------------------------
+
+# Logging
+logging_websockets: typing.Set[asyncio.Queue] = set()
+
+
+def logging_websocket(func):
+    """Wraps a websocket route to use the logging_websockets queue"""
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        global logging_websockets
+        queue = asyncio.Queue()
+        logging_websockets.add(queue)
+        try:
+            return await func(queue, *args, **kwargs)
+        finally:
+            logging_websockets.remove(queue)
+
+    return wrapper
+
+
+async def broadcast_logging(message):
+    """Broadcasts a logging message to all logging websockets."""
+    for queue in logging_websockets:
+        await queue.put(message)
+
+
+logging.root.addHandler(
+    FunctionLoggingHandler(
+        lambda message: asyncio.run_coroutine_threadsafe(
+            broadcast_logging(message), loop
+        )
+    )
+)
+
+
+@app.websocket("/api/events/log")
+@logging_websocket
+async def api_events_log(queue) -> None:
+    """Websocket endpoint to receive logging messages as text."""
+    while True:
+        message = await queue.get()
+        await websocket.send(message)
+
+
+# -----------------------------------------------------------------------------
+
+# MQTT
+mqtt_websockets: typing.Set[asyncio.Queue] = set()
+
+
+def mqtt_websocket(func):
+    """Wraps a websocket route to use the mqtt_websockets queue"""
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        global mqtt_websockets
+        queue = asyncio.Queue()
+        mqtt_websockets.add(queue)
+
+        assert core
+        core.message_queues.add(queue)
+
+        try:
+            return await func(queue, *args, **kwargs)
+        finally:
+            mqtt_websockets.remove(queue)
+            core.message.queues.remove(queue)
+
+    return wrapper
+
+
+async def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
+    """Broadcasts an MQTT topic/payload to all MQTT websockets."""
+    for queue in mqtt_websockets:
+        await queue.put((topic, payload))
+
+
+def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
+    """Handle subscribe/publish MQTT requests from a websocket."""
+    assert core
+    assert core.client
+
+    message_dict = json.loads(message)
+    message_type = message_dict["type"]
+    assert message_type in [
+        "subscribe",
+        "publish",
+    ], f'Invalid message type "{message_type}" (must be "subscribe" or "publish")'
+
+    topic = message_dict["topic"]
+
+    if message_type == "subscribe":
+        core.client.subscribe(topic)
+        matcher[topic] = message_dict
+        _LOGGER.debug("Subscribed to %s", topic)
+    elif message_type == "publish":
+        payload = json.dumps(message_dict["payload"])
+        core.client.publish(topic, payload)
+        _LOGGER.debug("Published %s char(s) to %s", len(payload), topic)
+
+
+@app.websocket("/api/mqtt")
+@mqtt_websocket
+async def api_ws_mqtt(queue) -> None:
+    """Websocket endpoint to send/receive MQTT messages."""
+    topic_matcher = MQTTMatcher()
+    receive_task = loop.create_task(websocket.receive())
+    send_task = loop.create_task(queue.get())
+    pending = {receive_task, send_task}
+
+    while True:
+        done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            if task is receive_task:
+                try:
+                    # Process received message
+                    message = task.result()
+                    handle_ws_mqtt(message, topic_matcher)
+                except Exception:
+                    _LOGGER.debug(message)
+                    _LOGGER.exception("api_ws_mqtt (receive)")
+
+                # Schedule another receive
+                receive_task = loop.create_task(websocket.receive())
+                pending.add(receive_task)
+            elif task is send_task:
+                try:
+                    # Send out queued message (if matches topic)
+                    topic, payload = task.result()
+                    message = json.dumps(
+                        {"topic": topic, "payload": json.loads(payload)}
+                    )
+
+                    for _ in topic_matcher.iter_match(topic):
+                        await websocket.send(message)
+                        _LOGGER.debug("Sent %s char(s) to websocket", len(message))
+                        break
+                except Exception:
+                    _LOGGER.debug(topic)
+                    _LOGGER.exception("api_ws_mqtt (send)")
+
+                # Schedule another send
+                send_task = loop.create_task(queue.get())
+                pending.add(send_task)
+
+
+# -----------------------------------------------------------------------------
+
+# WS_EVENT_INTENT = 0
+# WS_EVENT_LOG = 1
+
+# ws_queues: typing.List[typing.List[asyncio.Queue]] = [[], []]
+# ws_locks: typing.List[asyncio.Lock] = [asyncio.Lock(), asyncio.Lock()]
+
+
+# async def add_ws_event(event_type: int, text: str):
+#     """Send text out to all websockets for a specific event."""
+#     async with ws_locks[event_type]:
+#         for q in ws_queues[event_type]:
+#             await q.put(text)
+
+
+# class WebSocketObserver(RhasspyActor):
+#     """Observe the dialogue manager and output intents to the websocket."""
+
+#     def in_started(self, message: typing.Any, sender: RhasspyActor) -> None:
+#         """Handle messages in started state."""
+#         if isinstance(message, IntentRecognized):
+#             # Add slots
+#             intent_slots = {}
+#             for ev in message.intent.get("entities", []):
+#                 intent_slots[ev["entity"]] = ev["value"]
+
+#             message.intent["slots"] = intent_slots
+
+#             # Convert to JSON
+#             intent_json = json.dumps(message.intent)
+#             self.__LOGGER.debug(intent_json)
+#             asyncio.run_coroutine_threadsafe(
+#                 add_ws_event(WS_EVENT_INTENT, intent_json), loop
+#             )
+
+
+# TODO: Add websocket intents
+# @app.websocket("/api/events/intent")
+# async def api_events_intent() -> None:
+#     """Websocket endpoint to receive intents as JSON."""
+#     # Add new queue for websocket
+#     q: asyncio.Queue = asyncio.Queue()
+#     async with ws_locks[WS_EVENT_INTENT]:
+#         ws_queues[WS_EVENT_INTENT].append(q)
+
+#     try:
+#         while True:
+#             text = await q.get()
+#             await websocket.send(text)
+#     except Exception:
+#         _LOGGER.exception("api_events_intent")
+
+#     # Remove queue
+#     async with ws_locks[WS_EVENT_INTENT]:
+#         ws_queues[WS_EVENT_INTENT].remove(q)
+
+
+# -----------------------------------------------------------------------------
+# MaryTTS
+# -----------------------------------------------------------------------------
+
 # @app.route("/process", methods=["GET"])
 # async def marytts_process():
 #     """Emulate MaryTTS /process API"""
@@ -1082,97 +1375,6 @@ async def swagger_yaml() -> Response:
 
 
 # -----------------------------------------------------------------------------
-# WebSocket API
-# -----------------------------------------------------------------------------
-
-WS_EVENT_INTENT = 0
-WS_EVENT_LOG = 1
-
-ws_queues: typing.List[typing.List[asyncio.Queue]] = [[], []]
-ws_locks: typing.List[asyncio.Lock] = [asyncio.Lock(), asyncio.Lock()]
-
-
-async def add_ws_event(event_type: int, text: str):
-    """Send text out to all websockets for a specific event."""
-    async with ws_locks[event_type]:
-        for q in ws_queues[event_type]:
-            await q.put(text)
-
-
-# Send logging messages out to websocket
-logging.root.addHandler(
-    FunctionLoggingHandler(
-        lambda msg: asyncio.run_coroutine_threadsafe(
-            add_ws_event(WS_EVENT_LOG, msg), loop
-        )
-    )
-)
-
-
-# class WebSocketObserver(RhasspyActor):
-#     """Observe the dialogue manager and output intents to the websocket."""
-
-#     def in_started(self, message: typing.Any, sender: RhasspyActor) -> None:
-#         """Handle messages in started state."""
-#         if isinstance(message, IntentRecognized):
-#             # Add slots
-#             intent_slots = {}
-#             for ev in message.intent.get("entities", []):
-#                 intent_slots[ev["entity"]] = ev["value"]
-
-#             message.intent["slots"] = intent_slots
-
-#             # Convert to JSON
-#             intent_json = json.dumps(message.intent)
-#             self.__LOGGER.debug(intent_json)
-#             asyncio.run_coroutine_threadsafe(
-#                 add_ws_event(WS_EVENT_INTENT, intent_json), loop
-#             )
-
-
-@app.websocket("/api/events/intent")
-async def api_events_intent() -> None:
-    """Websocket endpoint to receive intents as JSON."""
-    # Add new queue for websocket
-    q: asyncio.Queue = asyncio.Queue()
-    async with ws_locks[WS_EVENT_INTENT]:
-        ws_queues[WS_EVENT_INTENT].append(q)
-
-    try:
-        while True:
-            text = await q.get()
-            await websocket.send(text)
-    except Exception:
-        _LOGGER.exception("api_events_intent")
-
-    # Remove queue
-    async with ws_locks[WS_EVENT_INTENT]:
-        ws_queues[WS_EVENT_INTENT].remove(q)
-
-
-@app.websocket("/api/events/log")
-async def api_events_log() -> None:
-    """Websocket endpoint to receive logging messages as text."""
-    # Add new queue for websocket
-    q: asyncio.Queue = asyncio.Queue()
-    async with ws_locks[WS_EVENT_LOG]:
-        ws_queues[WS_EVENT_LOG].append(q)
-
-    try:
-        while True:
-            text = await q.get()
-            await websocket.send(text)
-    except concurrent.futures.CancelledError:
-        pass
-    except Exception:
-        _LOGGER.exception("api_events_log")
-
-    # Remove queue
-    async with ws_locks[WS_EVENT_LOG]:
-        ws_queues[WS_EVENT_LOG].remove(q)
-
-
-# -----------------------------------------------------------------------------
 
 # Swagger UI
 quart_api_doc(
@@ -1224,7 +1426,7 @@ loop.run_until_complete(start_rhasspy())
 # -----------------------------------------------------------------------------
 
 # Disable useless logging messages
-logging.getLogger("wsproto.utilities").setLevel(logging.CRITICAL)
+logging.getLogger("wsproto").setLevel(logging.CRITICAL)
 
 # Start web server
 if args.ssl is not None:

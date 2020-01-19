@@ -375,14 +375,27 @@ class RhasspyCore:
                 if not self._check_siteId(json_payload):
                     return
 
-                self.handle_message(msg.topic, NluIntent(**json_payload))
+                intent = NluIntent(**json_payload)
+
+                # Report to websockets
+                for queue in self.message_queues:
+                    self.loop.call_soon_threadsafe(queue.put_nowait, ("intent", intent))
+
+                self.handle_message(msg.topic, intent)
             elif msg.topic == NluIntentNotRecognized.topic():
                 # Intent not recognized
                 json_payload = json.loads(msg.payload)
                 if not self._check_siteId(json_payload):
                     return
 
-                self.handle_message(msg.topic, NluIntentNotRecognized(**json_payload))
+                not_recognized = NluIntentNotRecognized(**json_payload)
+                # Report to websockets
+                for queue in self.message_queues:
+                    self.loop.call_soon_threadsafe(
+                        queue.put_nowait, ("intent", not_recognized)
+                    )
+
+                self.handle_message(msg.topic, not_recognized)
             elif msg.topic == TtsSayFinished.topic():
                 # Text to speech finished
                 json_payload = json.loads(msg.payload)
@@ -398,7 +411,7 @@ class RhasspyCore:
             # Forward to external message queues
             for queue in self.message_queues:
                 self.loop.call_soon_threadsafe(
-                    queue.put_nowait, (msg.topic, msg.payload)
+                    queue.put_nowait, ("mqtt", msg.topic, msg.payload)
                 )
         except Exception:
             _LOGGER.exception("on_message")

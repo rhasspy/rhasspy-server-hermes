@@ -1123,10 +1123,13 @@ logging.root.addHandler(
 @app.websocket("/api/events/log")
 @logging_websocket
 async def api_events_log(queue) -> None:
-    """Websocket endpoint to receive logging messages as text."""
+    """Websocket endpoint to send out logging messages as text."""
     while True:
-        message = await queue.get()
-        await websocket.send(message)
+        try:
+            message = await queue.get()
+            await websocket.send(message)
+        except Exception:
+            break
 
 
 # -----------------------------------------------------------------------------
@@ -1213,15 +1216,19 @@ async def api_ws_mqtt(queue) -> None:
             elif task is send_task:
                 try:
                     # Send out queued message (if matches topic)
-                    topic, payload = task.result()
-                    message = json.dumps(
-                        {"topic": topic, "payload": json.loads(payload)}
-                    )
+                    message = task.result()
+                    if message[0] == "mqtt":
+                        topic, payload = message[1], message[2]
+                        mqtt_message = json.dumps(
+                            {"topic": topic, "payload": json.loads(payload)}
+                        )
 
-                    for _ in topic_matcher.iter_match(topic):
-                        await websocket.send(message)
-                        _LOGGER.debug("Sent %s char(s) to websocket", len(message))
-                        break
+                        for _ in topic_matcher.iter_match(topic):
+                            await websocket.send(mqtt_message)
+                            _LOGGER.debug(
+                                "Sent %s char(s) to websocket", len(mqtt_message)
+                            )
+                            break
                 except Exception:
                     _LOGGER.debug(topic)
                     _LOGGER.exception("api_ws_mqtt (send)")
@@ -1231,62 +1238,21 @@ async def api_ws_mqtt(queue) -> None:
                 pending.add(send_task)
 
 
-# -----------------------------------------------------------------------------
-
-# WS_EVENT_INTENT = 0
-# WS_EVENT_LOG = 1
-
-# ws_queues: typing.List[typing.List[asyncio.Queue]] = [[], []]
-# ws_locks: typing.List[asyncio.Lock] = [asyncio.Lock(), asyncio.Lock()]
-
-
-# async def add_ws_event(event_type: int, text: str):
-#     """Send text out to all websockets for a specific event."""
-#     async with ws_locks[event_type]:
-#         for q in ws_queues[event_type]:
-#             await q.put(text)
-
-
-# class WebSocketObserver(RhasspyActor):
-#     """Observe the dialogue manager and output intents to the websocket."""
-
-#     def in_started(self, message: typing.Any, sender: RhasspyActor) -> None:
-#         """Handle messages in started state."""
-#         if isinstance(message, IntentRecognized):
-#             # Add slots
-#             intent_slots = {}
-#             for ev in message.intent.get("entities", []):
-#                 intent_slots[ev["entity"]] = ev["value"]
-
-#             message.intent["slots"] = intent_slots
-
-#             # Convert to JSON
-#             intent_json = json.dumps(message.intent)
-#             self.__LOGGER.debug(intent_json)
-#             asyncio.run_coroutine_threadsafe(
-#                 add_ws_event(WS_EVENT_INTENT, intent_json), loop
-#             )
-
-
-# TODO: Add websocket intents
-# @app.websocket("/api/events/intent")
-# async def api_events_intent() -> None:
-#     """Websocket endpoint to receive intents as JSON."""
-#     # Add new queue for websocket
-#     q: asyncio.Queue = asyncio.Queue()
-#     async with ws_locks[WS_EVENT_INTENT]:
-#         ws_queues[WS_EVENT_INTENT].append(q)
-
-#     try:
-#         while True:
-#             text = await q.get()
-#             await websocket.send(text)
-#     except Exception:
-#         _LOGGER.exception("api_events_intent")
-
-#     # Remove queue
-#     async with ws_locks[WS_EVENT_INTENT]:
-#         ws_queues[WS_EVENT_INTENT].remove(q)
+@app.websocket("/api/events/intent")
+@mqtt_websocket
+async def api_ws_intent(queue) -> None:
+    """Websocket endpoint to send intents in Rhasspy JSON format."""
+    while True:
+        message = await queue.get()
+        if message[0] == "intent":
+            try:
+                intent_dict = to_intent_dict(message[1])
+                ws_message = json.dumps(intent_dict)
+                await websocket.send(ws_message)
+                _LOGGER.debug("Send %s char(s) to websocket", len(ws_message))
+                pass
+            except Exception:
+                _LOGGER.exception("api_ws_intent")
 
 
 # -----------------------------------------------------------------------------
@@ -1401,7 +1367,9 @@ def quality(accept, key: str) -> float:
 
 
 def to_intent_dict(message):
+    """Convert NluIntent/NluIntentNotRecognized to Rhasspy format."""
     if isinstance(message, NluIntent):
+        # TODO: Get text/raw_text
         return {
             "intent": {
                 "name": message.intent.intentName,

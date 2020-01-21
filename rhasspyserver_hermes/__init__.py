@@ -140,7 +140,7 @@ class RhasspyCore:
 
         def handle_intent():
             while True:
-                topic, message = yield
+                _, message = yield
 
                 if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
                     message.id == nlu_id
@@ -171,7 +171,7 @@ class RhasspyCore:
 
         def handle_finished():
             while True:
-                topic, message = yield
+                _, message = yield
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
                     return True, None
@@ -197,7 +197,7 @@ class RhasspyCore:
 
         def handle_captured():
             while True:
-                topic, message = yield
+                _, message = yield
 
                 if isinstance(message, AsrTextCaptured) and (
                     message.sessionId == sessionId
@@ -213,7 +213,8 @@ class RhasspyCore:
                     frames_left = wav_file.getnframes()
                     while frames_left > 0:
                         with io.BytesIO() as chunk_buffer:
-                            with wave.open(chunk_buffer, "wb") as chunk_file:
+                            chunk_file: wave.Wave_write = wave.open(chunk_buffer, "wb")
+                            with chunk_file:
                                 chunk_file.setframerate(wav_file.getframerate())
                                 chunk_file.setsampwidth(wav_file.getsampwidth())
                                 chunk_file.setnchannels(wav_file.getnchannels())
@@ -244,7 +245,7 @@ class RhasspyCore:
 
         def handle_finished():
             while True:
-                topic, message = yield
+                _, message = yield
 
                 if (
                     isinstance(message, AudioPlayFinished)
@@ -316,6 +317,7 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     def handle_message(self, topic: str, message: Message):
+        """Send matching messages to waiting handlers."""
         _LOGGER.debug("<- %s", message)
 
         for handler_id in list(self.handler_matchers):
@@ -332,11 +334,7 @@ class RhasspyCore:
                         handler.send((topic, message))
                         done, result = next(handler)
                     except StopIteration as e:
-                        if e.value:
-                            _, result = e.value
-                        else:
-                            result = None
-
+                        result = None
                         done = True
 
                     if done:

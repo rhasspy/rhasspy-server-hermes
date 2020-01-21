@@ -460,14 +460,16 @@ async def api_play_wav() -> str:
 
     if request.content_type == "audio/wav":
         wav_data = await request.data
-    else:
-        # Interpret as URL
-        data = await request.data
-        url = data.decode()
-        _LOGGER.debug("Loading WAV data from %s", url)
 
-        async with core.session.get(url) as response:
-            wav_data = await response.read()
+    # TODO: Handle URLs
+    # else:
+    #     # Interpret as URL
+    #     data = await request.data
+    #     url = data.decode()
+    #     _LOGGER.debug("Loading WAV data from %s", url)
+
+    #     async with core.session.get(url) as response:
+    #         wav_data = await response.read()
 
     # Play through speakers
     _LOGGER.debug("Playing %s byte(s)", len(wav_data))
@@ -1093,12 +1095,12 @@ def logging_websocket(func):
     """Wraps a websocket route to use the logging_websockets queue"""
 
     @wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*_args, **kwargs):
         global logging_websockets
         queue = asyncio.Queue()
         logging_websockets.add(queue)
         try:
-            return await func(queue, *args, **kwargs)
+            return await func(queue, *_args, **kwargs)
         finally:
             logging_websockets.remove(queue)
 
@@ -1142,7 +1144,7 @@ def mqtt_websocket(func):
     """Wraps a websocket route to use the mqtt_websockets queue"""
 
     @wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*_args, **kwargs):
         global mqtt_websockets
         queue = asyncio.Queue()
         mqtt_websockets.add(queue)
@@ -1151,7 +1153,7 @@ def mqtt_websocket(func):
         core.message_queues.add(queue)
 
         try:
-            return await func(queue, *args, **kwargs)
+            return await func(queue, *_args, **kwargs)
         finally:
             mqtt_websockets.remove(queue)
             core.message.queues.remove(queue)

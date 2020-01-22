@@ -370,7 +370,7 @@ async def api_profile() -> typing.Union[str, Response]:
         _LOGGER.debug("Re-generating %s", str(docker_compose_path))
 
         with open(docker_compose_path, "w") as docker_compose_file:
-            rhasspysupervisor.profile_to_compose(
+            rhasspysupervisor.profile_to_docker(
                 new_profile, docker_compose_file, local_mqtt_port=args.local_mqtt_port
             )
 
@@ -1156,7 +1156,7 @@ def mqtt_websocket(func):
             return await func(queue, *_args, **kwargs)
         finally:
             mqtt_websockets.remove(queue)
-            core.message.queues.remove(queue)
+            core.message_queues.remove(queue)
 
     return wrapper
 

@@ -333,7 +333,7 @@ class RhasspyCore:
                     try:
                         handler.send((topic, message))
                         done, result = next(handler)
-                    except StopIteration as e:
+                    except StopIteration:
                         result = None
                         done = True
 

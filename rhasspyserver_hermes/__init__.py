@@ -8,6 +8,7 @@ import wave
 from pathlib import Path
 from uuid import uuid4
 
+import aiohttp
 import attr
 import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
@@ -15,6 +16,7 @@ from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
 from rhasspyhermes.audioserver import AudioFrame, AudioPlayBytes, AudioPlayFinished
 from rhasspyhermes.base import Message
+from rhasspyhermes.g2p import G2pPronounce, G2pPhonemes
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
 from rhasspyprofile import Profile
@@ -39,11 +41,15 @@ class RhasspyCore:
         loop=None,
         connection_retries: int = 10,
         retry_seconds: float = 1,
+        message_timeout_seconds: float = 5,
     ):
         self.profile_name = profile_name
         self.system_profiles_dir = Path(system_profiles_dir)
         self.user_profiles_dir = Path(user_profiles_dir)
         self.loop = loop or asyncio.get_event_loop()
+
+        # Default timeout for response messages
+        self.message_timeout_seconds = message_timeout_seconds
 
         self.profile = Profile(
             self.profile_name, self.system_profiles_dir, self.user_profiles_dir
@@ -87,6 +93,17 @@ class RhasspyCore:
         # External message queues
         self.message_queues: typing.Set[asyncio.Queue] = set()
 
+        # Shared aiohttp client session
+        self._http_session: typing.Optional[
+            aiohttp.ClientSession
+        ] = aiohttp.ClientSession()
+
+    @property
+    def http_session(self) -> aiohttp.ClientSession:
+        """Get HTTP client session."""
+        assert self._http_session is not None
+        return self._http_session
+
     # -------------------------------------------------------------------------
 
     async def start(self):
@@ -126,10 +143,16 @@ class RhasspyCore:
         """Disconnect from MQTT broker"""
         _LOGGER.debug("Shutting down core")
 
+        # Shut down MQTT client
         if self.client:
             client = self.client
             self.client = None
             client.loop_stop()
+
+        # Shut down HTTP session
+        if self._http_session is not None:
+            await self._http_session.close()
+            self._http_session = None
 
     # -------------------------------------------------------------------------
 
@@ -174,7 +197,7 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
-                    return True, None
+                    return True, message
 
         say = TtsSay(id=tts_id, text=sentence, siteId=self.siteId)
         if language:
@@ -239,7 +262,7 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    async def play_wav_data(self, wav_data: bytes):
+    async def play_wav_data(self, wav_data: bytes) -> AudioPlayFinished:
         """Play WAV data through speakers."""
         requestId = str(uuid4())
 
@@ -247,12 +270,8 @@ class RhasspyCore:
             while True:
                 _, message = yield
 
-                if (
-                    isinstance(message, AudioPlayFinished)
-                    and (message.siteId == self.siteId)
-                    and (message.id == requestId)
-                ):
-                    return True, None
+                if isinstance(message, AudioPlayFinished) and (message.id == requestId):
+                    return True, message
 
         def messages():
             yield (
@@ -268,6 +287,37 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
+    async def get_word_pronunciations(
+        self, words: typing.Iterable[str], num_guesses: int = 5
+    ) -> G2pPhonemes:
+        """Look up or guess word phonetic pronunciations."""
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                _, message = yield
+
+                if isinstance(message, G2pPhonemes) and (message.id == requestId):
+                    return True, message
+
+        messages = [
+            G2pPronounce(
+                words=list(words),
+                numGuesses=num_guesses,
+                id=requestId,
+                siteId=self.siteId,
+            )
+        ]
+        topics = [G2pPhonemes.topic()]
+
+        # Expecting only a single result
+        async for result in self.publish_wait(handle_finished(), messages, topics):
+            return result
+
+    # -------------------------------------------------------------------------
+    # Supporting Functions
+    # -------------------------------------------------------------------------
+
     async def publish_wait(
         self,
         handler,
@@ -275,8 +325,11 @@ class RhasspyCore:
             typing.Union[Message, typing.Tuple[Message, typing.Dict[str, typing.Any]]]
         ],
         topics: typing.List[str],
+        timeout_seconds: typing.Optional[float] = None,
     ):
         """Publish messages and wait for responses."""
+        timeout_seconds = timeout_seconds or self.message_timeout_seconds
+
         # Start generator
         handler.send(None)
 
@@ -305,9 +358,16 @@ class RhasspyCore:
                 message, kwargs = maybe_message
                 self.publish(message, **kwargs)
 
-        # TODO: Add timeout
-        done, result = await self.handler_queues[handler_id].get()
-        print(done, result)
+        # Wait for response or timeout
+        result_awaitable = self.handler_queues[handler_id].get()
+
+        if timeout_seconds > 0:
+            # With timeout
+            done, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
+        else:
+            # No timeout
+            done, result = await result_awaitable
+
         yield result
 
         if done:
@@ -333,8 +393,8 @@ class RhasspyCore:
                     try:
                         handler.send((topic, message))
                         done, result = next(handler)
-                    except StopIteration:
-                        result = None
+                    except StopIteration as e:
+                        _, result = e.value
                         done = True
 
                     if done:
@@ -373,7 +433,7 @@ class RhasspyCore:
                 if not self._check_siteId(json_payload):
                     return
 
-                intent = NluIntent(**json_payload)
+                intent = NluIntent.from_dict(json_payload)
 
                 # Report to websockets
                 for queue in self.message_queues:
@@ -386,7 +446,7 @@ class RhasspyCore:
                 if not self._check_siteId(json_payload):
                     return
 
-                not_recognized = NluIntentNotRecognized(**json_payload)
+                not_recognized = NluIntentNotRecognized.from_dict(json_payload)
                 # Report to websockets
                 for queue in self.message_queues:
                     self.loop.call_soon_threadsafe(
@@ -397,14 +457,27 @@ class RhasspyCore:
             elif msg.topic == TtsSayFinished.topic():
                 # Text to speech finished
                 json_payload = json.loads(msg.payload)
-                self.handle_message(msg.topic, TtsSayFinished(**json_payload))
+                self.handle_message(msg.topic, TtsSayFinished.from_dict(json_payload))
             elif msg.topic == AsrTextCaptured.topic():
                 # Speech to text result
                 json_payload = json.loads(msg.payload)
                 if not self._check_siteId(json_payload):
                     return
 
-                self.handle_message(msg.topic, AsrTextCaptured(**json_payload))
+                self.handle_message(msg.topic, AsrTextCaptured.from_dict(json_payload))
+            elif msg.topic == AudioPlayFinished.topic():
+                # Audio has finished playing
+                json_payload = json.loads(msg.payload)
+                self.handle_message(
+                    msg.topic, AudioPlayFinished.from_dict(json_payload)
+                )
+            elif msg.topic == G2pPhonemes.topic():
+                # Grapheme to phoneme result
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, G2pPhonemes.from_dict(json_payload))
 
             # Forward to external message queues
             for queue in self.message_queues:

@@ -2,6 +2,7 @@ Package: rhasspy-server-hermes
 Version: ${version}
 Section: utils
 Priority: optional
+Depends: espeak
 Architecture: ${architecture}
 Maintainer: Michael Hansen
 Description: Web interface to Rhasspy using Hermes protocol on the back end

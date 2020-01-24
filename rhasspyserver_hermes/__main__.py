@@ -402,12 +402,36 @@ async def api_lookup() -> Response:
     word = data.decode().strip().lower()
     assert word, "No word to look up"
 
-    # TODO: Look up word pronunciations
-    # result = await core.get_word_pronunciations([word], n)
-    # pronunciations = result.pronunciations
+    result = await core.get_word_pronunciations([word], n)
 
-    # return jsonify(pronunciations[word])
-    return jsonify({})
+    # Convert to Rhasspy format
+    pronunciations = {
+        word: {
+            "in_dictionary": any(
+                not word_pron.guessed for word_pron in result.wordPhonemes[word]
+            ),
+            "pronunciations": [
+                " ".join(word_pron.phonemes) for word_pron in result.wordPhonemes[word]
+            ],
+            "phonemes": get_espeak_phonemes(word),
+        }
+        for word in result.wordPhonemes
+    }
+
+    return jsonify(pronunciations[word])
+
+
+def get_espeak_phonemes(word: str) -> str:
+    """Get eSpeak phonemes for a word."""
+    try:
+        espeak_command = ["espeak", "-q", "-x", word]
+
+        _LOGGER.debug(espeak_command)
+        return subprocess.check_output(espeak_command, universal_newlines=True).strip()
+    except Exception:
+        _LOGGER.exception("get_espeak_phonemes")
+
+    return ""
 
 
 # -----------------------------------------------------------------------------
@@ -418,36 +442,74 @@ async def api_lookup() -> Response:
 async def api_pronounce() -> typing.Union[Response, str]:
     """Pronounce CMU phonemes or word using eSpeak"""
     assert core is not None
-    # download = request.args.get("download", "false").lower() == "true"
+    download = request.args.get("download", "false").lower() == "true"
 
     data = await request.data
     pronounce_str = data.decode().strip()
     assert pronounce_str, "No string to pronounce"
 
     # phonemes or word
-    # pronounce_type = request.args.get("type", "phonemes")
+    pronounce_type = request.args.get("type", "phonemes")
 
     # TODO: Get phonemes
-    # if pronounce_type == "phonemes":
-    #     # Convert from Sphinx to espeak phonemes
-    #     phoneme_result = await core.get_word_phonemes(pronounce_str)
-    #     espeak_str = phoneme_result.phonemes
-    # else:
-    #     # Speak word directly
-    #     espeak_str = pronounce_str
+    if pronounce_type == "phonemes":
+        # Convert from Sphinx to espeak phonemes
+        speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
+        phoneme_map_path = core.profile.read_path(
+            core.profile.get(
+                f"speech_to_text.{speech_system}.phoneme_map", "espeak_phonemes.txt"
+            )
+        )
 
-    # speak_result = await core.speak_word(espeak_str)
-    # wav_data = speak_result.wav_data
-    # espeak_phonemes = speak_result.phonemes
+        assert phoneme_map_path.is_file(), f"Missing phoneme map at {phoneme_map_path}"
 
-    # if download:
-    #     # Return WAV
-    #     return Response(wav_data)  # , mimetype="audio/wav")
+        # Load map from dictionary phonemes to eSpeak phonemes
+        phoneme_map: typing.Dict[str, str] = {}
+        with open(phoneme_map_path, "r") as phoneme_map_file:
+            for line in phoneme_map_file:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    # P1 E1
+                    # P2 E2
+                    parts = line.split(maxsplit=1)
+                    phoneme_map[parts[0]] = parts[1]
 
-    # # Play through speakers
-    # core.play_wav_data(wav_data)
-    # return espeak_phonemes
-    return ""
+        # Map to eSpeak phonemes
+        espeak_phonemes = "".join(phoneme_map.get(p, p) for p in pronounce_str.split())
+        espeak_str = f"[[{espeak_phonemes}]]"
+    else:
+        # Speak word directly
+        espeak_str = pronounce_str
+
+    # Convert to WAV
+    wav_data = get_espeak_wav(espeak_str, voice=core.profile.get("language"))
+
+    if download:
+        # Return WAV
+        return Response(wav_data, mimetype="audio/wav")
+
+    # Play through speakers
+    await core.play_wav_data(wav_data)
+
+    return "OK"
+
+
+def get_espeak_wav(word: str, voice: typing.Optional[str] = None) -> bytes:
+    """Get eSpeak WAV pronunciation for a word."""
+    try:
+        espeak_command = ["espeak", "--stdout", "-s", "80"]
+
+        if voice:
+            espeak_command.extend(["-v", str(voice)])
+
+        espeak_command.append(word)
+
+        _LOGGER.debug(espeak_command)
+        return subprocess.check_output(espeak_command)
+    except Exception:
+        _LOGGER.exception("get_espeak_wav")
+
+    return bytes()
 
 
 # -----------------------------------------------------------------------------
@@ -460,16 +522,14 @@ async def api_play_wav() -> str:
 
     if request.content_type == "audio/wav":
         wav_data = await request.data
+    else:
+        # Interpret as URL
+        data = await request.data
+        url = data.decode()
+        _LOGGER.debug("Loading WAV data from %s", url)
 
-    # TODO: Handle URLs
-    # else:
-    #     # Interpret as URL
-    #     data = await request.data
-    #     url = data.decode()
-    #     _LOGGER.debug("Loading WAV data from %s", url)
-
-    #     async with core.session.get(url) as response:
-    #         wav_data = await response.read()
+        async with core.http_session.get(url) as response:
+            wav_data = await response.read()
 
     # Play through speakers
     _LOGGER.debug("Playing %s byte(s)", len(wav_data))

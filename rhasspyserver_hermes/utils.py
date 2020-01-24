@@ -2,6 +2,7 @@
 import io
 import logging
 import re
+import subprocess
 import typing
 import wave
 from pathlib import Path
@@ -202,3 +203,37 @@ def get_all_intents(ini_paths: typing.List[Path]) -> typing.Dict[str, typing.Any
 def split_whitespace(s: str, **kwargs):
     """Split a string by whitespace of any type/length."""
     return WHITESPACE_PATTERN.split(s, **kwargs)
+
+
+# -----------------------------------------------------------------------------
+
+
+def get_espeak_wav(word: str, voice: typing.Optional[str] = None) -> bytes:
+    """Get eSpeak WAV pronunciation for a word."""
+    try:
+        espeak_command = ["espeak", "--stdout", "-s", "80"]
+
+        if voice:
+            espeak_command.extend(["-v", str(voice)])
+
+        espeak_command.append(word)
+
+        _LOGGER.debug(espeak_command)
+        return subprocess.check_output(espeak_command)
+    except Exception:
+        _LOGGER.exception("get_espeak_wav")
+
+    return bytes()
+
+
+def get_espeak_phonemes(word: str) -> str:
+    """Get eSpeak phonemes for a word."""
+    try:
+        espeak_command = ["espeak", "-q", "-x", word]
+
+        _LOGGER.debug(espeak_command)
+        return subprocess.check_output(espeak_command, universal_newlines=True).strip()
+    except Exception:
+        _LOGGER.exception("get_espeak_phonemes")
+
+    return ""

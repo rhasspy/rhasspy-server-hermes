@@ -16,7 +16,7 @@ from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
 from rhasspyhermes.audioserver import AudioFrame, AudioPlayBytes, AudioPlayFinished
 from rhasspyhermes.base import Message
-from rhasspyhermes.g2p import G2pPronounce, G2pPhonemes
+from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
 from rhasspyprofile import Profile
@@ -156,7 +156,9 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    async def recognize_intent(self, text: str) -> typing.Dict[str, typing.Any]:
+    async def recognize_intent(
+        self, text: str
+    ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
         nlu_id = str(uuid4())
         query = NluQuery(id=nlu_id, input=text, siteId=self.siteId)
@@ -181,8 +183,12 @@ class RhasspyCore:
         topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
 
         # Expecting only a single result
-        async for result in self.publish_wait(handle_intent(), messages, topics):
-            return result
+        result = None
+        async for response in self.publish_wait(handle_intent(), messages, topics):
+            result = response
+
+        assert isinstance(result, (NluIntent, NluIntentNotRecognized))
+        return result
 
     # -------------------------------------------------------------------------
 
@@ -257,8 +263,12 @@ class RhasspyCore:
         topics = [AsrTextCaptured.topic()]
 
         # Expecting only a single result
-        async for result in self.publish_wait(handle_captured(), messages(), topics):
-            return result
+        result = None
+        async for response in self.publish_wait(handle_captured(), messages(), topics):
+            result = response
+
+        assert isinstance(result, AsrTextCaptured)
+        return result
 
     # -------------------------------------------------------------------------
 
@@ -282,8 +292,12 @@ class RhasspyCore:
         topics = [AudioPlayFinished.topic(siteId=self.siteId)]
 
         # Expecting only a single result
-        async for result in self.publish_wait(handle_finished(), messages(), topics):
-            return result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages(), topics):
+            result = response
+
+        assert isinstance(result, AudioPlayFinished)
+        return result
 
     # -------------------------------------------------------------------------
 
@@ -311,8 +325,12 @@ class RhasspyCore:
         topics = [G2pPhonemes.topic()]
 
         # Expecting only a single result
-        async for result in self.publish_wait(handle_finished(), messages, topics):
-            return result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, G2pPhonemes)
+        return result
 
     # -------------------------------------------------------------------------
     # Supporting Functions
@@ -321,7 +339,7 @@ class RhasspyCore:
     async def publish_wait(
         self,
         handler,
-        messages: typing.List[
+        messages: typing.Sequence[
             typing.Union[Message, typing.Tuple[Message, typing.Dict[str, typing.Any]]]
         ],
         topics: typing.List[str],
@@ -340,6 +358,7 @@ class RhasspyCore:
         self.handler_queues[handler_id] = asyncio.Queue()
 
         # Subscribe to any outstanding topics
+        assert self.client
         for topic in topics:
             if topic not in self.topics:
                 self.client.subscribe(topic)
@@ -394,6 +413,7 @@ class RhasspyCore:
                         handler.send((topic, message))
                         done, result = next(handler)
                     except StopIteration as e:
+                        # pylint: disable=E0633
                         _, result = e.value
                         done = True
 
@@ -502,7 +522,10 @@ class RhasspyCore:
     def publish(self, message: Message, **topic_args):
         """Publish a Hermes message to MQTT."""
         try:
+            assert self.client
             topic = message.topic(**topic_args)
+            payload: typing.Union[str, bytes]
+
             if isinstance(message, (AudioFrame, AudioPlayBytes)):
                 # Handle binary payloads specially
                 _LOGGER.debug(

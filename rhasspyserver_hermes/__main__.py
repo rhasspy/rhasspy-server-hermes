@@ -36,6 +36,8 @@ from .utils import (
     FunctionLoggingHandler,
     buffer_to_wav,
     get_all_intents,
+    get_espeak_phonemes,
+    get_espeak_wav,
     get_ini_paths,
     get_wav_duration,
     load_phoneme_examples,
@@ -204,7 +206,7 @@ async def api_profiles() -> Response:
 
     # TODO: Check for missing profile files
     # missing_files = core.check_profile()
-    missing_files = {}
+    missing_files: typing.Dict[str, typing.Any] = {}
     downloaded = len(missing_files) == 0
     return jsonify(
         {
@@ -421,19 +423,6 @@ async def api_lookup() -> Response:
     return jsonify(pronunciations[word])
 
 
-def get_espeak_phonemes(word: str) -> str:
-    """Get eSpeak phonemes for a word."""
-    try:
-        espeak_command = ["espeak", "-q", "-x", word]
-
-        _LOGGER.debug(espeak_command)
-        return subprocess.check_output(espeak_command, universal_newlines=True).strip()
-    except Exception:
-        _LOGGER.exception("get_espeak_phonemes")
-
-    return ""
-
-
 # -----------------------------------------------------------------------------
 
 
@@ -492,24 +481,6 @@ async def api_pronounce() -> typing.Union[Response, str]:
     await core.play_wav_data(wav_data)
 
     return "OK"
-
-
-def get_espeak_wav(word: str, voice: typing.Optional[str] = None) -> bytes:
-    """Get eSpeak WAV pronunciation for a word."""
-    try:
-        espeak_command = ["espeak", "--stdout", "-s", "80"]
-
-        if voice:
-            espeak_command.extend(["-v", str(voice)])
-
-        espeak_command.append(word)
-
-        _LOGGER.debug(espeak_command)
-        return subprocess.check_output(espeak_command)
-    except Exception:
-        _LOGGER.exception("get_espeak_wav")
-
-    return bytes()
 
 
 # -----------------------------------------------------------------------------
@@ -1258,7 +1229,9 @@ async def api_ws_mqtt(queue) -> None:
     topic_matcher = MQTTMatcher()
     receive_task = loop.create_task(websocket.receive())
     send_task = loop.create_task(queue.get())
-    pending = {receive_task, send_task}
+    pending: typing.Set[
+        typing.Union[asyncio.Future[typing.Any], asyncio.Task[typing.Any]]
+    ] = {receive_task, send_task}
 
     while True:
         done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)

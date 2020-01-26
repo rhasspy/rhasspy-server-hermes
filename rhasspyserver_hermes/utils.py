@@ -46,7 +46,7 @@ def read_dict(
 
     for i, line in enumerate(dict_file):
         line = line.strip()
-        if len(line) == 0:
+        if not line:
             continue
 
         try:
@@ -55,7 +55,7 @@ def read_dict(
             word = parts[0]
 
             # Skip Julius extras
-            parts = [p for p in parts[1:] if p[0] not in ["[", "@"]]
+            parts = [p for p in parts[1:] if p[0] not in {"[", "@"}]
 
             idx = word.find("(")
             if idx > 0:
@@ -98,7 +98,7 @@ def recursive_remove(
         if k in base_dict:
             if isinstance(v, dict):
                 recursive_remove(base_dict[k], v)
-                if len(v) == 0:
+                if not v:
                     del new_dict[k]
             elif v == base_dict[k]:
                 del new_dict[k]
@@ -139,7 +139,7 @@ def load_phoneme_examples(path: str) -> typing.Dict[str, typing.Dict[str, str]]:
     with open(path, "r") as example_file:
         for line in example_file:
             line = line.strip()
-            if (len(line) == 0) or line.startswith("#"):
+            if not line or line.startswith("#"):
                 continue  # skip blanks and comments
 
             parts = split_whitespace(line)
@@ -154,7 +154,7 @@ def load_phoneme_map(path: str) -> typing.Dict[str, str]:
     with open(path, "r") as phoneme_file:
         for line in phoneme_file:
             line = line.strip()
-            if (len(line) == 0) or line.startswith("#"):
+            if not line or line.startswith("#"):
                 continue  # skip blanks and comments
 
             parts = split_whitespace(line, maxsplit=1)

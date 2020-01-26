@@ -14,7 +14,14 @@ import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
-from rhasspyhermes.audioserver import AudioFrame, AudioPlayBytes, AudioPlayFinished
+from rhasspyhermes.audioserver import (
+    AudioFrame,
+    AudioPlayBytes,
+    AudioPlayFinished,
+    AudioGetDevices,
+    AudioDevices,
+    AudioDeviceMode,
+)
 from rhasspyhermes.base import Message
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
@@ -333,6 +340,37 @@ class RhasspyCore:
         return result
 
     # -------------------------------------------------------------------------
+
+    async def get_microphones(self, test: bool = False) -> AudioDevices:
+        """Get available microphones and optionally test them."""
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                _, message = yield
+
+                if isinstance(message, AudioDevices) and (message.id == requestId):
+                    return True, message
+
+        messages = [
+            AudioGetDevices(
+                id=requestId,
+                siteId=self.siteId,
+                modes=[AudioDeviceMode.INPUT],
+                test=test,
+            )
+        ]
+        topics = [AudioDevices.topic()]
+
+        # Expecting only a single result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, AudioDevices)
+        return result
+
+    # -------------------------------------------------------------------------
     # Supporting Functions
     # -------------------------------------------------------------------------
 
@@ -498,6 +536,13 @@ class RhasspyCore:
                     return
 
                 self.handle_message(msg.topic, G2pPhonemes.from_dict(json_payload))
+            elif msg.topic == AudioDevices.topic():
+                # Audio device list
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, AudioDevices.from_dict(json_payload))
 
             # Forward to external message queues
             for queue in self.message_queues:

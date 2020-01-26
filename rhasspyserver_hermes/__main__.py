@@ -166,11 +166,6 @@ async def start_rhasspy() -> None:
         extra_settings[key] = value
         core.profile.set(key, value)
 
-    # # Load observer actor to catch intents
-    # observer = system.createActor(WebSocketObserver)
-    # system.ask(observer, ConfigureEvent(core.profile))
-
-    # await core.start(observer=observer)
     await core.start()
     _LOGGER.info("Started")
 

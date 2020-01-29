@@ -691,12 +691,9 @@ async def api_train() -> str:
     assert core is not None
 
     start_time = time.time()
-    # _LOGGER.info("Starting training")
+    _LOGGER.info("Starting training")
 
-    # TODO: Start traning
-    # result = await core.train(no_cache=no_cache)
-    # if isinstance(result, ProfileTrainingFailed):
-    #     raise Exception(f"Training failed: {result.reason}")
+    result = await core.train()
 
     end_time = time.time()
 

@@ -13,7 +13,14 @@ import attr
 import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
 from paho.mqtt.matcher import MQTTMatcher
-from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
+from rhasspyhermes.asr import (
+    AsrStartListening,
+    AsrStopListening,
+    AsrTextCaptured,
+    AsrTrain,
+    AsrTrainSuccess,
+    AsrError,
+)
 from rhasspyhermes.audioserver import (
     AudioFrame,
     AudioPlayBytes,
@@ -24,9 +31,20 @@ from rhasspyhermes.audioserver import (
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
-from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized, NluQuery
+from rhasspyhermes.nlu import (
+    NluIntent,
+    NluIntentNotRecognized,
+    NluQuery,
+    NluTrain,
+    NluTrainSuccess,
+    NluError,
+)
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
+import rhasspynlu
 from rhasspyprofile import Profile
+
+from .train import sentences_to_graph
+from .utils import get_ini_paths
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,6 +178,134 @@ class RhasspyCore:
         if self._http_session is not None:
             await self._http_session.close()
             self._http_session = None
+
+    # -------------------------------------------------------------------------
+
+    async def train(self) -> typing.Union[NluIntent, NluIntentNotRecognized]:
+        """Send an NLU query and wait for intent or not recognized"""
+
+        # Load sentences.ini files
+        sentences_ini = self.profile.read_path(
+            self.profile.get("speech_to_text.sentences_ini", "sentences.ini")
+        )
+        sentences_dir = self.profile.read_path(
+            self.profile.get("speech_to_text.sentences_dir", "intents")
+        )
+        if not sentences_dir.is_dir():
+            sentences_dir = None
+
+        ini_paths = get_ini_paths(sentences_ini, sentences_dir)
+        _LOGGER.debug("Loading sentences from %s", ini_paths)
+
+        sentences_dict = {str(p): p.read_text() for p in ini_paths}
+
+        # Load settings
+        language = self.profile.get("language", "en")
+        dictionary_casing = self.profile.get(
+            "speech_to_text.dictionary_casing", "ignore"
+        ).lower()
+        word_transform = None
+        if dictionary_casing == "upper":
+            word_transform = str.upper
+        elif dictionary_casing == "lower":
+            word_transform = str.lower
+
+        slots_dir = self.profile.write_path(
+            self.profile.get("speech_to_text.slots_dir", "slots")
+        )
+        system_slots_dir = (
+            self.profile.system_profiles_dir / self.profile.name / "slots"
+        )
+        slot_programs_dir = self.profile.write_path(
+            self.profile.get("speech_to_text.slot_programs_dir", "slot_programs")
+        )
+        system_slot_programs_dir = (
+            self.profile.system_profiles_dir / self.profile.name / "slot_programs"
+        )
+
+        # Convert to graph
+        _LOGGER.debug("Generating intent graph")
+
+        intent_graph = sentences_to_graph(
+            sentences_dict,
+            slots_dirs=[slots_dir, system_slots_dir],
+            slot_programs_dirs=[slot_programs_dir, system_slot_programs_dir],
+            language=language,
+            word_transform=word_transform,
+        )
+
+        # Convert to dictionary
+        graph_dict = rhasspynlu.graph_to_json(intent_graph)
+
+        # Save to JSON file
+        graph_path = self.profile.read_path(
+            self.profile.get("intent.fsticuffs.intent_graph", "intent.json")
+        )
+
+        with open(graph_path, "w") as graph_file:
+            json.dump(graph_dict, graph_file)
+
+        _LOGGER.debug("Wrote intent graph to %s", str(graph_path))
+
+        # Send to ASR/NLU systems
+        speech_system = self.profile.get("speech_to_text.system", "dummy")
+        has_speech = speech_system != "dummy"
+
+        intent_system = self.profile.get("intent.system", "dummy")
+        has_intent = intent_system != "dummy"
+
+        if has_speech or has_intent:
+            request_id = str(uuid4())
+
+            def handle_train():
+                asr_response = None if has_speech else True
+                nlu_response = None if has_intent else True
+
+                while True:
+                    _, message = yield
+
+                    if isinstance(message, (NluTrainSuccess, NluError)) and (
+                        message.id == request_id
+                    ):
+                        nlu_response = message
+                    elif isinstance(message, (AsrTrainSuccess, AsrError)) and (
+                        message.id == request_id
+                    ):
+                        asr_response = message
+
+                    if asr_response and nlu_response:
+                        return True, [asr_response, nlu_response]
+
+            messages = []
+            topics = []
+
+            if has_speech:
+                messages.append(
+                    (
+                        AsrTrain(id=request_id, graph_dict=graph_dict),
+                        {"siteId": self.siteId},
+                    )
+                )
+                topics.append(AsrTrainSuccess.topic(siteId=self.siteId))
+
+            if has_intent:
+                messages.append(
+                    (
+                        NluTrain(id=request_id, graph_dict=graph_dict),
+                        {"siteId": self.siteId},
+                    )
+                )
+                topics.append(NluTrainSuccess.topic(siteId=self.siteId))
+
+            # Expecting only a single result
+            result = None
+            async for response in self.publish_wait(handle_train(), messages, topics):
+                result = response
+
+            assert isinstance(result, list)
+            return result
+
+        return None
 
     # -------------------------------------------------------------------------
 

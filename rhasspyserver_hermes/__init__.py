@@ -5,6 +5,7 @@ import json
 import logging
 import typing
 import wave
+from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 
@@ -66,7 +67,8 @@ class RhasspyCore:
         loop=None,
         connection_retries: int = 10,
         retry_seconds: float = 1,
-        message_timeout_seconds: float = 5,
+        message_timeout_seconds: float = 30,
+        training_timeout_seconds: float = 600,
     ):
         self.profile_name = profile_name
         self.system_profiles_dir = Path(system_profiles_dir)
@@ -75,6 +77,7 @@ class RhasspyCore:
 
         # Default timeout for response messages
         self.message_timeout_seconds = message_timeout_seconds
+        self.training_timeout_seconds = training_timeout_seconds
 
         self.profile = Profile(
             self.profile_name, self.system_profiles_dir, self.user_profiles_dir
@@ -181,6 +184,10 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
+    @attr.s(auto_attribs=True)
+    class TrainingFailedException(Exception):
+        reason: str
+
     async def train(self) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
 
@@ -274,35 +281,57 @@ class RhasspyCore:
                         asr_response = message
 
                     if asr_response and nlu_response:
-                        return True, [asr_response, nlu_response]
+                        return [asr_response, nlu_response]
 
             messages = []
             topics = []
 
             if has_speech:
+                # Request ASR training
                 messages.append(
                     (
                         AsrTrain(id=request_id, graph_dict=graph_dict),
                         {"siteId": self.siteId},
                     )
                 )
-                topics.append(AsrTrainSuccess.topic(siteId=self.siteId))
+                topics.extend(
+                    [AsrTrainSuccess.topic(siteId=self.siteId), AsrError.topic()]
+                )
 
             if has_intent:
+                # Request NLU training
                 messages.append(
                     (
                         NluTrain(id=request_id, graph_dict=graph_dict),
                         {"siteId": self.siteId},
                     )
                 )
-                topics.append(NluTrainSuccess.topic(siteId=self.siteId))
+                topics.extend(
+                    [NluTrainSuccess.topic(siteId=self.siteId), NluError.topic()]
+                )
 
             # Expecting only a single result
             result = None
-            async for response in self.publish_wait(handle_train(), messages, topics):
+            async for response in self.publish_wait(
+                handle_train(),
+                messages,
+                topics,
+                timeout_seconds=self.training_timeout_seconds,
+            ):
                 result = response
 
+            # Check result
             assert isinstance(result, list)
+            asr_response, nlu_response = result
+
+            if isinstance(asr_response, AsrError):
+                _LOGGER.error(asr_response)
+                raise TrainingFailedException(reason=asr_response.error)
+
+            if isinstance(nlu_response, NluError):
+                _LOGGER.error(nlu_response)
+                raise TrainingFailedException(reason=nlu_response.error)
+
             return result
 
         return None
@@ -330,7 +359,7 @@ class RhasspyCore:
                             rhasspyhermes.intent.Slot(**s) for s in message.slots
                         ]
 
-                    return True, message
+                    return message
 
         messages = [query]
         topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
@@ -356,7 +385,7 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
-                    return True, message
+                    return message
 
         say = TtsSay(id=tts_id, text=sentence, siteId=self.siteId)
         if language:
@@ -384,7 +413,7 @@ class RhasspyCore:
                 if isinstance(message, AsrTextCaptured) and (
                     message.sessionId == sessionId
                 ):
-                    return True, message
+                    return message
 
         def messages():
             yield AsrStartListening(siteId=self.siteId, sessionId=sessionId)
@@ -434,7 +463,7 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(message, AudioPlayFinished) and (message.id == requestId):
-                    return True, message
+                    return message
 
         def messages():
             yield (
@@ -465,7 +494,7 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(message, G2pPhonemes) and (message.id == requestId):
-                    return True, message
+                    return message
 
         messages = [
             G2pPronounce(
@@ -496,7 +525,7 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(message, AudioDevices) and (message.id == requestId):
-                    return True, message
+                    return message
 
         messages = [
             AudioGetDevices(
@@ -594,11 +623,10 @@ class RhasspyCore:
                     )
 
                     try:
-                        handler.send((topic, message))
-                        done, result = next(handler)
+                        result = handler.send((topic, message))
+                        done = False
                     except StopIteration as e:
-                        # pylint: disable=E0633
-                        _, result = e.value
+                        result = e.value
                         done = True
 
                     if done:
@@ -606,9 +634,10 @@ class RhasspyCore:
                         self.handler_matchers.pop(handler_id)
 
                     # Signal other thread
-                    self.loop.call_soon_threadsafe(
-                        self.handler_queues[handler_id].put_nowait, (done, result)
-                    )
+                    if done or (result is not None):
+                        self.loop.call_soon_threadsafe(
+                            self.handler_queues[handler_id].put_nowait, (done, result)
+                        )
                 except Exception:
                     _LOGGER.exception("handle_message")
 
@@ -689,6 +718,22 @@ class RhasspyCore:
                     return
 
                 self.handle_message(msg.topic, AudioDevices.from_dict(json_payload))
+            elif AsrTrainSuccess.is_topic(msg.topic):
+                # NLU training success
+                siteId = AsrTrainSuccess.get_siteId(msg.topic)
+                if self.siteIds and (siteId not in self.siteIds):
+                    return
+
+                json_payload = json.loads(msg.payload)
+                self.handle_message(msg.topic, AsrTrainSuccess.from_dict(json_payload))
+            elif NluTrainSuccess.is_topic(msg.topic):
+                # NLU training success
+                siteId = NluTrainSuccess.get_siteId(msg.topic)
+                if self.siteIds and (siteId not in self.siteIds):
+                    return
+
+                json_payload = json.loads(msg.payload)
+                self.handle_message(msg.topic, NluTrainSuccess.from_dict(json_payload))
 
             # Forward to external message queues
             for queue in self.message_queues:
@@ -726,6 +771,10 @@ class RhasspyCore:
                     topic,
                 )
                 payload = message.wav_data
+            elif isinstance(message, (AsrTrain, NluTrain)):
+                # Don't print entire intent graph to console
+                _LOGGER.debug("-> %s(id=%s)", message.__class__.__name__, message.id)
+                payload = json.dumps(attr.asdict(message))
             else:
                 _LOGGER.debug("-> %s", message)
                 payload = json.dumps(attr.asdict(message))
@@ -743,3 +792,24 @@ class RhasspyCore:
 
         # All sites
         return True
+
+
+# -----------------------------------------------------------------------------
+
+
+def message_handler(func):
+    """Wraps a topic/message handling function"""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        while True:
+            value = yield
+            if value is None:
+                break
+
+            topic, message = value
+            result = func(topic, message, *args, **kwargs)
+            if result is not None:
+                return result
+
+    return wrapper

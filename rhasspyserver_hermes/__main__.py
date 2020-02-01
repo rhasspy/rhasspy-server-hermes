@@ -14,6 +14,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import rhasspyprofile
 import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
 from quart import (
@@ -200,15 +201,17 @@ async def api_profiles() -> Response:
                 profile_names.add(str(name))
 
     # TODO: Check for missing profile files
-    # missing_files = core.check_profile()
-    missing_files: typing.Dict[str, typing.Any] = {}
+    missing_files = rhasspyprofile.get_missing_files(core.profile)
     downloaded = len(missing_files) == 0
     return jsonify(
         {
             "default_profile": core.profile.name,
             "profiles": sorted(list(profile_names)),
             "downloaded": downloaded,
-            "missing_files": missing_files,
+            "missing_files": {
+                str(missing.file_path): (missing.setting_name, missing.setting_value)
+                for missing in missing_files
+            },
         }
     )
 
@@ -220,10 +223,9 @@ async def api_profiles() -> Response:
 async def api_download_profile() -> str:
     """Downloads the current profile."""
     assert core is not None
-    # delete = request.args.get("delete", "false").lower() == "true"
 
-    # TODO: Download profile files
-    # await core.download_profile(delete=delete)
+    # TODO: Report status
+    await rhasspyprofile.download_files(core.profile)
 
     return "OK"
 

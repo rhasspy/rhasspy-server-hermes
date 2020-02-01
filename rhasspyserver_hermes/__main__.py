@@ -251,12 +251,10 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
-    # system = request.args.get("system", None)
+    # TODO: Add for PyAudio
+    microphones = await core.get_microphones()
 
-    # TODO: Request microphone details
-    # return jsonify(await core.get_microphones(system))
-
-    return jsonify({})
+    return jsonify({mic.name: mic.description for mic in microphones.devices})
 
 
 # -----------------------------------------------------------------------------
@@ -266,12 +264,15 @@ async def api_microphones() -> Response:
 async def api_test_microphones() -> Response:
     """Get a dictionary of available, functioning recording devices"""
     assert core is not None
-    # system = request.args.get("system", None)
+    microphones = await core.get_microphones(test=True)
 
-    # TODO: Request microphone test
-    # return jsonify(await core.test_microphones(system))
-
-    return jsonify({})
+    # TODO: Add for PyAudio
+    return jsonify(
+        {
+            mic.name: mic.description + (" (working!)" if mic.working else "")
+            for mic in microphones.devices
+        }
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -423,7 +424,6 @@ async def api_lookup() -> Response:
 # -----------------------------------------------------------------------------
 
 
-# TODO: pronounce
 @app.route("/api/pronounce", methods=["POST"])
 async def api_pronounce() -> typing.Union[Response, str]:
     """Pronounce CMU phonemes or word using eSpeak"""

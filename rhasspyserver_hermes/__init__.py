@@ -619,7 +619,10 @@ class RhasspyCore:
                 try:
                     # Run handler
                     _LOGGER.debug(
-                        "Handling %s (id=%s)", message.__class__.__name__, handler_id
+                        "Handling %s (topic=%s, id=%s)",
+                        message.__class__.__name__,
+                        topic,
+                        handler_id,
                     )
 
                     try:
@@ -792,24 +795,3 @@ class RhasspyCore:
 
         # All sites
         return True
-
-
-# -----------------------------------------------------------------------------
-
-
-def message_handler(func):
-    """Wraps a topic/message handling function"""
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        while True:
-            value = yield
-            if value is None:
-                break
-
-            topic, message = value
-            result = func(topic, message, *args, **kwargs)
-            if result is not None:
-                return result
-
-    return wrapper

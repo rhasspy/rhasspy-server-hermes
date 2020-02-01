@@ -21,14 +21,6 @@
       "phoneme_map": "kaldi/espeak_phonemes.txt"
     }
   },
-  "intent": {
-    "flair": {
-      "embeddings": [
-        "news-forward-0.4.1.pt",
-        "news-backward-0.4.1.pt"
-      ]
-    }
-  },
   "text_to_speech": {
     "wavenet": {
       "language_code": "en-US"
@@ -38,12 +30,20 @@
     }
   },
   "download": {
+    "url_base": "https://github.com/synesthesiam/",
     "conditions": {
       "speech_to_text.system": {
         "pocketsphinx": {
-          "acoustic_model": "cmusphinx-en-us-5.2.tar.gz:cmusphinx-en-us-5.2",
-          "base_dictionary.txt": "en-g2p.tar.gz:base_dictionary.txt",
-          "g2p.fst": "en-g2p.tar.gz:g2p.fst"
+          "acoustic_model/feat.params": "en-us_pocketsphinx-cmu/acoustic_model/feat.params",
+          "acoustic_model/feature_transform": "en-us_pocketsphinx-cmu/acoustic_model/feature_transform",
+          "acoustic_model/mdef": "en-us_pocketsphinx-cmu/acoustic_model/mdef",
+          "acoustic_model/means": "en-us_pocketsphinx-cmu/acoustic_model/means",
+          "acoustic_model/mixture_weights": "en-us_pocketsphinx-cmu/acoustic_model/mixture_weights",
+          "acoustic_model/noisedict": "en-us_pocketsphinx-cmu/acoustic_model/noisedict",
+          "acoustic_model/transition_matrices": "en-us_pocketsphinx-cmu/acoustic_model/transition_matrices",
+          "acoustic_model/variances": "en-us_pocketsphinx-cmu/acoustic_model/variances",
+          "base_dictionary.txt": "en-us_pocketsphinx-cmu/base_dictionary.txt",
+          "g2p.fst": "en-us_pocketsphinx-cmu/g2p.fst"
         },
         "kaldi": {
           "kaldi": "en_kaldi-zamia.tar.gz:kaldi"
@@ -56,39 +56,71 @@
       },
       "speech_to_text.pocketsphinx.mix_weight": {
         ">0": {
-          "base_language_model.txt": "en-70k-0.2-pruned.lm.gz:en-70k-0.2-pruned.lm"
-        }
-      },
-      "intent.system": {
-        "flair": {
-          "flair/cache/embeddings/news-forward-0.4.1.pt": "news-forward-0.4.1.pt",
-          "flair/cache/embeddings/news-backward-0.4.1.pt": "news-backward-0.4.1.pt"
+          "base_language_model.txt": "en-us_pocketsphinx/base_language_model.txt"
         }
       }
     },
     "files": {
-      "cmusphinx-en-us-5.2.tar.gz": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/cmusphinx-en-us-5.2.tar.gz"
+      "en-us_pocketsphinx-cmu/acoustic_model/feat.params": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/feat.params",
+        "bytes_expected": 129,
+        "unzip": false
       },
-      "en-70k-0.2-pruned.lm.gz": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/en-70k-0.2-pruned.lm.gz"
+      "en-us_pocketsphinx-cmu/acoustic_model/feature_transform": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/feature_transform",
+        "bytes_expected": 5660,
+        "unzip": false
       },
-      "en-g2p.tar.gz": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/en-g2p.tar.gz"
+      "en-us_pocketsphinx-cmu/acoustic_model/mdef": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/mdef",
+        "bytes_expected": 6992233,
+        "unzip": false
       },
-      "news-forward-0.4.1.pt": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/news-forward-0.4.1.pt",
-        "cache": false
+      "en-us_pocketsphinx-cmu/acoustic_model/means": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/means",
+        "bytes_expected": 23675972,
+        "unzip": false
       },
-      "news-backward-0.4.1.pt": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/news-backward-0.4.1.pt",
-        "cache": false
+      "en-us_pocketsphinx-cmu/acoustic_model/mixture_weights": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/mixture_weights",
+        "bytes_expected": 657728,
+        "unzip": false
+      },
+      "en-us_pocketsphinx-cmu/acoustic_model/noisedict": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/noisedict",
+        "bytes_expected": 113,
+        "unzip": false
+      },
+      "en-us_pocketsphinx-cmu/acoustic_model/transition_matrices": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/transition_matrices",
+        "bytes_expected": 2272,
+        "unzip": false
+      },
+      "en-us_pocketsphinx-cmu/acoustic_model/variances": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/acoustic_model/variances",
+        "bytes_expected": 23675972,
+        "unzip": false
+      },
+      "en-us_pocketsphinx-cmu/base_dictionary.txt": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/base_dictionary.txt.gz",
+        "bytes_expected": 3240168,
+        "unzip": true
+      },
+      "en-us_pocketsphinx/base_language_model.txt": {
+        "url": "en-us_pocketsphinx/raw/master/base_language_model.txt.gz",
+        "unzip": true,
+        "bytes_expected": 95595651
+      },
+      "en-us_pocketsphinx-cmu/g2p.fst": {
+        "url": "en-us_pocketsphinx-cmu/raw/master/g2p.fst.gz",
+        "unzip": true,
+        "bytes_expected": 41213581
       },
       "en_kaldi-zamia.tar.gz": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/en_kaldi-zamia.tar.gz"
+        "url": "en_kaldi-zamia.tar.gz"
       },
       "en_kaldi-zamia-base_graph.tar.gz": {
-        "url": "https://github.com/synesthesiam/rhasspy-profiles/releases/download/v1.0-en/en_kaldi-zamia-base_graph.tar.gz"
+        "url": "en_kaldi-zamia-base_graph.tar.gz"
       }
     }
   }

@@ -7,3 +7,4 @@ dist/
 pyinstaller/
 web/
 .vscode/
+download/

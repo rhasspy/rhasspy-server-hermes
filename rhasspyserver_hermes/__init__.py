@@ -5,7 +5,6 @@ import json
 import logging
 import typing
 import wave
-from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,41 +12,51 @@ import aiohttp
 import attr
 import paho.mqtt.client as mqtt
 import rhasspyhermes.intent
+import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
+    AsrError,
     AsrStartListening,
     AsrStopListening,
     AsrTextCaptured,
     AsrTrain,
     AsrTrainSuccess,
-    AsrError,
 )
 from rhasspyhermes.audioserver import (
+    AudioDeviceMode,
+    AudioDevices,
     AudioFrame,
+    AudioGetDevices,
     AudioPlayBytes,
     AudioPlayFinished,
-    AudioGetDevices,
-    AudioDevices,
-    AudioDeviceMode,
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
+    NluError,
     NluIntent,
     NluIntentNotRecognized,
     NluQuery,
     NluTrain,
     NluTrainSuccess,
-    NluError,
 )
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
-import rhasspynlu
 from rhasspyprofile import Profile
 
 from .train import sentences_to_graph
 from .utils import get_ini_paths
 
 _LOGGER = logging.getLogger(__name__)
+
+# -----------------------------------------------------------------------------
+
+
+@attr.s(auto_attribs=True)
+class TrainingFailedException(Exception):
+    """Raised when training fails."""
+
+    reason: str
+
 
 # -----------------------------------------------------------------------------
 
@@ -184,20 +193,18 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    @attr.s(auto_attribs=True)
-    class TrainingFailedException(Exception):
-        reason: str
-
-    async def train(self) -> typing.Union[NluIntent, NluIntentNotRecognized]:
+    async def train(self):
         """Send an NLU query and wait for intent or not recognized"""
 
         # Load sentences.ini files
         sentences_ini = self.profile.read_path(
             self.profile.get("speech_to_text.sentences_ini", "sentences.ini")
         )
-        sentences_dir = self.profile.read_path(
+        sentences_dir: typing.Optional[Path] = self.profile.read_path(
             self.profile.get("speech_to_text.sentences_dir", "intents")
         )
+
+        assert sentences_dir is not None
         if not sentences_dir.is_dir():
             sentences_dir = None
 
@@ -283,7 +290,12 @@ class RhasspyCore:
                     if asr_response and nlu_response:
                         return [asr_response, nlu_response]
 
-            messages = []
+            messages: typing.List[
+                typing.Tuple[
+                    typing.Union[NluTrain, AsrTrain], typing.Dict[str, typing.Any]
+                ],
+            ] = []
+
             topics = []
 
             if has_speech:

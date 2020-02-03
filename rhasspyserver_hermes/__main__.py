@@ -696,6 +696,7 @@ async def api_train() -> str:
     _LOGGER.info("Starting training")
 
     result = await core.train()
+    _LOGGER.debug(result)
 
     end_time = time.time()
 

@@ -8,7 +8,6 @@ import networkx as nx
 import rhasspynlu
 from rhasspynlu.jsgf import Expression, Word
 
-
 _LOGGER = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------

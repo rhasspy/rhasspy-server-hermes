@@ -206,7 +206,7 @@ async def api_profiles() -> Response:
     return jsonify(
         {
             "default_profile": core.profile.name,
-            "profiles": sorted(list(profile_names)),
+            "profiles": sorted(profile_names),
             "downloaded": downloaded,
             "missing_files": {
                 str(missing.file_path): (missing.setting_name, missing.setting_value)
@@ -949,7 +949,7 @@ async def api_slots() -> typing.Union[str, Response]:
 
         if overwrite_all:
             # Remote existing values first
-            for name in new_slot_values.keys():
+            for name in new_slot_values:
                 slots_path = safe_join(slots_dir, f"{name}")
                 if slots_path.is_file():
                     try:
@@ -970,7 +970,7 @@ async def api_slots() -> typing.Union[str, Response]:
             # Merge with existing values
             values = set(values)
             if slots_path.is_file():
-                values.update(line for line in slots_path.read_text().splitlines())
+                values.update(slots_path.read_text().splitlines())
 
             # Write merged values
             if values:

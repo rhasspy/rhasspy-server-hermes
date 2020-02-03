@@ -51,21 +51,14 @@ def read_dict(
 
         try:
             # Use explicit whitespace (avoid 0xA0)
-            parts = re.split(r"[ \t]+", line)
-            word = parts[0]
+            word, *parts = re.split(r"[ \t]+", line)
 
             # Skip Julius extras
-            parts = [p for p in parts[1:] if p[0] not in {"[", "@"}]
+            pronounce = " ".join(p for p in parts if p[0] not in {"[", "@"})
 
-            idx = word.find("(")
-            if idx > 0:
-                word = word[:idx]
-
-            if "+" in word:
-                # Julius format word1+word2
-                words = word.split("+")
-            else:
-                words = [word]
+            word = word.split("(")[0]
+            # Julius format word1+word2
+            words = word.split("+")
 
             for word in words:
                 # Don't transform silence words
@@ -73,8 +66,6 @@ def read_dict(
                     (silence_words is None) or (word not in silence_words)
                 ):
                     word = transform(word)
-
-                pronounce = " ".join(parts)
 
                 if word in word_dict:
                     word_dict[word].append(pronounce)
@@ -176,8 +167,7 @@ def get_ini_paths(
 
     # Add .ini files from intents directory
     if sentences_dir and sentences_dir.is_dir():
-        for ini_path in sentences_dir.rglob("*.ini"):
-            ini_paths.append(ini_path)
+        ini_paths.extend(sentences_dir.rglob("*.ini"))
 
     return ini_paths
 

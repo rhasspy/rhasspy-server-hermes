@@ -266,7 +266,6 @@ async def api_test_microphones() -> Response:
     assert core is not None
     microphones = await core.get_microphones(test=True)
 
-    # TODO: Add for PyAudio
     return jsonify(
         {
             mic.name: mic.description + (" (working!)" if mic.working else "")
@@ -282,12 +281,9 @@ async def api_test_microphones() -> Response:
 async def api_speakers() -> Response:
     """Get a dictionary of available playback devices"""
     assert core is not None
-    # system = request.args.get("system", None)
+    speakers = await core.get_speakers()
 
-    # TODO: Request speaker details
-    # return jsonify(await core.get_speakers(system))
-
-    return jsonify({})
+    return jsonify({speaker.name: speaker.description for speaker in speakers.devices})
 
 
 # -----------------------------------------------------------------------------

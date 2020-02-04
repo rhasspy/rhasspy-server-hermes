@@ -557,6 +557,32 @@ class RhasspyCore:
         assert isinstance(result, AudioDevices)
         return result
 
+    async def get_speakers(self) -> AudioDevices:
+        """Get available speakers."""
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                _, message = yield
+
+                if isinstance(message, AudioDevices) and (message.id == requestId):
+                    return message
+
+        messages = [
+            AudioGetDevices(
+                id=requestId, siteId=self.siteId, modes=[AudioDeviceMode.OUTPUT]
+            )
+        ]
+        topics = [AudioDevices.topic()]
+
+        # Expecting only a single result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, AudioDevices)
+        return result
+
     # -------------------------------------------------------------------------
     # Supporting Functions
     # -------------------------------------------------------------------------

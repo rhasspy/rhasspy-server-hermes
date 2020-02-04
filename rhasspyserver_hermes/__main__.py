@@ -28,6 +28,7 @@ from quart import (
     websocket,
 )
 from quart_cors import cors
+from rhasspyhermes.wake import HotwordToggleOn, HotwordToggleOff
 from rhasspyhermes.nlu import NluIntent
 from rhasspyprofile import Profile
 from swagger_ui import quart_api_doc
@@ -293,11 +294,16 @@ async def api_speakers() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
+    toggle_off = (await request.data).decode().lower() in ["false", "off"]
 
-    # TODO: hermes/hotword/toggleOn
-    # core.listen_for_wake()
+    if toggle_off:
+        # Disable
+        core.publish(HotwordToggleOff(siteId=core.siteId))
+        return "off"
 
-    return "OK"
+    # Enable
+    core.publish(HotwordToggleOn(siteId=core.siteId))
+    return "on"
 
 
 # -----------------------------------------------------------------------------
@@ -764,7 +770,7 @@ async def api_text_to_intent():
     assert core is not None
     data = await request.data
     text = data.decode()
-    # no_hass = request.args.get("nohass", "false").lower() == "true"
+    no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Convert text to intent
     start_time = time.time()
@@ -776,12 +782,10 @@ async def api_text_to_intent():
 
     intent_json = json.dumps(intent)
     _LOGGER.debug(intent_json)
-    # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
-    # TODO: Handle intent
-    # if not no_hass:
-    #     # Send intent to Home Assistant
-    #     intent = (await core.handle_intent(intent)).intent
+    if not no_hass:
+        # Handle intent here
+        intent = await core.handle_intent(intent)
 
     return jsonify(intent)
 
@@ -793,7 +797,7 @@ async def api_text_to_intent():
 async def api_speech_to_intent() -> Response:
     """Transcribe speech, recognize intent, and optionally handle."""
     assert core is not None
-    # no_hass = request.args.get("nohass", "false").lower() == "true"
+    no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
     wav_data = await request.data
@@ -813,12 +817,10 @@ async def api_speech_to_intent() -> Response:
 
     intent_json = json.dumps(intent)
     _LOGGER.debug(intent_json)
-    # await add_ws_event(WS_EVENT_INTENT, intent_json)
 
-    # TODO: Handle intent
-    # if not no_hass:
-    #     # Send intent to Home Assistant
-    #     intent = (await core.handle_intent(intent)).intent
+    if not no_hass:
+        # Handle intent here
+        intent = await core.handle_intent(intent)
 
     return jsonify(intent)
 

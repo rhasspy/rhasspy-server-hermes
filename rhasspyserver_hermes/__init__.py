@@ -32,6 +32,7 @@ from rhasspyhermes.audioserver import (
     AudioPlayFinished,
 )
 from rhasspyhermes.base import Message
+from rhasspyhermes.dialogue import DialogueSessionStarted
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
     NluError,
@@ -46,9 +47,9 @@ from rhasspyhermes.wake import HotwordDetected
 from rhasspyprofile import Profile
 
 from .intent_handler import (
+    handle_command,
     handle_home_assistant_event,
     handle_home_assistant_intent,
-    handle_command,
     handle_remote,
 )
 from .train import sentences_to_graph
@@ -715,16 +716,16 @@ class RhasspyCore:
         # Wait for response or timeout
         result_awaitable = self.handler_queues[handler_id].get()
 
-        if timeout_seconds > 0:
-            # With timeout
-            done, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
-        else:
-            # No timeout
-            done, result = await result_awaitable
+        try:
+            if timeout_seconds > 0:
+                # With timeout
+                done, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
+            else:
+                # No timeout
+                done, result = await result_awaitable
 
-        yield result
-
-        if done:
+            yield result
+        finally:
             # Remove queue
             self.handler_queues.pop(handler_id)
 
@@ -870,6 +871,15 @@ class RhasspyCore:
                 # TODO: Report to webhooks
 
                 self.handle_message(msg.topic, hotword_detected)
+            elif msg.topic == DialogueSessionStarted.topic():
+                # Dialogue session started
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(
+                    msg.topic, DialogueSessionStarted.from_dict(json_payload)
+                )
 
             # Forward to external message queues
             for queue in self.message_queues:

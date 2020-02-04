@@ -80,8 +80,8 @@ async def handle_home_assistant_intent(
 
     if pem_file:
         _LOGGER.debug("Using PEM: %s", pem_file)
-        ssl.create_default_context()
-        ssl_context = ssl_context.load_cert_chain(pem_file)
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_cert_chain(pem_file)
 
     await session.post(
         post_url, json=hass_intent, ssl=ssl_context, raise_for_status=True

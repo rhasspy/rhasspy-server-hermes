@@ -28,8 +28,15 @@ from quart import (
     websocket,
 )
 from quart_cors import cors
-from rhasspyhermes.wake import HotwordToggleOn, HotwordToggleOff
-from rhasspyhermes.nlu import NluIntent
+from rhasspyhermes.asr import AsrStopListening
+from rhasspyhermes.dialogue import (
+    DialogueAction,
+    DialogueSessionStarted,
+    DialogueStartSession,
+    DialogueEndSession,
+)
+from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
+from rhasspyhermes.wake import HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile
 from swagger_ui import quart_api_doc
 
@@ -315,11 +322,12 @@ async def api_listen_for_command() -> Response:
     """Wake Rhasspy up and listen for a voice command"""
     assert core is not None
     # no_hass = request.args.get("nohass", "false").lower() == "true"
+    # wakewordId = request.args.get("wakewordId", "default")
 
     # Seconds before timing out
-    timeout = request.args.get("timeout")
-    if timeout is not None:
-        timeout = float(timeout)
+    # timeout = request.args.get("timeout")
+    # if timeout is not None:
+    #     timeout = float(timeout)
 
     # Key/value to set in recognized intent
     # entity = request.args.get("entity")
@@ -815,62 +823,105 @@ async def api_speech_to_intent() -> Response:
     intent_sec = time.time() - start_time
     intent["time_sec"] = intent_sec
 
-    intent_json = json.dumps(intent)
-    _LOGGER.debug(intent_json)
-
     if not no_hass:
         # Handle intent here
         intent = await core.handle_intent(intent)
+
+    _LOGGER.debug(intent)
 
     return jsonify(intent)
 
 
 # -----------------------------------------------------------------------------
 
+session_names: typing.Dict[str, str] = {}
+
 
 @app.route("/api/start-recording", methods=["POST"])
 async def api_start_recording() -> str:
     """Begin recording voice command."""
     assert core is not None
-    # buffer_name = request.args.get("name", "")
+    name = str(request.args.get("name", ""))
+    text = str(request.args.get("text", ""))
+    customData = str(uuid4())
 
-    # TODO: Begin session
-    # core.start_recording_wav(buffer_name)
+    def handle_started():
+        while True:
+            _, message = yield
 
-    return "OK"
+            if isinstance(message, DialogueSessionStarted) and (
+                message.customData == customData
+            ):
+                return message
+
+    topics = [DialogueSessionStarted.topic()]
+    messages = [
+        DialogueStartSession(
+            init=DialogueAction(
+                canBeEnqueued=False, text=text, sendIntentNotRecognized=True
+            ),
+            siteId=core.siteId,
+            customData=customData,
+        )
+    ]
+
+    # Begin session
+    _LOGGER.debug("Waiting for session to start (customData=%s)", customData)
+    started = None
+    async for response in core.publish_wait(handle_started(), messages, topics):
+        started = response
+
+    assert isinstance(started, DialogueSessionStarted)
+
+    # Map to user provided name
+    session_names[name] = started.sessionId
+
+    return started.sessionId
 
 
 @app.route("/api/stop-recording", methods=["POST"])
 async def api_stop_recording() -> Response:
     """End recording voice command. Transcribe and handle."""
     assert core is not None
-    # no_hass = request.args.get("nohass", "false").lower() == "true"
+    no_hass = request.args.get("nohass", "false").lower() == "true"
 
-    # TODO: End session
-    # buffer_name = request.args.get("name", "")
-    # audio_data = (await core.stop_recording_wav(buffer_name)).data
+    # End session
+    name = request.args.get("name", "")
+    assert name in session_names, f"No session for name: {name}"
+    sessionId = session_names.pop(name)
 
-    # wav_data = buffer_to_wav(audio_data)
-    # _LOGGER.debug("Recorded %s byte(s) of audio data", len(wav_data))
+    def handle_intent():
+        while True:
+            _, message = yield
 
-    # transcription = await core.transcribe_wav(wav_data)
-    # text = transcription.text
-    # _LOGGER.debug(text)
+            if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                message.sessionId == sessionId
+            ):
+                return message
 
-    # intent = (await core.recognize_intent(text)).intent
-    # intent["speech_confidence"] = transcription.confidence
+    topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
+    messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
 
-    # intent_json = json.dumps(intent)
-    # _LOGGER.debug(intent_json)
-    # await add_ws_event(WS_EVENT_INTENT, intent_json)
+    intent = empty_intent()
 
-    # TODO: Handle intent
-    # if not no_hass:
-    #     # Send intent to Home Assistant
-    #     intent = (await core.handle_intent(intent)).intent
+    try:
+        # Expecting only a single result
+        _LOGGER.debug("Waiting for session to end (sessionId=%s)", sessionId)
+        result = None
+        async for response in core.publish_wait(handle_intent(), messages, topics):
+            result = response
 
-    # return jsonify(intent)
-    return jsonify({})
+        if isinstance(result, NluIntent):
+            intent = to_intent_dict(result)
+
+            # Got intent
+            if not no_hass:
+                # Handle intent here
+                intent = await core.handle_intent(intent)
+    finally:
+        core.publish(DialogueEndSession(sessionId=sessionId))
+
+    return jsonify(intent)
 
 
 # -----------------------------------------------------------------------------
@@ -1394,7 +1445,12 @@ def quality(accept, key: str) -> float:
     return 0.0
 
 
-def to_intent_dict(message):
+def empty_intent() -> typing.Dict[str, typing.Any]:
+    # Empty intent
+    return {"text": "", "intent": {"name": "", "confidence": 0}, "entities": []}
+
+
+def to_intent_dict(message) -> typing.Dict[str, typing.Any]:
     """Convert NluIntent/NluIntentNotRecognized to Rhasspy format."""
     if isinstance(message, NluIntent):
         # TODO: Get text/raw_text
@@ -1410,8 +1466,7 @@ def to_intent_dict(message):
             "slots": {s.slotName: s.value for s in message.slots},
         }
 
-    # Empty intent
-    return {"text": "", "intent": {"name": "", "confidence": 0}, "entities": []}
+    return empty_intent()
 
 
 # -----------------------------------------------------------------------------

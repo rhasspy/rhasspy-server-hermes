@@ -12,7 +12,6 @@ from uuid import uuid4
 import aiohttp
 import attr
 import paho.mqtt.client as mqtt
-import rhasspyhermes.intent
 import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
@@ -22,6 +21,7 @@ from rhasspyhermes.asr import (
     AsrTextCaptured,
     AsrTrain,
     AsrTrainSuccess,
+    AsrAudioCaptured,
 )
 from rhasspyhermes.audioserver import (
     AudioDeviceMode,
@@ -128,7 +128,13 @@ class RhasspyCore:
             self.siteId = "default"
 
         # Default subscription topics
-        self.topics: typing.Set[str] = set()
+        self.topics: typing.Set[str] = set(
+            [
+                HotwordDetected.topic(wakewordId="+"),
+                AsrTextCaptured.topic(),
+                NluIntentNotRecognized.topic(),
+            ]
+        )
 
         # id -> matcher
         self.handler_matchers: typing.Dict[str, MQTTMatcher] = {}
@@ -373,13 +379,6 @@ class RhasspyCore:
                 if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
                     message.id == nlu_id
                 ):
-                    if isinstance(message, NluIntent):
-                        # Finish parsing
-                        message.intent = rhasspyhermes.intent.Intent(**message.intent)
-                        message.slots = [
-                            rhasspyhermes.intent.Slot(**s) for s in message.slots
-                        ]
-
                     return message
 
         messages = [query]
@@ -669,6 +668,24 @@ class RhasspyCore:
         return intent_dict
 
     # -------------------------------------------------------------------------
+
+    async def maybe_play_sound(self, sound_name: str):
+        sound_system = self.profile.get("sounds.system", "dummy")
+        if sound_system == "dummy":
+            # No feedback sounds
+            return
+
+        wav_path_str = os.path.expandvars(self.profile.get(f"sounds.{sound_name}", ""))
+        if wav_path_str:
+            wav_path = self.profile.read_path(wav_path_str)
+            if not wav_path.is_file():
+                _LOGGER.error("WAV does not exist: %s", str(wav_path))
+                return
+
+            _LOGGER.debug("Playing WAV %s", str(wav_path))
+            await self.play_wav_data(wav_path.read_bytes())
+
+    # -------------------------------------------------------------------------
     # Supporting Functions
     # -------------------------------------------------------------------------
 
@@ -719,10 +736,10 @@ class RhasspyCore:
         try:
             if timeout_seconds > 0:
                 # With timeout
-                done, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
+                _, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
             else:
                 # No timeout
-                done, result = await result_awaitable
+                _, result = await result_awaitable
 
             yield result
         finally:
@@ -806,11 +823,17 @@ class RhasspyCore:
                     return
 
                 not_recognized = NluIntentNotRecognized.from_dict(json_payload)
+
                 # Report to websockets
                 for queue in self.message_queues:
                     self.loop.call_soon_threadsafe(
                         queue.put_nowait, ("intent", not_recognized)
                     )
+
+                # Play error sound
+                asyncio.run_coroutine_threadsafe(
+                    self.maybe_play_sound("error"), self.loop
+                )
 
                 self.handle_message(msg.topic, not_recognized)
             elif msg.topic == TtsSayFinished.topic():
@@ -822,6 +845,11 @@ class RhasspyCore:
                 json_payload = json.loads(msg.payload)
                 if not self._check_siteId(json_payload):
                     return
+
+                # Play recorded sound
+                asyncio.run_coroutine_threadsafe(
+                    self.maybe_play_sound("recorded"), self.loop
+                )
 
                 self.handle_message(msg.topic, AsrTextCaptured.from_dict(json_payload))
             elif msg.topic == AudioPlayFinished.topic():
@@ -852,6 +880,13 @@ class RhasspyCore:
 
                 json_payload = json.loads(msg.payload)
                 self.handle_message(msg.topic, AsrTrainSuccess.from_dict(json_payload))
+            elif AsrAudioCaptured.is_topic(msg.topic):
+                # Audio data from ASR session
+                siteId = AsrAudioCaptured.get_siteId(msg.topic)
+                if self.siteIds and (siteId not in self.siteIds):
+                    return
+
+                self.handle_message(msg.topic, AsrAudioCaptured(wav_bytes=msg.payload))
             elif NluTrainSuccess.is_topic(msg.topic):
                 # NLU training success
                 siteId = NluTrainSuccess.get_siteId(msg.topic)
@@ -869,6 +904,11 @@ class RhasspyCore:
                 hotword_detected = HotwordDetected.from_dict(json_payload)
 
                 # TODO: Report to webhooks
+
+                # Play wake sound
+                asyncio.run_coroutine_threadsafe(
+                    self.maybe_play_sound("wake"), self.loop
+                )
 
                 self.handle_message(msg.topic, hotword_detected)
             elif msg.topic == DialogueSessionStarted.topic():

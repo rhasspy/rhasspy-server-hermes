@@ -28,15 +28,9 @@ from quart import (
     websocket,
 )
 from quart_cors import cors
-from rhasspyhermes.asr import AsrStopListening
-from rhasspyhermes.dialogue import (
-    DialogueAction,
-    DialogueSessionStarted,
-    DialogueStartSession,
-    DialogueEndSession,
-)
+from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
-from rhasspyhermes.wake import HotwordToggleOff, HotwordToggleOn
+from rhasspyhermes.wake import HotwordToggleOff, HotwordToggleOn, HotwordDetected
 from rhasspyprofile import Profile
 from swagger_ui import quart_api_doc
 
@@ -316,31 +310,56 @@ async def api_listen_for_wake() -> str:
 # -----------------------------------------------------------------------------
 
 
-# TODO: listen-for-command
 @app.route("/api/listen-for-command", methods=["POST"])
 async def api_listen_for_command() -> Response:
     """Wake Rhasspy up and listen for a voice command"""
     assert core is not None
-    # no_hass = request.args.get("nohass", "false").lower() == "true"
-    # wakewordId = request.args.get("wakewordId", "default")
+    no_hass = request.args.get("nohass", "false").lower() == "true"
+    wakewordId = request.args.get("wakewordId", "default")
+    sessionId = str(uuid4())
 
-    # Seconds before timing out
-    # timeout = request.args.get("timeout")
-    # if timeout is not None:
-    #     timeout = float(timeout)
+    # Fake a hotword detected event and wait for intent/notRecognized
+    def handle_intent():
+        while True:
+            _, message = yield
 
-    # Key/value to set in recognized intent
-    # entity = request.args.get("entity")
-    # value = request.args.get("value")
+            if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                message.sessionId == sessionId
+            ):
+                return message
 
-    # TODO: Start session, block for intent
-    # return jsonify(
-    #     await core.listen_for_command(
-    #         handle=(not no_hass), timeout=timeout, entity=entity, value=value
-    #     )
-    # )
+    topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
+    messages = [
+        (
+            HotwordDetected(
+                modelId=wakewordId,
+                modelVersion="",
+                modelType="personal",
+                currentSensitivity=1,
+                siteId=core.siteId,
+                sessionId=sessionId,
+            ),
+            {"wakewordId": wakewordId},
+        )
+    ]
 
-    return jsonify({})
+    # Expecting only a single result
+    _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
+    result = None
+    async for response in core.publish_wait(handle_intent(), messages, topics):
+        result = response
+
+    if isinstance(result, NluIntent):
+        # Process intent
+        intent = to_intent_dict(result)
+        if not no_hass:
+            # Handle intent here
+            intent = await core.handle_intent(intent)
+    else:
+        # Not recognized
+        intent = empty_intent()
+
+    return jsonify(intent)
 
 
 # -----------------------------------------------------------------------------
@@ -698,8 +717,6 @@ async def api_custom_words():
 @app.route("/api/train", methods=["POST"])
 async def api_train() -> str:
     """Generate speech/intent artifacts for profile."""
-    # no_cache = request.args.get("nocache", "false").lower() == "true"
-
     assert core is not None
 
     start_time = time.time()
@@ -842,41 +859,17 @@ async def api_start_recording() -> str:
     """Begin recording voice command."""
     assert core is not None
     name = str(request.args.get("name", ""))
-    text = str(request.args.get("text", ""))
-    customData = str(uuid4())
 
-    def handle_started():
-        while True:
-            _, message = yield
-
-            if isinstance(message, DialogueSessionStarted) and (
-                message.customData == customData
-            ):
-                return message
-
-    topics = [DialogueSessionStarted.topic()]
-    messages = [
-        DialogueStartSession(
-            init=DialogueAction(
-                canBeEnqueued=False, text=text, sendIntentNotRecognized=True
-            ),
-            siteId=core.siteId,
-            customData=customData,
-        )
-    ]
-
-    # Begin session
-    _LOGGER.debug("Waiting for session to start (customData=%s)", customData)
-    started = None
-    async for response in core.publish_wait(handle_started(), messages, topics):
-        started = response
-
-    assert isinstance(started, DialogueSessionStarted)
+    # Start new ASR session
+    sessionId = str(uuid4())
+    core.publish(
+        AsrStartListening(siteId=core.siteId, sessionId=sessionId, stopOnSilence=False)
+    )
 
     # Map to user provided name
-    session_names[name] = started.sessionId
+    session_names[name] = sessionId
 
-    return started.sessionId
+    return sessionId
 
 
 @app.route("/api/stop-recording", methods=["POST"])
@@ -886,40 +879,46 @@ async def api_stop_recording() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # End session
+    # TODO: Handle AsrAudioCaptured
     name = request.args.get("name", "")
     assert name in session_names, f"No session for name: {name}"
     sessionId = session_names.pop(name)
 
-    def handle_intent():
+    def handle_captured():
         while True:
             _, message = yield
 
-            if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+            if isinstance(message, AsrTextCaptured) and (
                 message.sessionId == sessionId
             ):
                 return message
 
-    topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
-    messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
+    topics = [AsrTextCaptured.topic()]
+    messages = [
+        AsrStopListening(
+            siteId=core.siteId, sessionId=sessionId, sendAudioCaptured=True
+        )
+    ]
 
-    intent = empty_intent()
+    # Expecting only a single result
+    _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
+    text_captured = None
+    async for response in core.publish_wait(handle_captured(), messages, topics):
+        text_captured = response
 
-    try:
-        # Expecting only a single result
-        _LOGGER.debug("Waiting for session to end (sessionId=%s)", sessionId)
-        result = None
-        async for response in core.publish_wait(handle_intent(), messages, topics):
-            result = response
+    assert isinstance(text_captured, AsrTextCaptured)
+    text = text_captured.text
+    result = await core.recognize_intent(text)
 
-        if isinstance(result, NluIntent):
-            intent = to_intent_dict(result)
+    if isinstance(result, NluIntent):
+        intent = to_intent_dict(result)
 
-            # Got intent
-            if not no_hass:
-                # Handle intent here
-                intent = await core.handle_intent(intent)
-    finally:
-        core.publish(DialogueEndSession(sessionId=sessionId))
+        # Got intent
+        if not no_hass:
+            # Handle intent here
+            intent = await core.handle_intent(intent)
+    else:
+        intent = empty_intent()
 
     return jsonify(intent)
 
@@ -1446,7 +1445,7 @@ def quality(accept, key: str) -> float:
 
 
 def empty_intent() -> typing.Dict[str, typing.Any]:
-    # Empty intent
+    """Return an empty intent dictionary."""
     return {"text": "", "intent": {"name": "", "confidence": 0}, "entities": []}
 
 

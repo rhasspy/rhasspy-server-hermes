@@ -30,7 +30,7 @@ from quart import (
 from quart_cors import cors
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
-from rhasspyhermes.wake import HotwordToggleOff, HotwordToggleOn, HotwordDetected
+from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile
 from swagger_ui import quart_api_doc
 

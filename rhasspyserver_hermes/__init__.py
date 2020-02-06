@@ -15,13 +15,13 @@ import paho.mqtt.client as mqtt
 import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
+    AsrAudioCaptured,
     AsrError,
     AsrStartListening,
     AsrStopListening,
     AsrTextCaptured,
     AsrTrain,
     AsrTrainSuccess,
-    AsrAudioCaptured,
 )
 from rhasspyhermes.audioserver import (
     AudioDeviceMode,
@@ -670,6 +670,7 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def maybe_play_sound(self, sound_name: str):
+        """Play WAV sound through audio out if it exists."""
         sound_system = self.profile.get("sounds.system", "dummy")
         if sound_system == "dummy":
             # No feedback sounds

@@ -20,6 +20,8 @@ from rhasspyhermes.asr import (
     AsrStartListening,
     AsrStopListening,
     AsrTextCaptured,
+    AsrToggleOff,
+    AsrToggleOn,
     AsrTrain,
     AsrTrainSuccess,
 )
@@ -493,13 +495,22 @@ class RhasspyCore:
 
         topics = [AudioPlayFinished.topic(siteId=self.siteId)]
 
-        # Expecting only a single result
-        result = None
-        async for response in self.publish_wait(handle_finished(), messages(), topics):
-            result = response
+        # Disable ASR
+        self.publish(AsrToggleOff(siteId=self.siteId))
 
-        assert isinstance(result, AudioPlayFinished)
-        return result
+        try:
+            # Expecting only a single result
+            result = None
+            async for response in self.publish_wait(
+                handle_finished(), messages(), topics
+            ):
+                result = response
+
+            assert isinstance(result, AudioPlayFinished)
+            return result
+        finally:
+            # Enable ASR
+            self.publish(AsrToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------
 

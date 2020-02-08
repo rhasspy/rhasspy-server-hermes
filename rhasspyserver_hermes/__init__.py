@@ -45,7 +45,7 @@ from rhasspyhermes.nlu import (
     NluTrainSuccess,
 )
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
-from rhasspyhermes.wake import HotwordDetected
+from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile
 
 from .intent_handler import (
@@ -67,6 +67,9 @@ class TrainingFailedException(Exception):
     """Raised when training fails."""
 
     reason: str
+
+    def __str__(self):
+        return self.reason
 
 
 # -----------------------------------------------------------------------------
@@ -138,6 +141,16 @@ class RhasspyCore:
             ]
         )
 
+        if self.siteIds:
+            # Specific site ids
+            self.topics.update(
+                AsrAudioCaptured.topic(siteId=siteId, sessionId="+")
+                for siteId in self.siteIds
+            )
+        else:
+            # All site ids
+            self.topics.add(AsrAudioCaptured.topic(siteId="+", sessionId="+"))
+
         # id -> matcher
         self.handler_matchers: typing.Dict[str, MQTTMatcher] = {}
 
@@ -151,6 +164,12 @@ class RhasspyCore:
         self._http_session: typing.Optional[
             aiohttp.ClientSession
         ] = aiohttp.ClientSession()
+
+        # Cached wake word IDs for sessions
+        self.session_wakewordIds: typing.Dict[str, str] = {}
+
+        # Holds last voice command
+        self.last_audio_captured: typing.Optional[AsrAudioCaptured] = None
 
     @property
     def http_session(self) -> aiohttp.ClientSession:
@@ -295,12 +314,20 @@ class RhasspyCore:
                 while True:
                     _, message = yield
 
-                    if isinstance(message, (NluTrainSuccess, NluError)) and (
+                    if isinstance(message, NluTrainSuccess) and (
                         message.id == request_id
                     ):
                         nlu_response = message
-                    elif isinstance(message, (AsrTrainSuccess, AsrError)) and (
+                    elif isinstance(message, AsrTrainSuccess) and (
                         message.id == request_id
+                    ):
+                        asr_response = message
+                    if isinstance(message, NluError) and (
+                        message.sessionId == request_id
+                    ):
+                        nlu_response = message
+                    elif isinstance(message, AsrError) and (
+                        message.sessionId == request_id
                     ):
                         asr_response = message
 
@@ -350,7 +377,7 @@ class RhasspyCore:
                 result = response
 
             # Check result
-            assert isinstance(result, list)
+            assert isinstance(result, list), f"Expected list, got {result}"
             asr_response, nlu_response = result
 
             if isinstance(asr_response, AsrError):
@@ -438,7 +465,12 @@ class RhasspyCore:
                     return message
 
         def messages():
-            yield AsrStartListening(siteId=self.siteId, sessionId=sessionId)
+            yield AsrStartListening(
+                siteId=self.siteId,
+                sessionId=sessionId,
+                stopOnSilence=False,
+                sendAudioCaptured=True,
+            )
 
             # Break WAV into chunks
             with io.BytesIO(wav_bytes) as wav_buffer:
@@ -466,13 +498,22 @@ class RhasspyCore:
 
         topics = [AsrTextCaptured.topic()]
 
-        # Expecting only a single result
-        result = None
-        async for response in self.publish_wait(handle_captured(), messages(), topics):
-            result = response
+        # Disable hotword
+        self.publish(HotwordToggleOff(siteId=self.siteId, sessionId=sessionId))
 
-        assert isinstance(result, AsrTextCaptured)
-        return result
+        try:
+            # Expecting only a single result
+            result = None
+            async for response in self.publish_wait(
+                handle_captured(), messages(), topics
+            ):
+                result = response
+
+            assert isinstance(result, AsrTextCaptured)
+            return result
+        finally:
+            # Enable hotword
+            self.publish(HotwordToggleOn(siteId=self.siteId, sessionId=sessionId))
 
     # -------------------------------------------------------------------------
 
@@ -495,7 +536,8 @@ class RhasspyCore:
 
         topics = [AudioPlayFinished.topic(siteId=self.siteId)]
 
-        # Disable ASR
+        # Disable hotword/ASR
+        self.publish(HotwordToggleOff(siteId=self.siteId, sessionId=requestId))
         self.publish(AsrToggleOff(siteId=self.siteId))
 
         try:
@@ -509,7 +551,8 @@ class RhasspyCore:
             assert isinstance(result, AudioPlayFinished)
             return result
         finally:
-            # Enable ASR
+            # Enable hotword/ASR
+            self.publish(HotwordToggleOn(siteId=self.siteId, sessionId=requestId))
             self.publish(AsrToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------
@@ -858,12 +901,25 @@ class RhasspyCore:
                 if not self._check_siteId(json_payload):
                     return
 
+                text_captured = AsrTextCaptured.from_dict(json_payload)
+
+                # Remove cached wake word ID
+                wakewordId = self.session_wakewordIds.pop(
+                    text_captured.sessionId, "default"
+                )
+
+                # Report to websockets
+                for queue in self.message_queues:
+                    self.loop.call_soon_threadsafe(
+                        queue.put_nowait, ("text", text_captured, wakewordId)
+                    )
+
                 # Play recorded sound
                 asyncio.run_coroutine_threadsafe(
                     self.maybe_play_sound("recorded"), self.loop
                 )
 
-                self.handle_message(msg.topic, AsrTextCaptured.from_dict(json_payload))
+                self.handle_message(msg.topic, text_captured)
             elif msg.topic == AudioPlayFinished.topic():
                 # Audio has finished playing
                 json_payload = json.loads(msg.payload)
@@ -898,7 +954,8 @@ class RhasspyCore:
                 if self.siteIds and (siteId not in self.siteIds):
                     return
 
-                self.handle_message(msg.topic, AsrAudioCaptured(wav_bytes=msg.payload))
+                self.last_audio_captured = AsrAudioCaptured(wav_bytes=msg.payload)
+                self.handle_message(msg.topic, self.last_audio_captured)
             elif NluTrainSuccess.is_topic(msg.topic):
                 # NLU training success
                 siteId = NluTrainSuccess.get_siteId(msg.topic)
@@ -914,8 +971,18 @@ class RhasspyCore:
                     return
 
                 hotword_detected = HotwordDetected.from_dict(json_payload)
+                wakewordId = HotwordDetected.get_wakewordId(msg.topic)
+
+                # Cache wake word ID for session
+                self.session_wakewordIds[hotword_detected.sessionId] = wakewordId
 
                 # TODO: Report to webhooks
+
+                # Report to websockets
+                for queue in self.message_queues:
+                    self.loop.call_soon_threadsafe(
+                        queue.put_nowait, ("wake", hotword_detected, wakewordId)
+                    )
 
                 # Play wake sound
                 asyncio.run_coroutine_threadsafe(
@@ -932,6 +999,20 @@ class RhasspyCore:
                 self.handle_message(
                     msg.topic, DialogueSessionStarted.from_dict(json_payload)
                 )
+            elif msg.topic == AsrError.topic():
+                # ASR service error
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, AsrError.from_dict(json_payload))
+            elif msg.topic == NluError.topic():
+                # NLU service error
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, NluError.from_dict(json_payload))
 
             # Forward to external message queues
             for queue in self.message_queues:

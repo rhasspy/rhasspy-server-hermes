@@ -863,7 +863,12 @@ async def api_start_recording() -> str:
     # Start new ASR session
     sessionId = str(uuid4())
     core.publish(
-        AsrStartListening(siteId=core.siteId, sessionId=sessionId, stopOnSilence=False)
+        AsrStartListening(
+            siteId=core.siteId,
+            sessionId=sessionId,
+            stopOnSilence=False,
+            sendAudioCaptured=True,
+        )
     )
 
     # Map to user provided name
@@ -894,11 +899,7 @@ async def api_stop_recording() -> Response:
                 return message
 
     topics = [AsrTextCaptured.topic()]
-    messages = [
-        AsrStopListening(
-            siteId=core.siteId, sessionId=sessionId, sendAudioCaptured=True
-        )
-    ]
+    messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
 
     # Expecting only a single result
     _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
@@ -921,6 +922,20 @@ async def api_stop_recording() -> Response:
         intent = empty_intent()
 
     return jsonify(intent)
+
+
+@app.route("/api/play-recording", methods=["POST"])
+async def api_play_recording() -> str:
+    """Play last recorded voice command through the configured audio output system"""
+    assert core is not None
+
+    if core.last_audio_captured:
+        # Play through speakers
+        wav_data = core.last_audio_captured.wav_bytes
+        _LOGGER.debug("Playing %s byte(s)", len(wav_data))
+        await core.play_wav_data(wav_data)
+
+    return "OK"
 
 
 # -----------------------------------------------------------------------------
@@ -1325,12 +1340,56 @@ async def api_ws_intent(queue) -> None:
         if message[0] == "intent":
             try:
                 intent_dict = to_intent_dict(message[1])
+
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
-                _LOGGER.debug("Send %s char(s) to websocket", len(ws_message))
-                pass
+                _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
             except Exception:
                 _LOGGER.exception("api_ws_intent")
+
+
+@app.websocket("/api/events/wake")
+@mqtt_websocket
+async def api_ws_wake(queue) -> None:
+    """Websocket endpoint to notify clients on wake up."""
+    while True:
+        message = await queue.get()
+        if message[0] == "wake":
+            try:
+                hotword_detected: HotwordDetected = message[1]
+                wakewordId: str = message[2]
+
+                ws_message = json.dumps(
+                    {"wakewordId": wakewordId, "siteId": hotword_detected.siteId}
+                )
+                await websocket.send(ws_message)
+                _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
+            except Exception:
+                _LOGGER.exception("api_ws_wake")
+
+
+@app.websocket("/api/events/text")
+@mqtt_websocket
+async def api_ws_text(queue) -> None:
+    """Websocket endpoint to notify clients when speech is transcribed."""
+    while True:
+        message = await queue.get()
+        if message[0] == "text":
+            try:
+                text_captured: AsrTextCaptured = message[1]
+                wakewordId: str = message[2]
+
+                ws_message = json.dumps(
+                    {
+                        "text": text_captured.text,
+                        "siteId": text_captured.siteId,
+                        "wakewordId": wakewordId,
+                    }
+                )
+                await websocket.send(ws_message)
+                _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
+            except Exception:
+                _LOGGER.exception("api_ws_wake")
 
 
 # -----------------------------------------------------------------------------

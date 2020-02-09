@@ -61,9 +61,10 @@
           "kaldi/model/graph/disambig_tid.int": "en-us_kaldi-zamia/acoustic_model/graph/disambig_tid.int",
           "kaldi/model/graph/num_pdfs": "en-us_kaldi-zamia/acoustic_model/graph/num_pdfs",
           "kaldi/model/graph/phones.txt": "en-us_kaldi-zamia/acoustic_model/graph/phones.txt",
-          "kaldi/model/graph/words.txt": "en-us_kaldi-zamia/acoustic_model/graph/words.txt",
           "kaldi/model/model/cmvn_opts": "en-us_kaldi-zamia/acoustic_model/model/cmvn_opts",
+          "kaldi/model/model/den.fst": "en-us_kaldi-zamia/acoustic_model/model/den.fst",
           "kaldi/model/model/final.mdl": "en-us_kaldi-zamia/acoustic_model/model/final.mdl",
+          "kaldi/model/model/normalization.fst": "en-us_kaldi-zamia/acoustic_model/model/normalization.fst",
           "kaldi/model/model/tree": "en-us_kaldi-zamia/acoustic_model/model/tree",
           "kaldi/model/phones/extra_questions.txt": "en-us_kaldi-zamia/acoustic_model/phones/extra_questions.txt",
           "kaldi/model/phones/nonsilence_phones.txt": "en-us_kaldi-zamia/acoustic_model/phones/nonsilence_phones.txt",
@@ -213,28 +214,24 @@
         "bytes_expected": 37,
         "unzip": false
       },
+      "en-us_kaldi-zamia/acoustic_model/model/den.fst": {
+        "url": "en-us_kaldi-zamia/raw/master/acoustic_model/model/den.fst",
+        "bytes_expected": 2337598,
+        "unzip": false
+      },
       "en-us_kaldi-zamia/acoustic_model/model/final.mdl": {
-        "url": "en-us_kaldi-zamia/raw/master/acoustic_model/model/",
-        "bytes_expected": 70363806,
-        "parts": [
-          {
-            "fragment": "final.mdl.gz.part-00",
-            "bytes_expected": 26214400
-          },
-          {
-            "fragment": "final.mdl.gz.part-01",
-            "bytes_expected": 26214400
-          },
-          {
-            "fragment": "final.mdl.gz.part-02",
-            "bytes_expected": 12519484
-          }
-        ],
-        "unzip": true
+        "url": "en-us_kaldi-zamia/raw/master/acoustic_model/model/final.mdl",
+        "bytes_expected": 12092273,
+        "unzip": false
+      },
+      "en-us_kaldi-zamia/acoustic_model/model/normalization.fst": {
+        "url": "en-us_kaldi-zamia/raw/master/acoustic_model/model/normalization.fst",
+        "bytes_expected": 2614734,
+        "unzip": false
       },
       "en-us_kaldi-zamia/acoustic_model/model/tree": {
         "url": "en-us_kaldi-zamia/raw/master/acoustic_model/model/tree",
-        "bytes_expected": 812268,
+        "bytes_expected": 709472,
         "unzip": false
       },
       "en-us_kaldi-zamia/acoustic_model/phones/extra_questions.txt": {

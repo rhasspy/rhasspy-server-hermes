@@ -805,7 +805,12 @@ class RhasspyCore:
 
     def handle_message(self, topic: str, message: Message):
         """Send matching messages to waiting handlers."""
-        _LOGGER.debug("<- %s", message)
+        if isinstance(message, AsrAudioCaptured):
+            _LOGGER.debug(
+                "<- %s(%s byte(s))", message.__class__.__name__, len(message.wav_bytes)
+            )
+        else:
+            _LOGGER.debug("<- %s", message)
 
         for handler_id in list(self.handler_matchers):
             handler_matcher = self.handler_matchers[handler_id]

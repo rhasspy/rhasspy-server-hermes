@@ -231,12 +231,14 @@ async def api_download_profile() -> str:
 
     return "OK"
 
+
 @app.route("/api/download-status", methods=["GET"])
 async def api_download_status() -> str:
     """Get status of profile download"""
     assert core is not None
 
     return ""
+
 
 # -----------------------------------------------------------------------------
 
@@ -806,6 +808,7 @@ async def api_text_to_intent():
     # Convert text to intent
     start_time = time.time()
     intent = to_intent_dict(await core.recognize_intent(text))
+    intent["raw_text"] = text
     intent["speech_confidence"] = 1
 
     intent_sec = time.time() - start_time
@@ -841,6 +844,7 @@ async def api_speech_to_intent() -> Response:
 
     # text -> intent
     intent = to_intent_dict(await core.recognize_intent(text))
+    intent["raw_text"] = transcription.text
     intent["speech_confidence"] = transcription.likelihood
 
     intent_sec = time.time() - start_time
@@ -919,6 +923,7 @@ async def api_stop_recording() -> Response:
 
     if isinstance(result, NluIntent):
         intent = to_intent_dict(result)
+        intent["raw_text"] = test_captured.text
 
         # Got intent
         if not no_hass:
@@ -1528,6 +1533,7 @@ def to_intent_dict(message) -> typing.Dict[str, typing.Any]:
                 for s in message.slots
             ],
             "slots": {s.slotName: s.value for s in message.slots},
+            "text": message.input,
         }
 
     return empty_intent()

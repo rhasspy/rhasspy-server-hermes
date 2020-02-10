@@ -503,14 +503,14 @@ async def api_pronounce() -> typing.Union[Response, str]:
         espeak_str = pronounce_str
 
     # Convert to WAV
-    wav_data = get_espeak_wav(espeak_str, voice=core.profile.get("language"))
+    wav_bytes = get_espeak_wav(espeak_str, voice=core.profile.get("language"))
 
     if download:
         # Return WAV
-        return Response(wav_data, mimetype="audio/wav")
+        return Response(wav_bytes, mimetype="audio/wav")
 
     # Play through speakers
-    await core.play_wav_data(wav_data)
+    await core.play_wav_data(wav_bytes)
 
     return "OK"
 
@@ -524,7 +524,7 @@ async def api_play_wav() -> str:
     assert core is not None
 
     if request.content_type == "audio/wav":
-        wav_data = await request.data
+        wav_bytes = await request.data
     else:
         # Interpret as URL
         data = await request.data
@@ -532,11 +532,11 @@ async def api_play_wav() -> str:
         _LOGGER.debug("Loading WAV data from %s", url)
 
         async with core.http_session.get(url) as response:
-            wav_data = await response.read()
+            wav_bytes = await response.read()
 
     # Play through speakers
-    _LOGGER.debug("Playing %s byte(s)", len(wav_data))
-    await core.play_wav_data(wav_data)
+    _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
+    await core.play_wav_data(wav_bytes)
 
     return "OK"
 
@@ -769,13 +769,13 @@ async def api_speech_to_text() -> str:
     assert core is not None
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
-    wav_data = await request.data
+    wav_bytes = await request.data
     if no_header:
         # Wrap in WAV
-        wav_data = buffer_to_wav(wav_data)
+        wav_bytes = buffer_to_wav(wav_bytes)
 
     start_time = time.perf_counter()
-    result = await core.transcribe_wav(wav_data)
+    result = await core.transcribe_wav(wav_bytes)
     end_time = time.perf_counter()
 
     if prefers_json():
@@ -785,7 +785,7 @@ async def api_speech_to_text() -> str:
                 "text": result.text,
                 "likelihood": result.likelihood,
                 "transcribe_seconds": (end_time - start_time),
-                "wav_seconds": get_wav_duration(wav_data),
+                "wav_seconds": get_wav_duration(wav_bytes),
             }
         )
 
@@ -831,11 +831,11 @@ async def api_speech_to_intent() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
-    wav_data = await request.data
+    wav_bytes = await request.data
 
     # speech -> text
     start_time = time.time()
-    transcription = await core.transcribe_wav(wav_data)
+    transcription = await core.transcribe_wav(wav_bytes)
     text = transcription.text
     _LOGGER.debug(text)
 
@@ -937,9 +937,9 @@ async def api_play_recording() -> str:
 
     if core.last_audio_captured:
         # Play through speakers
-        wav_data = core.last_audio_captured.wav_bytes
-        _LOGGER.debug("Playing %s byte(s)", len(wav_data))
-        await core.play_wav_data(wav_data)
+        wav_bytes = core.last_audio_captured.wav_bytes
+        _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
+        await core.play_wav_data(wav_bytes)
 
     return "OK"
 
@@ -1415,7 +1415,7 @@ async def api_ws_text(queue) -> None:
 #         sentence, play=False, voice=voice, language=locale
 #     )
 
-#     return spoken.wav_data
+#     return spoken.wav_bytes
 
 
 # -----------------------------------------------------------------------------

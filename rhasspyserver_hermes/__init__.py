@@ -488,7 +488,7 @@ class RhasspyCore:
                                 )
 
                             yield (
-                                AudioFrame(wav_data=chunk_buffer.getvalue()),
+                                AudioFrame(chunk_buffer.getvalue()),
                                 {"siteId": self.siteId},
                             )
 
@@ -517,7 +517,7 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    async def play_wav_data(self, wav_data: bytes) -> AudioPlayFinished:
+    async def play_wav_data(self, wav_bytes: bytes) -> AudioPlayFinished:
         """Play WAV data through speakers."""
         requestId = str(uuid4())
 
@@ -530,7 +530,7 @@ class RhasspyCore:
 
         def messages():
             yield (
-                AudioPlayBytes(wav_data=wav_data),
+                AudioPlayBytes(wav_bytes),
                 {"siteId": self.siteId, "requestId": requestId},
             )
 
@@ -1051,10 +1051,10 @@ class RhasspyCore:
                 _LOGGER.debug(
                     "-> %s(%s byte(s)) on %s",
                     message.__class__.__name__,
-                    len(message.wav_data),
+                    len(message.wav_bytes),
                     topic,
                 )
-                payload = message.wav_data
+                payload = message.wav_bytes
             elif isinstance(message, (AsrTrain, NluTrain)):
                 # Don't print entire intent graph to console
                 _LOGGER.debug("-> %s(id=%s)", message.__class__.__name__, message.id)

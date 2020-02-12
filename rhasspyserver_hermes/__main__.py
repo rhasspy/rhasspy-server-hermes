@@ -29,6 +29,7 @@ from quart import (
 )
 from quart_cors import cors
 from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
+from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile
@@ -326,48 +327,50 @@ async def api_listen_for_command() -> Response:
     wakewordId = request.args.get("wakewordId", "default")
     sessionId = str(uuid4())
 
-    # Fake a hotword detected event and wait for intent/notRecognized
-    def handle_intent():
-        while True:
-            _, message = yield
+    if no_hass:
+        # Temporarily disable intent handling
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
-            if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
-                message.sessionId == sessionId
-            ):
-                return message
+    try:
+        # Fake a hotword detected event and wait for intent/notRecognized
+        def handle_intent():
+            while True:
+                _, message = yield
 
-    topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
-    messages = [
-        (
-            HotwordDetected(
-                modelId=wakewordId,
-                modelVersion="",
-                modelType="personal",
-                currentSensitivity=1,
-                siteId=core.siteId,
-                sessionId=sessionId,
-            ),
-            {"wakewordId": wakewordId},
-        )
-    ]
+                if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                    message.sessionId == sessionId
+                ):
+                    return message
 
-    # Expecting only a single result
-    _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
-    result = None
-    async for response in core.publish_wait(handle_intent(), messages, topics):
-        result = response
+        topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
+        messages = [
+            (
+                HotwordDetected(
+                    modelId=wakewordId,
+                    modelVersion="",
+                    modelType="personal",
+                    currentSensitivity=1,
+                    siteId=core.siteId,
+                    sessionId=sessionId,
+                ),
+                {"wakewordId": wakewordId},
+            )
+        ]
 
-    if isinstance(result, NluIntent):
-        # Process intent
-        intent = to_intent_dict(result)
-        if not no_hass:
-            # Handle intent here
-            intent = await core.handle_intent(intent)
-    else:
-        # Not recognized
-        intent = empty_intent()
+        # Expecting only a single result
+        _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
+        result = None
+        async for response in core.publish_wait(handle_intent(), messages, topics):
+            result = response
 
-    return jsonify(intent)
+        if isinstance(result, (NluIntent, NluIntentNotRecognized)):
+            # Convert to dict
+            intent_dict = result.to_rhasspy_dict()
+
+        return jsonify(intent_dict)
+    finally:
+        # Re-enable intent handling
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -805,23 +808,24 @@ async def api_text_to_intent():
     text = data.decode()
     no_hass = request.args.get("nohass", "false").lower() == "true"
 
-    # Convert text to intent
-    start_time = time.time()
-    intent = to_intent_dict(await core.recognize_intent(text))
-    intent["raw_text"] = text
-    intent["speech_confidence"] = 1
+    if no_hass:
+        # Temporarily disable intent handling
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
-    intent_sec = time.time() - start_time
-    intent["time_sec"] = intent_sec
+    try:
+        # Convert text to intent
+        start_time = time.time()
+        intent = (await core.recognize_intent(text)).to_rhasspy_dict()
+        intent["raw_text"] = text
+        intent["speech_confidence"] = 1
 
-    intent_json = json.dumps(intent)
-    _LOGGER.debug(intent_json)
+        intent_sec = time.time() - start_time
+        intent["time_sec"] = intent_sec
 
-    if not no_hass:
-        # Handle intent here
-        intent = await core.handle_intent(intent)
-
-    return jsonify(intent)
+        return jsonify(intent)
+    finally:
+        # Re-enable intent handling
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -833,28 +837,32 @@ async def api_speech_to_intent() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
 
-    # Prefer 16-bit 16Khz mono, but will convert with sox if needed
-    wav_bytes = await request.data
+    if no_hass:
+        # Temporarily disable intent handling
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
-    # speech -> text
-    start_time = time.time()
-    transcription = await core.transcribe_wav(wav_bytes)
-    text = transcription.text
-    _LOGGER.debug(text)
+    try:
+        # Prefer 16-bit 16Khz mono, but will convert with sox if needed
+        wav_bytes = await request.data
 
-    # text -> intent
-    intent = to_intent_dict(await core.recognize_intent(text))
-    intent["raw_text"] = transcription.text
-    intent["speech_confidence"] = transcription.likelihood
+        # speech -> text
+        start_time = time.time()
+        transcription = await core.transcribe_wav(wav_bytes)
+        text = transcription.text
+        _LOGGER.debug(text)
 
-    intent_sec = time.time() - start_time
-    intent["time_sec"] = intent_sec
+        # text -> intent
+        intent = (await core.recognize_intent(text)).to_rhasspy_dict()
+        intent["raw_text"] = transcription.text
+        intent["speech_confidence"] = transcription.likelihood
 
-    if not no_hass:
-        # Handle intent here
-        intent = await core.handle_intent(intent)
+        intent_sec = time.time() - start_time
+        intent["time_sec"] = intent_sec
 
-    _LOGGER.debug(intent)
+        _LOGGER.debug(intent)
+    finally:
+        # Re-enable intent handling
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
     return jsonify(intent)
 
@@ -893,46 +901,47 @@ async def api_stop_recording() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
 
-    # End session
-    # TODO: Handle AsrAudioCaptured
-    name = request.args.get("name", "")
-    assert name in session_names, f"No session for name: {name}"
-    sessionId = session_names.pop(name)
+    if no_hass:
+        # Temporarily disable intent handling
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
-    def handle_captured():
-        while True:
-            _, message = yield
+    try:
+        # End session
+        # TODO: Handle AsrAudioCaptured
+        name = request.args.get("name", "")
+        assert name in session_names, f"No session for name: {name}"
+        sessionId = session_names.pop(name)
 
-            if isinstance(message, AsrTextCaptured) and (
-                message.sessionId == sessionId
-            ):
-                return message
+        def handle_captured():
+            while True:
+                _, message = yield
 
-    topics = [AsrTextCaptured.topic()]
-    messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
+                if isinstance(message, AsrTextCaptured) and (
+                    message.sessionId == sessionId
+                ):
+                    return message
 
-    # Expecting only a single result
-    _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
-    text_captured = None
-    async for response in core.publish_wait(handle_captured(), messages, topics):
-        text_captured = response
+        topics = [AsrTextCaptured.topic()]
+        messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
 
-    assert isinstance(text_captured, AsrTextCaptured)
-    text = text_captured.text
-    result = await core.recognize_intent(text)
+        # Expecting only a single result
+        _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
+        text_captured = None
+        async for response in core.publish_wait(handle_captured(), messages, topics):
+            text_captured = response
 
-    if isinstance(result, NluIntent):
-        intent = to_intent_dict(result)
-        intent["raw_text"] = test_captured.text
+        assert isinstance(text_captured, AsrTextCaptured)
+        text = text_captured.text
+        result = await core.recognize_intent(text)
 
-        # Got intent
-        if not no_hass:
-            # Handle intent here
-            intent = await core.handle_intent(intent)
-    else:
-        intent = empty_intent()
+        if isinstance(result, (NluIntent, NluIntentNotRecognized)):
+            # Convert to dict
+            intent = result.to_rhasspy_dict()
 
-    return jsonify(intent)
+        return jsonify(intent)
+    finally:
+        # Re-enable intent handling
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 @app.route("/api/play-recording", methods=["POST"])
@@ -1350,7 +1359,10 @@ async def api_ws_intent(queue) -> None:
         message = await queue.get()
         if message[0] == "intent":
             try:
-                intent_dict = to_intent_dict(message[1])
+                intent = typing.cast(
+                    typing.Union[NluIntent, NluIntentNotRecognized], message[1]
+                )
+                intent_dict = intent.to_rhasspy_dict()
 
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
@@ -1512,31 +1524,6 @@ def quality(accept, key: str) -> float:
         if accept._values_match(key, option.value):
             return option.quality
     return 0.0
-
-
-def empty_intent() -> typing.Dict[str, typing.Any]:
-    """Return an empty intent dictionary."""
-    return {"text": "", "intent": {"name": "", "confidence": 0}, "entities": []}
-
-
-def to_intent_dict(message) -> typing.Dict[str, typing.Any]:
-    """Convert NluIntent/NluIntentNotRecognized to Rhasspy format."""
-    if isinstance(message, NluIntent):
-        # TODO: Get text/raw_text
-        return {
-            "intent": {
-                "name": message.intent.intentName,
-                "confidence": message.intent.confidenceScore,
-            },
-            "entities": [
-                {"entity": s.slotName, "value": s.value, "raw_value": s.raw_value}
-                for s in message.slots
-            ],
-            "slots": {s.slotName: s.value for s in message.slots},
-            "text": message.input,
-        }
-
-    return empty_intent()
 
 
 # -----------------------------------------------------------------------------

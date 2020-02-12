@@ -48,12 +48,6 @@ from rhasspyhermes.tts import TtsSay, TtsSayFinished
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile
 
-from .intent_handler import (
-    handle_command,
-    handle_home_assistant_event,
-    handle_home_assistant_intent,
-    handle_remote,
-)
 from .train import sentences_to_graph
 from .utils import get_ini_paths
 
@@ -488,7 +482,7 @@ class RhasspyCore:
                                 )
 
                             yield (
-                                AudioFrame(chunk_buffer.getvalue()),
+                                AudioFrame(wav_bytes=chunk_buffer.getvalue()),
                                 {"siteId": self.siteId},
                             )
 
@@ -530,7 +524,7 @@ class RhasspyCore:
 
         def messages():
             yield (
-                AudioPlayBytes(wav_bytes),
+                AudioPlayBytes(wav_bytes=wav_bytes),
                 {"siteId": self.siteId, "requestId": requestId},
             )
 
@@ -644,82 +638,6 @@ class RhasspyCore:
 
         assert isinstance(result, AudioDevices)
         return result
-
-    # -------------------------------------------------------------------------
-
-    async def handle_intent(
-        self, intent_dict: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
-        """Handles an intent locally using handle.system in profile."""
-        handle_system: str = str(self.profile.get("handle.system", "dummy"))
-        forward_to_hass: bool = bool(self.profile.get("handle.forward_to_hass", False))
-
-        if handle_system == "hass":
-            # Send to home assistant (below)
-            forward_to_hass = True
-        elif handle_system == "command":
-            # Local program
-            handle_program = str(self.profile.get("handle.command.program", ""))
-            assert handle_program, "Missing intent handler program"
-            handle_arguments: typing.List[typing.Any] = self.profile.get(
-                "handle.command.arguments", []
-            )
-            intent_dict = await handle_command(
-                intent_dict, handle_program, handle_arguments
-            )
-        elif handle_system == "remote":
-            # Remote Rhasspy server
-            remote_url: str = str(self.profile.get("handle.remote.url", ""))
-            assert remote_url, "Missing intent handler URL"
-            intent_dict = await handle_remote(
-                intent_dict, remote_url, self.http_session
-            )
-        else:
-            # Don't handle
-            _LOGGER.debug("Not handling intent (handle.system=%s)", handle_system)
-            return intent_dict
-
-        # Check for speech in response
-        speech_text = intent_dict.get("speech", {}).get("text", "")
-        if speech_text:
-            _LOGGER.debug("Speech response received: %s", speech_text)
-            await self.speak_sentence(speech_text)
-
-        if forward_to_hass:
-            # Load home assistant config
-            hass_config = self.profile.get("home_assistant", {})
-            hass_url = hass_config.get("url", "http://hassio/homeassistant/")
-
-            # PEM file for self-signed HA certificates
-            pem_file = hass_config.get("pem_file", "")
-            if pem_file:
-                pem_file = os.path.expandvars(pem_file)
-                _LOGGER.debug("Using PEM file at %s", pem_file)
-            else:
-                pem_file = None  # disabled
-
-            # Send to home assistant
-            handle_type: str = str(
-                self.profile.get("home_assistant.handle_type", "event")
-            )
-
-            if handle_type == "intent":
-                # Use intent API
-                await handle_home_assistant_intent(
-                    intent_dict, hass_url, self.http_session
-                )
-            else:
-                # Send event
-                event_type_format = hass_config.get("event_type_format", "rhasspy_{0}")
-                await handle_home_assistant_event(
-                    intent_dict,
-                    hass_url,
-                    self.http_session,
-                    event_type_format=event_type_format,
-                    pem_file=pem_file,
-                )
-
-        return intent_dict
 
     # -------------------------------------------------------------------------
 

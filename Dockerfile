@@ -3,7 +3,6 @@ FROM ${BUILD_ARCH}/debian:buster-slim
 
 COPY pyinstaller/dist/* /usr/lib/rhasspyserver_hermes/
 COPY debian/bin/* /usr/bin/
-COPY profiles/ /usr/lib/rhasspyserver_hermes/profiles/
 COPY web/ /usr/lib/rhasspyserver_hermes/web/
 COPY VERSION /usr/lib/rhasspyserver_hermes/
 

@@ -75,7 +75,7 @@ class RhasspyCore:
     def __init__(
         self,
         profile_name: str,
-        system_profiles_dir: typing.Union[str, Path],
+        system_profiles_dir: typing.Optional[typing.Union[str, Path]],
         user_profiles_dir: typing.Union[str, Path],
         host: typing.Optional[str] = None,
         port: typing.Optional[int] = None,
@@ -88,7 +88,10 @@ class RhasspyCore:
         training_timeout_seconds: float = 600,
     ):
         self.profile_name = profile_name
-        self.system_profiles_dir = Path(system_profiles_dir)
+
+        if system_profiles_dir:
+            system_profiles_dir = Path(system_profiles_dir)
+
         self.user_profiles_dir = Path(user_profiles_dir)
         self.loop = loop or asyncio.get_event_loop()
 
@@ -97,10 +100,10 @@ class RhasspyCore:
         self.training_timeout_seconds = training_timeout_seconds
 
         self.profile = Profile(
-            self.profile_name, self.system_profiles_dir, self.user_profiles_dir
+            self.profile_name, system_profiles_dir, self.user_profiles_dir
         )
 
-        self.defaults = Profile.load_defaults(self.system_profiles_dir)
+        self.defaults = Profile.load_defaults(self.profile.system_profiles_dir)
 
         self.client: typing.Optional[mqtt.Client] = None
 
@@ -586,6 +589,10 @@ class RhasspyCore:
 
     async def get_microphones(self, test: bool = False) -> AudioDevices:
         """Get available microphones and optionally test them."""
+        if self.profile.get("microphone.system", "dummy") == "dummy":
+            _LOGGER.warning("Microphone disabled. Cannot get available input devices.")
+            return AudioDevices()
+
         requestId = str(uuid4())
 
         def handle_finished():
@@ -615,6 +622,10 @@ class RhasspyCore:
 
     async def get_speakers(self) -> AudioDevices:
         """Get available speakers."""
+        if self.profile.get("sounds.system", "dummy") == "dummy":
+            _LOGGER.warning("Speakers disabled. Cannot get available output devices.")
+            return AudioDevices()
+
         requestId = str(uuid4())
 
         def handle_finished():

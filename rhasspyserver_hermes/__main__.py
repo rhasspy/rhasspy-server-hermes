@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 import typing
 from functools import wraps
@@ -114,14 +115,13 @@ _LOGGER.debug(args)
 if args.system_profiles:
     system_profiles_dir = Path(args.system_profiles)
 else:
-    system_profiles_dir = Path("profiles")
+    # Bundled
+    system_profiles_dir = None
 
 if args.user_profiles:
     user_profiles_dir = Path(args.user_profiles)
 else:
     user_profiles_dir = Path("~/.config/rhasspy/profiles").expanduser()
-
-profiles_dirs: typing.List[Path] = [user_profiles_dir, system_profiles_dir]
 
 # -----------------------------------------------------------------------------
 # Dialogue Manager Setup
@@ -194,7 +194,10 @@ async def api_profiles() -> Response:
     assert core is not None
     profile_names: typing.Set[str] = set()
 
-    for profiles_dir in profiles_dirs:
+    for profiles_dir in [
+        core.profile.system_profiles_dir,
+        core.profile.user_profiles_dir,
+    ]:
         if not profiles_dir.is_dir():
             continue
 
@@ -751,15 +754,18 @@ async def api_restart() -> str:
     _LOGGER.debug("Restarting Rhasspy")
 
     pid_path = core.profile.read_path("supervisord.pid")
-    assert (
-        pid_path.is_file()
-    ), "Cannot restart Rhasspy when not running through supervisord"
+    if pid_path.is_file():
+        pid = pid_path.read_text().strip()
+        restart_command = ["kill", "-SIGHUP", pid]
+        _LOGGER.debug(restart_command)
 
-    pid = pid_path.read_text().strip()
-    restart_command = ["kill", "-SIGHUP", pid]
-    _LOGGER.debug(restart_command)
+        subprocess.check_call(restart_command)
+    else:
+        _LOGGER.info(
+            "PID file not found at %s. Shutting down with exit code 2.", str(pid_path)
+        )
 
-    subprocess.check_call(restart_command)
+        sys.exit(2)
 
     return "Restarted Rhasspy"
 

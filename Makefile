@@ -20,7 +20,7 @@ reformat:
 check:
 	scripts/check-code.sh $(PYTHON_FILES)
 
-venv:
+venv: rhasspy-libs
 	scripts/create-venv.sh
 
 dist: sdist debian
@@ -48,3 +48,26 @@ pyinstaller:
 
 debian:
 	scripts/build-debian.sh "${architecture}" "${version}"
+
+# -----------------------------------------------------------------------------
+# Downloads
+# -----------------------------------------------------------------------------
+
+# Rhasspy development dependencies
+rhasspy-libs: $(DOWNLOAD_DIR)/rhasspy-profile-0.1.3.tar.gz $(DOWNLOAD_DIR)/rhasspy-hermes-0.1.6.tar.gz $(DOWNLOAD_DIR)/rhasspy-nlu-0.1.6.tar.gz $(DOWNLOAD_DIR)/rhasspy-supervisor-0.1.3.tar.gz
+
+$(DOWNLOAD_DIR)/rhasspy-profile-0.1.3.tar.gz:
+	mkdir -p "$(DOWNLOAD_DIR)"
+	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
+
+$(DOWNLOAD_DIR)/rhasspy-hermes-0.1.6.tar.gz:
+	mkdir -p "$(DOWNLOAD_DIR)"
+	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
+
+$(DOWNLOAD_DIR)/rhasspy-nlu-0.1.6.tar.gz:
+	mkdir -p "$(DOWNLOAD_DIR)"
+	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
+
+$(DOWNLOAD_DIR)/rhasspy-supervisor-0.1.3.tar.gz:
+	mkdir -p "$(DOWNLOAD_DIR)"
+	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"

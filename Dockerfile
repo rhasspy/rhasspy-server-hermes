@@ -20,9 +20,6 @@ FROM ${BUILD_ARCH}/python:3.7-alpine
 WORKDIR /usr
 COPY --from=build /usr/.venv /usr/.venv/
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
 COPY **/*.py rhasspyserver_hermes/
 COPY web/ web/
 COPY VERSION rhasspyserver_hermes/

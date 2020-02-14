@@ -1,11 +1,30 @@
 ARG BUILD_ARCH=amd64
-FROM ${BUILD_ARCH}/debian:buster-slim
+FROM ${BUILD_ARCH}/python:3.7-alpine as build
 
-COPY pyinstaller/dist/* /usr/lib/rhasspyserver_hermes/
-COPY debian/bin/* /usr/bin/
-COPY web/ /usr/lib/rhasspyserver_hermes/web/
-COPY VERSION /usr/lib/rhasspyserver_hermes/
+RUN apk add --no-cache build-base
 
-WORKDIR /usr/lib/rhasspyserver_hermes
+ENV VENV=/usr/.venv
 
-ENTRYPOINT ["/usr/bin/rhasspy-server-hermes"]
+RUN python3 -m venv $VENV
+RUN $VENV/bin/pip3 install --upgrade pip
+
+COPY requirements_rhasspy.txt requirements.txt /tmp/
+RUN $VENV/bin/pip3 install -r /tmp/requirements_rhasspy.txt
+RUN $VENV/bin/pip3 install -r /tmp/requirements.txt
+
+# -----------------------------------------------------------------------------
+
+ARG BUILD_ARCH=amd64
+FROM ${BUILD_ARCH}/python:3.7-alpine
+
+WORKDIR /usr
+COPY --from=build /usr/.venv /usr/.venv/
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+COPY **/*.py rhasspyserver_hermes/
+COPY web/ web/
+COPY VERSION rhasspyserver_hermes/
+
+ENTRYPOINT ["/usr/.venv/bin/python3", "-m", "rhasspyserver_hermes"]

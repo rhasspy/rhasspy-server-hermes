@@ -1,5 +1,6 @@
 *
-!pyinstaller/dist
-!debian/bin
+!rhasspyserver_hermes
+!requirements.txt
+!requirements_rhasspy.txt
 !web
 !VERSION

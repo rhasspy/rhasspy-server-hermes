@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+    <form class="form" method="post" onsubmit="beforeSubmit()">
+        <div class="form-group">
+            <div class="form-row text-muted pl-1">
+                <p>
+                    These are words whose pronunciations you want to customize.
+                    Each line contains a word followed <a href="#" onclick="$('#phonemesModal').modal('show')">its phonetic pronunciation</a> (separated by spaces):
+                    <br>
+                    <tt>test T EH S T</tt>
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <div class="col-xs-auto">
+                    <button type="submit" class="btn btn-primary words-button">Save Custom Words</button>
+                </div>
+                <div class="col-xs-auto">
+                    <button type="button" class="btn btn-success" onclick="guessWord()">Guess Word</button>
+                </div>
+                <div class="col-xs-auto">
+                    <input id="word" type="text" class="form-control" placeholder="word">
+                </div>
+                <span id="inDictionary" title="Word is in a dictionary" style="display:none">
+                    <i class="fas fa-book"></i>
+                </span>
+                <div class="col-xs-auto">
+                    <select id="guesses" class="form-control" style="display: none;">
+                        <option disabled value="">Select Guess</option>
+                    </select>
+                </div>
+                <div class="col-xs-auto">
+                    <button id="addWord" type="button" class="btn btn-info" onclick="addGuessedWord()" style="display: none;">Add</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <textarea id="customWords" name="customWords" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="setDirty()">{{ custom_words | safe }}</textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <button type="submit" class="btn btn-primary words-button"">Save Custom Words</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="phonemesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="phonemesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="phonemesModalLabel" class="modal-title">Available Phonemes ({{ profile.get("speech_to_text.system") }})</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead class="thead-light">
+                        <th scope="col">Phoneme</th>
+                        <th scope="col">Example</th>
+                        <th scope="col">Translation</th>
+                        <th scope="col"></th>
+                    </thead>
+                    <tbody>
+                        {% for phoneme, details in phonemes.items(): %}
+                        <tr>
+                            <td>{{ phoneme }}</td>
+                            <td>{{ details["word"] }}</td>
+                            <td>{{ details["phonemes"] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+ var isDirty = false;
+
+ function guessWord() {
+     // Call /api/lookup and show word pronunciations
+     $('#guesses option').remove();
+     $('#guesses').hide();
+     $('#addWord').hide();
+     $('#inDictionary').hide();
+
+     let word = $('#word').val() || '';
+     if (word.length > 0) {
+         rhasspy.postBusy('Guessing word', '/api/lookup', word)
+         .done(function(response) {
+             if (response.in_dictionary) {
+                 $('#inDictionary').show();
+             } else {
+                 $('#addWord').show();
+             }
+
+             response.pronunciations.forEach(function(phonemes) {
+                 $('#guesses').append('<option>' + phonemes + '</option>');
+             })
+
+             $('#guesses').show();
+         });
+     } else {
+         alert('Please enter a word to guess')
+     }
+ }
+
+ function addGuessedWord() {
+     var word = $('#word').val() || '';
+     var phonemes = $('#guesses').val() || '';
+     if ((word.length > 0) && (phonemes.length > 0)) {
+         let customWords = $('#customWords').val();
+         if ((customWords.length > 0) && !customWords.endsWith('\n')) {
+             customWords += '\n';
+         }
+
+         $('#customWords').val(customWords + word + ' ' + phonemes);
+     } else {
+         alert('No word or pronunciation')
+     }
+ }
+
+ function setDirty() {
+     isDirty = true;
+     $('#customWords').css('border-color', 'red');
+     $('.words-button').addClass('btn-danger');
+ }
+
+ function beforeSubmit() {
+     isDirty = false;
+     rhasspy.showBusy('Saving custom words');
+ }
+
+ window.onbeforeunload = function() {
+     if (isDirty) {
+         return 'Custom words were not saved. Are you sure?"'
+     }
+ }
+
+ $(function() {
+     $("#word").keypress(function() {
+         if (event.which == 13) {
+             event.preventDefault();
+             guessWord();
+         }
+     })
+ })
+</script>
+{% endblock %}

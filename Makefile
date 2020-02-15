@@ -4,6 +4,7 @@ PACKAGE_NAME = rhasspy-server-hermes
 SOURCE = $(PYTHON_NAME)
 PYTHON_FILES = $(SOURCE)/*.py *.py
 SHELL_FILES = bin/* debian/bin/*
+DOWNLOAD_DIR = download
 
 .PHONY: reformat check venv dist sdist pyinstaller debian docker deploy
 

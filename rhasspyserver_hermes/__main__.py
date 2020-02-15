@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import typing
+from collections import defaultdict
 from functools import wraps
 from pathlib import Path
 from uuid import uuid4
@@ -125,6 +126,129 @@ else:
     user_profiles_dir = Path("~/.config/rhasspy/profiles").expanduser()
 
 # -----------------------------------------------------------------------------
+# Template Functions
+# -----------------------------------------------------------------------------
+
+
+def get_version() -> str:
+    return Path("VERSION").read_text().strip()
+
+
+def get_template_args():
+    return {
+        "profile": core.profile,
+        "profile_json": json.dumps(core.profile.json, indent=4),
+        "version": get_version(),
+    }
+
+
+def save_profile(profile_json):
+    # Ensure that JSON is valid
+    recursive_remove(core.profile.system_json, profile_json)
+
+    profile_path = Path(core.profile.write_path("profile.json"))
+    with open(profile_path, "w") as profile_file:
+        json.dump(profile_json, profile_file, indent=4)
+
+    msg = f"Wrote profile to {str(profile_path)}"
+    _LOGGER.debug(msg)
+
+    # Re-generate supevisord config
+    new_profile = Profile(args.profile, system_profiles_dir, user_profiles_dir)
+    supervisor_conf_path = new_profile.write_path("supervisord.conf")
+    _LOGGER.debug("Re-generating %s", str(supervisor_conf_path))
+
+    with open(supervisor_conf_path, "w") as supervisor_conf_file:
+        rhasspysupervisor.profile_to_conf(
+            new_profile, supervisor_conf_file, local_mqtt_port=args.local_mqtt_port
+        )
+
+    # Re-genenerate Docker compose YAML
+    docker_compose_path = new_profile.write_path("docker-compose.yml")
+    _LOGGER.debug("Re-generating %s", str(docker_compose_path))
+
+    with open(docker_compose_path, "w") as docker_compose_file:
+        rhasspysupervisor.profile_to_docker(
+            new_profile, docker_compose_file, local_mqtt_port=args.local_mqtt_port
+        )
+
+    return msg
+
+
+def get_phonemes():
+    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
+    examples_path = core.profile.read_path(
+        core.profile.get(
+            f"speech_to_text.{speech_system}.phoneme_examples", "phoneme_examples.txt"
+        )
+    )
+
+    # phoneme -> { word, phonemes }
+    _LOGGER.debug("Loading phoneme examples from %s", examples_path)
+    return load_phoneme_examples(examples_path)
+
+
+def read_slots(slots_dir: Path) -> typing.Dict[str, str]:
+    slots_dict: typing.Dict[st, str] = {}
+
+    if slots_dir.is_dir():
+        # Load slot values
+        for slot_file_path in slots_dir.glob("*"):
+            if slot_file_path.is_file():
+                slot_name = slot_file_path.name
+                slots_dict[slot_name] = [
+                    line.strip() for line in slot_file_path.read_text().splitlines()
+                ]
+
+    return slots_dict
+
+
+def save_slots(
+    slots_dir: Path, new_slot_values: typing.Dict[str, str], overwrite_all=True
+):
+    # Write slots on POST
+    if overwrite_all:
+        # Remote existing values first
+        for name in new_slot_values:
+            slots_path = safe_join(slots_dir, f"{name}")
+            if slots_path.is_file():
+                try:
+                    slots_path.unlink()
+                except Exception:
+                    _LOGGER.exception("api_slots")
+
+    # Write new values
+    slots = defaultdict(list)
+    for name, values in new_slot_values.items():
+        if not values:
+            continue
+
+        if isinstance(values, str):
+            values = [values]
+
+        slots_path = slots_dir / name
+
+        # Create directories
+        slots_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Merge with existing values
+        values = set(values)
+        if slots_path.is_file():
+            values.update(slots_path.read_text().splitlines())
+
+        # Write merged values
+        if values:
+            with open(slots_path, "w") as slots_file:
+                for value in values:
+                    value = value.strip()
+                    if value:
+                        print(value, file=slots_file)
+                        slots[name].append(value)
+
+    return slots
+
+
+# -----------------------------------------------------------------------------
 # Dialogue Manager Setup
 # -----------------------------------------------------------------------------
 
@@ -181,9 +305,9 @@ async def start_rhasspy() -> None:
 
 
 @app.route("/api/version")
-async def api_version() -> Response:
+async def api_version() -> str:
     """Get Rhasspy version."""
-    return await send_file(Path("VERSION"))
+    return get_version()
 
 
 # -----------------------------------------------------------------------------
@@ -390,35 +514,7 @@ async def api_profile() -> typing.Union[str, Response]:
     if request.method == "POST":
         # Ensure that JSON is valid
         profile_json = await request.json
-        recursive_remove(core.profile.system_json, profile_json)
-
-        profile_path = Path(core.profile.write_path("profile.json"))
-        with open(profile_path, "w") as profile_file:
-            json.dump(profile_json, profile_file, indent=4)
-
-        msg = f"Wrote profile to {str(profile_path)}"
-        _LOGGER.debug(msg)
-
-        # Re-generate supevisord config
-        new_profile = Profile(args.profile, system_profiles_dir, user_profiles_dir)
-        supervisor_conf_path = new_profile.write_path("supervisord.conf")
-        _LOGGER.debug("Re-generating %s", str(supervisor_conf_path))
-
-        with open(supervisor_conf_path, "w") as supervisor_conf_file:
-            rhasspysupervisor.profile_to_conf(
-                new_profile, supervisor_conf_file, local_mqtt_port=args.local_mqtt_port
-            )
-
-        # Re-genenerate Docker compose YAML
-        docker_compose_path = new_profile.write_path("docker-compose.yml")
-        _LOGGER.debug("Re-generating %s", str(docker_compose_path))
-
-        with open(docker_compose_path, "w") as docker_compose_file:
-            rhasspysupervisor.profile_to_docker(
-                new_profile, docker_compose_file, local_mqtt_port=args.local_mqtt_port
-            )
-
-        return msg
+        return save_profile(profile_json)
 
     if layers == "defaults":
         # Read default settings
@@ -557,21 +653,7 @@ async def api_play_wav() -> str:
 def api_phonemes():
     """Get phonemes and example words for a profile"""
     assert core is not None
-    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
-    examples_path = Path(
-        core.profile.read_path(
-            core.profile.get(
-                f"speech_to_text.{speech_system}.phoneme_examples",
-                "phoneme_examples.txt",
-            )
-        )
-    )
-
-    # phoneme -> { word, phonemes }
-    _LOGGER.debug("Loading phoneme examples from %s", examples_path)
-    examples_dict = load_phoneme_examples(examples_path)
-
-    return jsonify(examples_dict)
+    return jsonify(get_phonemes())
 
 
 # -----------------------------------------------------------------------------
@@ -1508,15 +1590,106 @@ async def webfonts(filename) -> Response:
 
 
 @app.route("/", methods=["GET"])
-async def index() -> Response:
+async def page_index() -> Response:
     """Render main web page."""
-    return await render_template("index.html", profile=core.profile)
+    return await render_template("index.html", page="Home", **get_template_args())
 
 
-@app.route("/advanced", methods=["GET"])
-async def advanced() -> Response:
+@app.route("/sentences", methods=["GET", "POST"])
+async def page_sentences() -> Response:
+    """Render sentences web page."""
+    sentences = ""
+    sentences_path = core.profile.get("speech_to_text.sentences_ini", "sentences.ini")
+    sentences_read_path = core.profile.read_path(sentences_path)
+    sentences_write_path = core.profile.write_path(sentences_path)
+
+    if request.method == "POST":
+        form = await request.form
+        sentences = form["sentences"]
+        sentences_write_path.write_text(sentences)
+    elif sentences_write_path.is_file():
+        sentences = sentences_write_path.read_text()
+    elif sentences_read_path.is_file():
+        # Use default sentences
+        sentences = sentences_read_path.read_text()
+
+    return await render_template(
+        "sentences.html", page="Sentences", sentences=sentences, **get_template_args()
+    )
+
+
+@app.route("/words", methods=["GET", "POST"])
+async def page_words() -> Response:
+    """Render words web page."""
+    custom_words = ""
+    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
+    words_path = core.profile.get(
+        f"speech_to_text.{speech_system}.custom_words", "custom_words.txt"
+    )
+
+    words_write_path = core.profile.write_path(words_path)
+
+    if request.method == "POST":
+        form = await request.form
+        custom_words = form["customWords"]
+        words_write_path.write_text(custom_words)
+    elif words_write_path.is_file():
+        custom_words = words_write_path.read_text()
+
+    # Load phoneme examples
+    phonemes = get_phonemes()
+
+    return await render_template(
+        "words.html",
+        page="Words",
+        custom_words=custom_words,
+        phonemes=phonemes,
+        **get_template_args(),
+    )
+
+
+@app.route("/slots", methods=["GET", "POST"])
+async def page_slots() -> Response:
+    """Render slots web page."""
+    slots_dir = core.profile.read_path(
+        core.profile.get("speech_to_text.slots_dir", "slots")
+    )
+    slots: typing.Dict[str, str] = {}
+
+    if request.method == "POST":
+        form = await request.form
+        newline_slots = json.loads(form["slots"])
+        new_slot_values = {
+            name: value.splitlines() for name, value in newline_slots.items()
+        }
+        slots = save_slots(slots_dir, new_slot_values)
+    elif slots_dir.is_dir():
+        slots = read_slots(slots_dir)
+
+    slots_json = json.dumps(
+        {name: "\n".join(values) for name, values in slots.items()}, indent=4
+    )
+    return await render_template(
+        "slots.html",
+        page="Slots",
+        slots=slots,
+        slots_json=slots_json,
+        sorted=sorted,
+        **get_template_args(),
+    )
+
+
+@app.route("/advanced", methods=["GET", "POST"])
+async def page_advanced() -> Response:
     """Render advanced web page."""
-    return await render_template("advanced.html", profile=core.profile, json=json)
+    if request.method == "POST":
+        form = await request.form
+        profile_json = json.loads(form["profileJson"])
+        save_profile(profile_json)
+
+    return await render_template(
+        "advanced.html", page="Advanced", **get_template_args()
+    )
 
 
 @app.route("/swagger.yaml", methods=["GET"])

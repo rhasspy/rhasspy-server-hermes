@@ -22,7 +22,7 @@
 
             <!-- Logo -->
             <a href="/">
-                <img id="logo" class="navbar-brand" src="/img/logo.png">
+                <img id="logo" title="Rhasspy" class="navbar-brand" src="/img/logo.png">
             </a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,23 +31,37 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <div class="navbar-container">
-                    <a href="/" class="text-white font-weight-bold">Rhasspy</a>
-                    <a x-html="version" href="/api/" class="badge badge-info ml-2"></a>
+                    <a href="/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
+                </div>
+
+                <div class="navbar-container ml-3">
+                    <div class="nav-item dropdown">
+                        <a class="btn btn-outline-light  dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{ page }}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="/">Home</a>
+                            <a class="dropdown-item" href="/sentences">Sentences</a>
+                            <a class="dropdown-item" href="/slots">Slots</a>
+                            <a class="dropdown-item" href="/words">Words</a>
+                            <a class="dropdown-item" href="/settings">Settings</a>
+                            <a class="dropdown-item" href="/advanced">Advanced</a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Top Bar Buttons -->
                 <div class="navbar-container ml-auto">
-                    <span x-html="profile.name" title="Profile name" class="badge badge-primary ml-2" style="font-size: 1em"></span>
-                    <button @click="train()" :disabled="isTraining" class="btn btn-success ml-2" title="Re-train current profile">Train</button>
-                    <button @click="wakeup()" class="btn btn-warning ml-2" title="Make Rhasspy listen for a voice command">Wake</button>
-                    <button @click="restart()" :disabled="this.restarting" class="btn btn-danger ml-2" title="Restart Rhasspy server">Restart</button>
+                    <span title="Profile name" class="badge badge-primary ml-2" style="font-size: 1em">{{ profile.get("name", "") }}</span>
+
+                    <button @click="train()" :disabled="isTraining" class="btn btn-success ml-2" title="Train profile">Train</button>
+                    <button @click="restart()" :disabled="this.restarting" class="btn btn-danger ml-2" title="Restart Rhasspy">Restart</button>
                 </div>
             </div>
         </nav>
 
         <!-- Main -->
         <div class="main-container">
-
             {% block body %}{% endblock %}
 
         </div>
@@ -59,6 +73,14 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 id="busyText" class="modal-title" id="busyModalLabel"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -75,8 +97,57 @@
         <!-- Load Javascript libraries -->
         <script src="/js/recorder.js"></script>
         <script src="/js/jquery-3.4.1.min.js"></script>
+        <script src="/js/popper.min.js"></script>
         <script src="/js/bootstrap.min.js"></script>
-        <script src="/js/main.js"></script>
+
+        <script type="text/javascript">
+         var rhasspy = {
+             profile: {{ profile_json | safe }},
+
+             showBusy: function(message) {
+                 $('#logo').addClass('spinner')
+                 $('#busyText').html(message)
+                 $('#busyModal').modal('show')
+             },
+
+             hideBusy: function(message) {
+                 $('#logo').removeClass('spinner')
+                 $('#busyModal').modal('hide')
+                 $('#busyModal').hide()
+                 $('#busyText').html('')
+             },
+
+             alert: function(message, level) {
+                 $('#alert').addClass('alert-' + level)
+                 $('#alertText').text(message)
+                 $('#alert').show()
+
+                 // Hide alert after 20 seconds
+                 setTimeout(this.clearAlert, 20000)
+             },
+
+             clearAlert: function(message, level) {
+                 $('#alert').removeClass('alert-info')
+                 $('#alert').removeClass('alert-danger')
+                 $('#alert').removeClass('alert-warning')
+                 $('#alert').removeClass('alert-success')
+                 $('#alert').hide()
+             },
+
+             postBusy: function(message, url, data) {
+                 var rhasspy = this;
+
+                 rhasspy.showBusy(message)
+                 return $.post(url, data).always(function() {
+                     // Hide busy modal
+                     rhasspy.hideBusy()
+                 }).fail(function(error) {
+                     // Show error alert
+                     rhasspy.alert(error, 'danger');
+                 })
+             }
+         };
+        </script>
 
         {% block script %}{% endblock %}
     </body>

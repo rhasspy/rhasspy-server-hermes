@@ -2,6 +2,7 @@
 {% block body %}
 <div class="container">
     <form class="form" method="post" onsubmit="beforeSubmit()">
+        <input id="sentencesJson" type="hidden" name="sentences">
         <div class="form-group">
             <div class="form-row text-muted pl-1">
                 <p>Example sentences, formatted <a href="https://docs.python.org/3/library/configparser.html">ini style</a>, with each section (intent) containing a <a href="https://rhasspy.readthedocs.io/en/latest/training/#sentencesini">simplified JSGF Grammar</a>.</p>
@@ -9,12 +10,24 @@
         </div>
         <div class="form-group">
             <div class="form-row">
-                <button type="submit" class="btn btn-primary sentences-button">Save Sentences</button>
+                <div class="col-xs-auto">
+                    <button type="submit" class="btn btn-primary sentences-button">Save Sentences</button>
+                </div>
+                <div class="col-xs-auto">
+                    <select id="sentenceFiles" class="form-control" onchange="setSentences()">
+                        {% for sentences_name in sentences: %}
+                        <option {% if sentences_name == "sentences.ini" %}selected{% endif %}>{{ sentences_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xs-auto">
+                    <button type="button" class="btn btn-success" onclick="showNewSentences()">New Sentences File</button>
+                </div>
             </div>
         </div>
         <div class="form-group">
             <div class="form-row">
-                <textarea id="sentences" name="sentences" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="setDirty()">{{ sentences | safe }}</textarea>
+                <textarea id="sentences" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSentences()"></textarea>
             </div>
         </div>
         <div class="form-group">
@@ -29,11 +42,32 @@
         </div>
     </form>
 </div>
+
+<div id="newSentencesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newSentencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="newSentencesModalLabel" class="modal-title">New Sentence File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input id="newSentenceFile" type="text" class="form-control" placeholder="Sentence File Name">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="makeNewSentences()">New Sentence File</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript">
  var isDirty = false;
+ var sentences = {{ sentences_json | safe }};
 
  function setDirty() {
      isDirty = true;
@@ -43,7 +77,44 @@
 
  function beforeSubmit() {
      isDirty = false;
+     $('#sentencesJson').val(JSON.stringify(sentences))
      rhasspy.showBusy('Saving sentences');
+ }
+
+ function updateSentences() {
+     var sentenceFile = $('#sentenceFiles').val() || '';
+     if (sentenceFile.length > 0) {
+         // Copy text
+         sentences[sentenceFile] = $('#sentences').val();
+     }
+
+     setDirty();
+ }
+
+ function setSentences() {
+     var sentenceFile = $('#sentenceFiles').val() || '';
+     if (sentenceFile.length > 0) {
+         $('#sentences').val(sentences[sentenceFile]);
+     }
+ }
+
+ function showNewSentences() {
+     $('#newSentencesModal').modal('show');
+ }
+
+ function makeNewSentences() {
+     var newSentenceFile = $('#newSentenceFile').val();
+     if (newSentenceFile.length == 0) {
+         alert('Please enter a sentence file name');
+     } else if (newSentenceFile in sentences) {
+         alert('Sentence file already exists');
+     } else {
+         sentences[newSentenceFile] = '';
+         $('#sentenceFiles').append('<option>' + newSentenceFile + '</option>')
+         $('#sentenceFiles').val(newSentenceFile)
+         $('#newSentencesModal').modal('hide');
+         $('#sentences').val('')
+     }
  }
 
  window.onbeforeunload = function() {
@@ -51,5 +122,14 @@
          return 'Sentences were not saved. Are you sure?"'
      }
  }
+
+ $(function() {
+     if (sentences.length == 0) {
+         $('.sentences-button').prop('disabled', true);
+         $('#sentences').prop('disabled', true);
+     } else {
+         setSentences();
+     }
+ })
 </script>
 {% endblock %}

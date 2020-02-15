@@ -175,6 +175,58 @@ def save_profile(profile_json):
     return msg
 
 
+def read_sentences(sentences_path: Path, sentences_dir: Path):
+    sentences_dict = {}
+    if sentences_path.is_file():
+        try:
+            # Try user profile dir first
+            profile_dir = Path(core.profile.user_profiles_dir) / core.profile.name
+            key = str(sentences_path.relative_to(profile_dir))
+        except Exception:
+            # Fall back to system profile dir
+            profile_dir = Path(core.profile.system_profiles_dir) / core.profile.name
+            key = str(sentences_path.relative_to(profile_dir))
+
+        sentences_dict[key] = sentences_path.read_text()
+
+    # Add all .ini files from sentences_dir
+    if sentences_dir.is_dir():
+        for ini_path in sentences_dir.glob("*.ini"):
+            key = str(ini_path.relative_to(core.profile.read_path()))
+            sentences_dict[key] = ini_path.read_text()
+
+    return sentences_dict
+
+
+def save_sentences(sentences_dict):
+    # Update multiple ini files at once. Paths as keys (relative to
+    # profile directory), sentences as values.
+    num_chars = 0
+    paths_written = []
+
+    new_sentences = {}
+    for sentences_key, sentences_text in sentences_dict.items():
+        # Path is relative to profile directory
+        sentences_path = core.profile.write_path(sentences_key)
+
+        if sentences_text.strip():
+            # Overwrite file
+            _LOGGER.debug("Writing %s", sentences_path)
+
+            sentences_path.parent.mkdir(parents=True, exist_ok=True)
+            sentences_path.write_text(sentences_text)
+
+            num_chars += len(sentences_text)
+            paths_written.append(sentences_path)
+            new_sentences[sentences_key] = sentences_text
+        elif sentences_path.is_file():
+            # Remove file
+            _LOGGER.debug("Removing %s", sentences_path)
+            sentences_path.unlink()
+
+    return new_sentences
+
+
 def get_phonemes():
     speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
     examples_path = core.profile.read_path(
@@ -1598,23 +1650,28 @@ async def page_index() -> Response:
 @app.route("/sentences", methods=["GET", "POST"])
 async def page_sentences() -> Response:
     """Render sentences web page."""
-    sentences = ""
-    sentences_path = core.profile.get("speech_to_text.sentences_ini", "sentences.ini")
-    sentences_read_path = core.profile.read_path(sentences_path)
-    sentences_write_path = core.profile.write_path(sentences_path)
+    sentences_path = core.profile.read_path(
+        core.profile.get("speech_to_text.sentences_ini", "sentences.ini")
+    )
+    sentences_dir = core.profile.write_path(
+        core.profile.get("speech_to_text.sentences_dir", "intents")
+    )
+
+    sentences = read_sentences(sentences_path, sentences_dir)
 
     if request.method == "POST":
         form = await request.form
-        sentences = form["sentences"]
-        sentences_write_path.write_text(sentences)
-    elif sentences_write_path.is_file():
-        sentences = sentences_write_path.read_text()
-    elif sentences_read_path.is_file():
-        # Use default sentences
-        sentences = sentences_read_path.read_text()
+        new_sentences = json.loads(form["sentences"])
+        sentences = save_sentences(new_sentences)
+
+    sentences_json = json.dumps(sentences, indent=4)
 
     return await render_template(
-        "sentences.html", page="Sentences", sentences=sentences, **get_template_args()
+        "sentences.html",
+        page="Sentences",
+        sentences=sentences,
+        sentences_json=sentences_json,
+        **get_template_args(),
     )
 
 

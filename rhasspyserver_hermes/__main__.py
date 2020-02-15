@@ -23,6 +23,7 @@ from quart import (
     Response,
     jsonify,
     request,
+    render_template,
     safe_join,
     send_file,
     send_from_directory,
@@ -753,19 +754,31 @@ async def api_restart() -> str:
     assert core is not None
     _LOGGER.debug("Restarting Rhasspy")
 
+    # Check for PID file from supervisord.
+    # If present, send a SIGHUP to restart it and re-read the configuration file,
+    # which should have be re-written with a POST to /api/profile.
     pid_path = core.profile.read_path("supervisord.pid")
     if pid_path.is_file():
         pid = pid_path.read_text().strip()
+        assert pid, f"No PID in {pid_path}"
         restart_command = ["kill", "-SIGHUP", pid]
         _LOGGER.debug(restart_command)
 
         subprocess.check_call(restart_command)
-    else:
-        _LOGGER.info(
-            "PID file not found at %s. Shutting down with exit code 2.", str(pid_path)
-        )
+        return "Restarted Rhasspy"
 
-        sys.exit(2)
+    # Signal Docker orchestration script to restart.
+    # Wait for file to be deleted as a signal that restart is complete.
+    restart_path = core.profile.write_path(".restart_docker")
+    restart_path.write_text("")
+
+    seconds_left = 30
+    wait_seconds = 0.5
+    while restart_path.is_file():
+        time.sleep(wait_seconds)
+        seconds_left -= wait_seconds
+        if seconds_left <= 0:
+            raise RuntimeError("Did not receive shutdown signal within timeout")
 
     return "Restarted Rhasspy"
 
@@ -1497,7 +1510,13 @@ async def webfonts(filename) -> Response:
 @app.route("/", methods=["GET"])
 async def index() -> Response:
     """Render main web page."""
-    return await send_file(web_dir / "index.html")
+    return await render_template("index.html", profile=core.profile)
+
+
+@app.route("/advanced", methods=["GET"])
+async def advanced() -> Response:
+    """Render advanced web page."""
+    return await render_template("advanced.html", profile=core.profile, json=json)
 
 
 @app.route("/swagger.yaml", methods=["GET"])

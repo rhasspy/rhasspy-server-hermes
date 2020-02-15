@@ -496,7 +496,7 @@ class RhasspyCore:
         topics = [AsrTextCaptured.topic()]
 
         # Disable hotword
-        self.publish(HotwordToggleOff(siteId=self.siteId, sessionId=sessionId))
+        self.publish(HotwordToggleOff(siteId=self.siteId))
 
         try:
             # Expecting only a single result
@@ -510,7 +510,7 @@ class RhasspyCore:
             return result
         finally:
             # Enable hotword
-            self.publish(HotwordToggleOn(siteId=self.siteId, sessionId=sessionId))
+            self.publish(HotwordToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------
 
@@ -534,7 +534,7 @@ class RhasspyCore:
         topics = [AudioPlayFinished.topic(siteId=self.siteId)]
 
         # Disable hotword/ASR
-        self.publish(HotwordToggleOff(siteId=self.siteId, sessionId=requestId))
+        self.publish(HotwordToggleOff(siteId=self.siteId))
         self.publish(AsrToggleOff(siteId=self.siteId))
 
         try:
@@ -549,7 +549,7 @@ class RhasspyCore:
             return result
         finally:
             # Enable hotword/ASR
-            self.publish(HotwordToggleOn(siteId=self.siteId, sessionId=requestId))
+            self.publish(HotwordToggleOn(siteId=self.siteId))
             self.publish(AsrToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------

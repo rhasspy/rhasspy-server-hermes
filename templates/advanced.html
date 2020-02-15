@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+    <div class="text-muted pl-1">
+        <p>
+            You can edit <a href="https://rhasspy.readthedocs.io/en/latest/profiles/">your Rhasspy profile</a> directly here as JSON.
+            <br>
+            Only settings that <strong>differ from the defaults</strong> are shown.
+        </p>
+    </div>
+    <form class="form" v-on:submit.prevent="saveProfileJson">
+        <div class="form-group">
+            <div class="form-row">
+                <button type="submit" class="btn btn-primary profile-json-button">Save Profile</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-row">
+                <textarea id="profile-settings" class="form-control" style="border-width: 3px" type="text" rows="15" oninput="profileJsonDirty()">{{ json.dumps(profile.json, indent=4) }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-row">
+                <button type="submit" class="btn btn-primary profile-json-button">Save Profile</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+ function profileJsonDirty() {
+     $('#profile-settings').css('border-color', 'red');
+     $('.profile-json-button').addClass('btn-danger');
+ }
+</script>
+{% endblock %}

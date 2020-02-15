@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <title>Rhasspy Voice Assistant</title>
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+
+    <body>
+        <noscript>
+            <strong>Please enable Javascript to continue.</strong>
+        </noscript>
+
+        <!-- Top Bar -->
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
+
+            <!-- Logo -->
+            <a href="/">
+                <img id="logo" class="navbar-brand" src="/img/logo.png">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="navbar-container">
+                    <a href="/" class="text-white font-weight-bold">Rhasspy</a>
+                    <a x-html="version" href="/api/" class="badge badge-info ml-2"></a>
+                </div>
+
+                <!-- Top Bar Buttons -->
+                <div class="navbar-container ml-auto">
+                    <span x-html="profile.name" title="Profile name" class="badge badge-primary ml-2" style="font-size: 1em"></span>
+                    <button @click="train()" :disabled="isTraining" class="btn btn-success ml-2" title="Re-train current profile">Train</button>
+                    <button @click="wakeup()" class="btn btn-warning ml-2" title="Make Rhasspy listen for a voice command">Wake</button>
+                    <button @click="restart()" :disabled="this.restarting" class="btn btn-danger ml-2" title="Restart Rhasspy server">Restart</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main -->
+        <div class="main-container">
+
+            {% block body %}{% endblock %}
+
+        </div>
+        <!-- End Main -->
+
+        <!-- Busy -->
+        <div id="busyModal"class="modal fade" tabindex="-1" role="dialog" aria-labelledby="busyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="busyText" class="modal-title" id="busyModalLabel"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alert" style="display: none;" class="alert alert-success main-alert alert-dismissable" role="alert">
+            <button @click="clearAlert" type="button" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <span id="alertText"></span>
+        </div>
+
+        <!-- Load Javascript libraries -->
+        <script src="/js/recorder.js"></script>
+        <script src="/js/jquery-3.4.1.min.js"></script>
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/main.js"></script>
+
+        {% block script %}{% endblock %}
+    </body>
+</html>

@@ -17,11 +17,11 @@ RUN $VENV/bin/pip3 install -r /tmp/requirements.txt
 ARG BUILD_ARCH=amd64
 FROM ${BUILD_ARCH}/python:3.7-alpine
 
-WORKDIR /usr
-COPY --from=build /usr/.venv /usr/.venv/
+WORKDIR /rhasspy
+COPY --from=build /usr/.venv /rhasspy/.venv/
 
-COPY **/*.py rhasspyserver_hermes/
-COPY web/ web/
-COPY VERSION rhasspyserver_hermes/
+COPY **/*.py /rhasspy/rhasspyserver_hermes/
+COPY web/ /rhasspy/web/
+COPY VERSION /rhasspy/
 
-ENTRYPOINT ["/usr/.venv/bin/python3", "-m", "rhasspyserver_hermes"]
+ENTRYPOINT ["/rhasspy/.venv/bin/python3", "-m", "rhasspyserver_hermes"]

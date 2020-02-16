@@ -1,4 +1,150 @@
 {% extends "layout.html" %}
 {% block body %}
 
+<h3 class="text-center" title="Hermes siteId">{{ profile.get("mqtt.site_id", "default").split(",")[0] }}</h3>
+
+<div class="card-group">
+    <div class="card test-card">
+        <div class="card-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-warning" onclick="rhasspy.wakeUp()" title="Wake up Rhasspy and listen for a voice command">
+                            <i class="fas fa-2x fa-exclamation-circle"></i>
+                        </button>
+                        <span>Wake Up</span>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-success">
+                            <i class="fas fa-2x fa-play"></i>
+                        </button>
+                        <span>Play Command</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <i class="fas fa-microphone"></i>
+            Microphone
+        </div>
+    </div>
+    <div class="card test-card">
+        <div class="card-body">
+            <button class="btn btn-info">
+                <i class="fas fa-2x fa-upload"></i>
+            </button>
+            <span>Upload WAV File</span>
+        </div>
+        <div class="card-footer">
+            <i class="fas fa-phone-volume"></i>
+            Speech to Text
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <form onsubmit="recognize()">
+            <div class="input-group">
+                <button type="submit" id="intent-recognize" class="btn btn-primary">
+                    <i class="fas fa-inverse fa-comment"></i>
+                    Recognize
+                </button>
+                <input type="text" id="intent-text" class="form-control" placeholder="Text to recognize">
+            </div>
+            <div id="intent-error" class="alert alert-danger mt-3 mb-0" style="display: none;">
+                No intent recognized
+            </div>
+            <div id="intent-summary" class="form-group mt-3 mb-0">
+                <div class="form-row">
+                    <div id="intent-name" class="badge badge-danger"></div>
+                </div>
+                <div class="form-row">
+                    <ul id="intent-slots" class="mt-1"></ul>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card-footer">
+        Intent Recognition
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <form onsubmit="speak()">
+            <div class="input-group">
+                <button type="submit" id="tts-speak" class="btn btn-primary">
+                    <i class="fas fa-inverse fa-paper-plane"></i>
+                    Speak
+                </button>
+                <input type="text" id="tts-text" class="form-control" placeholder="Text to speak">
+            </div>
+        </form>
+    </div>
+    <div class="card-footer">
+        Text to Speech
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+ function recognize() {
+     event.preventDefault();
+     $('#intent-error').hide()
+     $('#intent-summary').hide()
+     $('#intent-slots li').remove()
+
+     var text = $('#intent-text').val();
+     if (text.length > 0) {
+         $('#intent-recognize').prop('disabled', true);
+         rhasspy.postBusy('Recognizing intent', '/api/text-to-intent', text)
+                .always(function() {
+                    $('#intent-recognize').prop('disabled', false);
+                })
+                .done(function(response) {
+                    if (response.intent.name.length == 0) {
+                        $('#intent-error').show()
+                        return;
+                    }
+
+                    $('#intent-summary').show()
+                    $('#intent-name').text(response.intent.name)
+                    console.log(response)
+                    for (slotName in response.slots) {
+                        $('#intent-slots').append(
+                            '<li>' +
+                            '<span>' + response.slots[slotName] + '</span>' +
+                            '<span class="badge badge-primary ml-1">' + slotName + '</span>' +
+                            '</li>'
+                        );
+                    }
+                });
+     } else {
+         alert('No text to recognize')
+     }
+
+     return false;
+ }
+
+ function speak() {
+     event.preventDefault();
+
+     var text = $('#tts-text').val();
+     if (text.length > 0) {
+         $('#tts-speak').prop('disabled', true);
+         rhasspy.postBusy(text, '/api/text-to-speech', text)
+                .always(function() {
+                    $('#tts-speak').prop('disabled', false);
+                });
+     } else {
+         alert('No text to speak')
+     }
+
+     return false;
+ }
+</script>
 {% endblock %}

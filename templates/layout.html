@@ -200,6 +200,11 @@
              set pocketsphinxWakeSensitivity(sensitivity) {
                  this.profile.wake.pocketsphinx.threshold =
                      this.sensitivityToThreshold(sensitivity);
+             },
+
+             intent: {
+                 intent: { name: '' },
+                 slots: []
              }
          };
 

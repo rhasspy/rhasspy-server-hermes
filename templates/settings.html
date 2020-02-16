@@ -20,6 +20,7 @@
     <!-- MQTT -->
     <div class="card" id="mqtt">
         <div class="card-header bg-dark" id="headingMqtt">
+            <i class="fas fa-inverse fa-network-wired"></i>
             <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#collapseMqtt" aria-expanded="true" aria-controls="collapseMqtt" :disabled="!profile.mqtt.enabled">
                 <i class="fas fa-sort-down"></i>MQTT
             </button>
@@ -32,36 +33,34 @@
         <div id="collapseMqtt" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
             <div class="card-body">
                 <div class="form-group">
-                    <div class="form-group">
-                        <div class="form-row">
-                            <label for="mqtt-host" class="col-form-label">Host</label>
-                            <div class="col-sm-auto">
-                                <input id="mqtt-host" type="text" class="form-control" x-model="profile.mqtt.host" :disabled="!profile.mqtt.enabled">
-                            </div>
+                    <div class="form-row">
+                        <label for="mqtt-host" class="col-form-label">Host</label>
+                        <div class="col-sm-auto">
+                            <input id="mqtt-host" type="text" class="form-control" x-model="profile.mqtt.host" :disabled="!profile.mqtt.enabled">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="form-row">
-                            <label for="mqtt-port" class="col-form-label">Port</label>
-                            <div class="col-sm-auto">
-                                <input id="mqtt-port" type="text" class="form-control" x-model="profile.mqtt.port" :disabled="!profile.mqtt.enabled">
-                            </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="mqtt-port" class="col-form-label">Port</label>
+                        <div class="col-sm-auto">
+                            <input id="mqtt-port" type="text" class="form-control" x-model="profile.mqtt.port" :disabled="!profile.mqtt.enabled">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="form-row">
-                            <label for="mqtt-username" class="col-form-label">Username</label>
-                            <div class="col-sm-auto">
-                                <input id="mqtt-username" type="text" class="form-control" x-model="profile.mqtt.username" :disabled="!profile.mqtt.enabled">
-                            </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="mqtt-username" class="col-form-label">Username</label>
+                        <div class="col-sm-auto">
+                            <input id="mqtt-username" type="text" class="form-control" x-model="profile.mqtt.username" :disabled="!profile.mqtt.enabled">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="form-row">
-                            <label for="mqtt-password" class="col-form-label">Password</label>
-                            <div class="col-sm-auto">
-                                <input id="mqtt-password" type="text" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
-                            </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="mqtt-password" class="col-form-label">Password</label>
+                        <div class="col-sm-auto">
+                            <input id="mqtt-password" type="text" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
                         </div>
                     </div>
                 </div>
@@ -70,10 +69,89 @@
     </div>
     <!-- End MQTT -->
 
+    <!-- Audio Recording -->
+    <div class="card" id="microphone">
+        <div class="card-header bg-dark" id="headingMicrophone">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-microphone"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#collapseMicrophone" aria-expanded="true" aria-controls="collapseMicrophone" :disabled="profile.microphone.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Audio Recording
+                </button>
+                <select class="ml-2" x-model="profile.microphone.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="pyaudio">PyAudio</option>
+                    <option value="arecord">arecord</option>
+                    <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseMicrophone" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- PyAudio -->
+                <div x-show="profile.microphone.system == 'pyaudio'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#pyaudio">Documentation</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End PyAudio -->
+
+                <!-- arecord -->
+                <div x-show="profile.microphone.system == 'arecord'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#alsa">Documentation</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End arecord -->
+
+                <!-- Command -->
+                <div x-show="profile.microphone.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="microphone-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="microphone-program" type="text" class="form-control" v-model="profile.microphone.command.program" :disabled="profile.microphone.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.microphone.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#audio-input">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Audio Recording -->
+
     <!-- Intent Handling -->
     <div class="card" id="handle">
         <div class="card-header bg-dark" id="headingHandle">
             <h5 class="mb-0">
+                <i class="fas fa-inverse fa-home"></i>
                 <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#collapseHandle" aria-expanded="true" aria-controls="collapseHandle" :disabled="profile.handle.system == 'dummy'">
                     <i class="fas fa-sort-down"></i>Intent Handling
                 </button>
@@ -89,6 +167,11 @@
             <div class="card-body">
                 <!-- Home Assistant -->
                 <div x-show="profile.handle.system == 'hass'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#home-assistant">Documentation</a>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="form-row">
                             <label for="hass-url" class="col-form-label">Hass URL</label>
@@ -195,6 +278,11 @@
                 <div x-show="profile.handle.system == 'remote'">
                     <div class="form-group">
                         <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#remote-server">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
                             <label for="remote-handle-url" class="col-form-label">Remote URL</label>
                             <div class="col">
                                 <input id="remote-handle-url" type="text" class="form-control" x-model="profile.handle.remote.url" :disabled="profile.handle.system != 'remote'">
@@ -203,6 +291,24 @@
                     </div>
                 </div>
                 <!-- End Remote -->
+
+                <!-- Command -->
+                <div x-show="profile.handle.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="handle-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="handle-program" type="text" class="form-control" v-model="profile.handle.command.program" :disabled="profile.handle.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
 
             </div>
         </div>
@@ -213,6 +319,7 @@
     <div class="card" id="wake">
         <div class="card-header bg-dark" id="headingWake">
             <h5 class="mb-0">
+                <i class="fas fa-inverse fa-exclamation-circle"></i>
                 <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy' }" data-toggle="collapse" data-target="#collapseWake" aria-expanded="true" aria-controls="collapseWake" :disabled="profile.wake.system == 'dummy'">
                     <i class="fas fa-sort-down"></i>Wake Word
                 </button>
@@ -222,6 +329,7 @@
                     <option value="snowboy">Snowboy</option>
                     <option value="pocketsphinx">Pocketsphinx</option>
                     <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
                 </select>
             </h5>
         </div>
@@ -230,6 +338,11 @@
 
                 <!-- Pocketsphinx -->
                 <div x-show="profile.wake.system == 'pocketsphinx'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#pocketsphinx">Documentation</a>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="form-row">
                             <label for="wake-pocketsphinx-keyphrase" class="col-form-label">Wake Keyphrase</label>
@@ -254,6 +367,11 @@
 
                 <!-- Snowboy -->
                 <div x-show="profile.wake.system == 'snowboy'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#snowboy">Documentation</a>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="form-row">
                             <label for="snowboy-model" class="col-form-label">Model Names</label>
@@ -293,6 +411,11 @@
                 <div x-show="profile.wake.system == 'porcupine'">
                     <div class="form-group">
                         <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#porcupine">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
                             <label for="porcupine-model" class="col-form-label">Keyword Files</label>
                             <div class="col-sm-auto">
                                 <input id="porcupine-keyword" type="text" class="form-control" x-model="profile.wake.porcupine.keyword_path" :disabled="profile.wake.system != 'porcupine'">
@@ -315,10 +438,623 @@
                 </div>
                 <!-- End Porcupine -->
 
+                <!-- Command -->
+                <div x-show="profile.wake.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="wake-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="wake-program" type="text" class="form-control" v-model="profile.wake.command.program" :disabled="profile.wake.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.wake.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#wake-word">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
             </div>
         </div>
     </div>
     <!-- End Wake Word -->
+
+    <!-- Speech to Text -->
+    <div class="card" id="speech">
+        <div class="card-header bg-dark" id="headingSpeech">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-phone-volume"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy' }" data-toggle="collapse" data-target="#collapseSpeech" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Speech to Text
+                </button>
+                <select class="ml-2" x-model="profile.speech_to_text.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="pocketsphinx">Pocketsphinx</option>
+                    <option value="kaldi">Kaldi</option>
+                    <option value="remote">Remote HTTP</option>
+                    <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseSpeech" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- Pocketsphinx -->
+                <div x-show="profile.speech_to_text.system == 'pocketsphinx'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#pocketsphinx">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning" x-show="!profile.speech_to_text.pocketsphinx.compatible">
+                        Not compatible with this profile
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <ul>
+                                <li>Acoustic Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.acoustic_model")) }}</tt> </li>
+                                <li>Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.dictionary")) }}</tt> </li>
+                                <li>Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.language_model")) }}</tt> </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <input type="checkbox" id="pocketsphinx-open" v-model="profile.speech_to_text.pocketsphinx.open_transcription">
+                            <label for="pocketsphinx-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Pocketsphinx -->
+
+                <!-- Kaldi -->
+                <div x-show="profile.speech_to_text.system == 'kaldi'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#kaldi">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning" x-show="!profile.speech_to_text.kaldi.compatible">
+                        Not compatible with this profile
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <ul>
+                                <li>Model Root: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.model_dir")) }}</tt> </li>
+                                <li>Graph Directory: <tt>&lt;model_root&gt;/{{ profile.get("speech_to_text.kaldi.graph") }}</tt> </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <input type="checkbox" id="kaldi-open" v-model="profile.speech_to_text.kaldi.open_transcription">
+                            <label for="kaldi-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Kaldi -->
+
+                <!-- Remote -->
+                <div x-show="profile.speech_to_text.system == 'remote'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#remote">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="stt-url" class="col-form-label">Rhasspy Speech-to-Text URL</label>
+                            <div class="col">
+                                <input id="stt-url" type="text" class="form-control" v-model="profile.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Example: http://localhost:12101/api/speech-to-text
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Remote -->
+
+                <!-- Command -->
+                <div x-show="profile.speech_to_text.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="stt-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="stt-program" type="text" class="form-control" v-model="profile.speech_to_text.command.program" :disabled="profile.speech_to_text.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.speech_to_text.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#speech-to-text">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Speech to Text -->
+
+    <!-- Intent Recognition -->
+    <div class="card" id="intent">
+        <div class="card-header bg-dark" id="headingIntent">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-comment"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#collapseIntent" aria-expanded="true" aria-controls="collapseIntent" :disabled="profile.intent.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Intent Recognition
+                </button>
+                <select class="ml-2" x-model="profile.intent.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="fsticuffs">Fsticuffs</option>
+                    <option value="fuzzywuzzy">Fuzzywuzzy</option>
+                    <option value="remote">Remote HTTP</option>
+                    <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseIntent" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- Fsticuffs -->
+                <div x-show="profile.intent.system == 'fsticuffs'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#fsticuffs">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <ul>
+                                <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
+                                <li>Stop Words: <tt>{{ profile.read_path(profile.get("intent.adapt.stop_words")) }}</tt> </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <input type="checkbox" id="fsticuffs-fuzzy" v-model="profile.intent.fsticuffs.fuzzy" :disabled="profile.intent.system != 'fsticuffs'">
+
+                            <label for="fsticuffs-fuzzy" class="col-form-label">Fuzzy text matching</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Fsticuffs -->
+
+                <!-- Fuzzywuzzy -->
+                <div x-show="profile.intent.system == 'fuzzywuzzy'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#fuzzywuzzy">Documentation</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Fuzzywuzzy -->
+
+                <!-- Remote -->
+                <div x-show="profile.intent.system == 'remote'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#remote">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="intent-url" class="col-form-label">Rhasspy Text-to-Intent URL</label>
+                            <div class="col">
+                                <input id="intent-url" type="text" class="form-control" v-model="profile.intent.remote.url" :disabled="profile.intent.system != 'remote'">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Example: http://localhost:12101/api/text-to-intent
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Remote -->
+
+                <!-- Command -->
+                <div x-show="profile.intent.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="stt-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="stt-program" type="text" class="form-control" v-model="profile.intent.command.program" :disabled="profile.intent.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.intent.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#intent-recognition">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Intent Recognition -->
+
+    <!-- Text to Speech -->
+    <div class="card" id="tts">
+        <div class="card-header bg-dark" id="headingTTS">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-paper-plane"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#collapseTTS" aria-expanded="true" aria-controls="collapseTTS" :disabled="profile.text_to_speech.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Text to Speech
+                </button>
+                <select class="ml-2" x-model="profile.text_to_speech.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="espeak">Espeak</option>
+                    <option value="picotts">PicoTTS</option>
+                    <option value="flite">Flite</option>
+                    <option value="marytts">MaryTTS</option>
+                    <option value="remote">Remote HTTP</option>
+                    <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseTTS" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- Espeak -->
+                <div x-show="profile.text_to_speech.system == 'espeak'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#espeak">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="marytts-voice" class="col-form-label">eSpeak Voice</label>
+                            <div class="col">
+                                <input id="espeak-voice" type="text" class="form-control" v-model="profile.text_to_speech.espeak.voice" :disabled="profile.text_to_speech.system != 'espeak'" placeholder="default">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Espeak -->
+
+                <!-- PicoTTS -->
+                <div x-show="profile.text_to_speech.system == 'picotts'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#picotts">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="picotts-language" class="col-form-label">pico-tts Language</label>
+                            <div class="col">
+                                <input id="picotts-language" type="text" class="form-control" v-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End PicoTTS -->
+
+                <!-- Flite -->
+                <div x-show="profile.text_to_speech.system == 'flite'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#flite">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="flite-voice" class="col-form-label">flite Voice</label>
+                            <div class="col">
+                                <input id="flite-voice" type="text" class="form-control" v-model="profile.text_to_speech.flite.voice" :disabled="profile.text_to_speech.system != 'flite'" placeholder="kal16">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Flite -->
+
+                <!-- MaryTTS -->
+                <div x-show="profile.text_to_speech.system == 'marytts'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#marytts">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tts-system" id="tts-system-marytts" value="marytts" v-model="profile.text_to_speech.system">
+                                <label class="form-check-label" for="tts-system-marytts">
+                                    Use marytts <a href="http://mary.dfki.de">MaryTTS</a> server
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="marytts-url" class="col-form-label">MaryTTS Server URL</label>
+                            <div class="col">
+                                <input id="marytts-url" type="text" class="form-control" v-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Example: http://localhost:59125
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="marytts-voice" class="col-form-label">MaryTTS Voice</label>
+                            <div class="col">
+                                <input id="marytts-voice" type="text" class="form-control" v-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End MaryTTS -->
+
+                <!-- Remote -->
+                <div x-show="profile.text_to_speech.system == 'remote'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#remote">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="tts-url" class="col-form-label">Rhasspy Text-to-Speech URL</label>
+                            <div class="col">
+                                <input id="tts-url" type="text" class="form-control" v-model="profile.text_to_speech.remote.url" :disabled="profile.text_to_speech.system != 'remote'">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Example: http://localhost:12101/api/text-to-speech
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Remote -->
+
+                <!-- Command -->
+                <div x-show="profile.text_to_speech.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="tts-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="tts-program" type="text" class="form-control" v-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.text_to_speech.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#text-to-speech">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Audio Recording -->
+
+    <!-- Audio Playing -->
+    <div class="card" id="sounds">
+        <div class="card-header bg-dark" id="headingSounds">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-volume-up"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#collapseSounds" aria-expanded="true" aria-controls="collapseSounds" :disabled="profile.sounds.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Audio Recording
+                </button>
+                <select class="ml-2" x-model="profile.sounds.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="aplay">aplay</option>
+                    <option value="remote">Remote</option>
+                    <option value="command">Local Command</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseSounds" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- aplay -->
+                <div x-show="profile.sounds.system == 'aplay'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#alsa">Documentation</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End aplay -->
+
+                <!-- Remote -->
+                <div x-show="profile.sounds.system == 'remote'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#remote">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="tts-url" class="col-form-label">Audio Output URL</label>
+                            <div class="col">
+                                <input id="tts-url" type="text" class="form-control" v-model="profile.sounds.remote.url" :disabled="profile.sounds.system != 'remote'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Remote -->
+
+                <!-- Command -->
+                <div x-show="profile.sounds.system == 'command'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#command">Documentation</a>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="sounds-program" class="col-form-label">Program</label>
+                            <div class="col">
+                                <input id="sounds-program" type="text" class="form-control" v-model="profile.sounds.command.program" :disabled="profile.sounds.system != 'command'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Command -->
+
+                <!-- Hermes -->
+                <div x-show="profile.sounds.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#audio-output">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Audio Recording -->
+
+    <!-- Dialogue Management -->
+    <div class="card" id="dialogue">
+        <div class="card-header bg-dark" id="headingDialogue">
+            <h5 class="mb-0">
+                <i class="fas fa-inverse fa-tasks"></i>
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.dialogue.system == 'dummy', 'btn-success': profile.dialogue.system != 'dummy' }" data-toggle="collapse" data-target="#collapseDialogue" aria-expanded="true" aria-controls="collapseDialogue" :disabled="profile.dialogue.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Dialogue Management
+                </button>
+                <select class="ml-2" x-model="profile.dialogue.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="rhasspy">Rhasspy</option>
+                    <option value="hermes">Hermes</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseDialogue" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- Rhasspy -->
+                <div x-show="profile.dialogue.system == 'rhasspy'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#dialogue-manager">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                Uses <a href="https://github.com/rhasspy/rhasspy-dialogue-hermes">rhasspy-dialogue-hermes</a> service
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Rhasspy -->
+
+                <!-- Hermes -->
+                <div x-show="profile.dialogue.system == 'hermes'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <a href="https://rhasspy.readthedocs.io/en/latest/services/#dialogue-manager">Documentation</a>
+                        </div>
+                        <div class="form-row">
+                            <p>
+                                External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Hermes -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Audio Recording -->
 
     <button onclick="saveProfile()" class="btn btn-primary mt-3">Save Settings</button>
 </div>

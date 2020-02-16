@@ -23,6 +23,7 @@ from quart import (
     Quart,
     Response,
     jsonify,
+    redirect,
     request,
     render_template,
     safe_join,
@@ -1610,6 +1611,7 @@ css_dir = web_dir / "css"
 js_dir = web_dir / "js"
 img_dir = web_dir / "img"
 webfonts_dir = web_dir / "webfonts"
+docs_dir = web_dir / "docs"
 
 
 @app.route("/css/<path:filename>", methods=["GET"])
@@ -1634,6 +1636,23 @@ async def img(filename) -> Response:
 async def webfonts(filename) -> Response:
     """Web font static endpoint."""
     return await send_from_directory(webfonts_dir, filename)
+
+
+# @app.route("/docs", methods=["GET"])
+# @app.route("/docs/", methods=["GET"])
+# async def docs_index() -> Response:
+#     """Documentation index static endpoint."""
+#     return await send_from_directory(docs_dir, "index.html")
+
+
+# @app.route("/docs/<path:filename>", methods=["GET"])
+# async def docs(filename) -> Response:
+#     """Documentation static endpoint."""
+#     doc_file = Path(safe_join(docs_dir, filename))
+#     if doc_file.is_dir():
+#         doc_file = doc_file / "index.html"
+
+#     return await send_file(doc_file)
 
 
 # ----------------------------------------------------------------------------

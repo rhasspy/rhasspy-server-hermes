@@ -1,0 +1,339 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container" x-data="rhasspy">
+    <button onclick="saveProfile()" class="btn btn-primary mb-3">Save Settings</button>
+
+    <!-- siteId -->
+    <div class="form-group">
+        <div class="form-row">
+            <label for="mqtt-siteid" class="col-form-label">siteId:</label>
+            <div class="col-sm-auto">
+                <input id="mqtt-siteid" type="text" class="form-control" x-model="profile.mqtt.site_id" placeholder="default">
+            </div>
+            <div class="col text-muted">
+                (comma-separated)
+            </div>
+        </div>
+    </div>
+    <!-- End siteId -->
+
+    <!-- MQTT -->
+    <div class="card" id="mqtt">
+        <div class="card-header bg-dark" id="headingMqtt">
+            <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#collapseMqtt" aria-expanded="true" aria-controls="collapseMqtt" :disabled="!profile.mqtt.enabled">
+                <i class="fas fa-sort-down"></i>MQTT
+            </button>
+
+            <select class="ml-2" x-model="profile.mqtt.enabled">
+                <option value="">Internal</option>
+                <option value="true">External</option>
+            </select>
+        </div>
+        <div id="collapseMqtt" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="mqtt-host" class="col-form-label">Host</label>
+                            <div class="col-sm-auto">
+                                <input id="mqtt-host" type="text" class="form-control" x-model="profile.mqtt.host" :disabled="!profile.mqtt.enabled">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="mqtt-port" class="col-form-label">Port</label>
+                            <div class="col-sm-auto">
+                                <input id="mqtt-port" type="text" class="form-control" x-model="profile.mqtt.port" :disabled="!profile.mqtt.enabled">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="mqtt-username" class="col-form-label">Username</label>
+                            <div class="col-sm-auto">
+                                <input id="mqtt-username" type="text" class="form-control" x-model="profile.mqtt.username" :disabled="!profile.mqtt.enabled">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="mqtt-password" class="col-form-label">Password</label>
+                            <div class="col-sm-auto">
+                                <input id="mqtt-password" type="text" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End MQTT -->
+
+    <!-- Intent Handling -->
+    <div class="card" id="handle">
+        <div class="card-header bg-dark" id="headingHandle">
+            <h5 class="mb-0">
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#collapseHandle" aria-expanded="true" aria-controls="collapseHandle" :disabled="profile.handle.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Intent Handling
+                </button>
+                <select class="ml-2" x-model="profile.handle.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="hass">Home Assistant</option>
+                    <option value="remote">Remote HTTP</option>
+                    <option value="command">Local Command</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseHandle" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
+            <div class="card-body">
+                <!-- Home Assistant -->
+                <div x-show="profile.handle.system == 'hass'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="hass-url" class="col-form-label">Hass URL</label>
+                            <div class="col">
+                                <input id="hass-url" type="text" class="form-control" x-model="profile.home_assistant.url"
+                                       :disabled="profile.handle.system != 'hass'">
+                            </div>
+                            <div class="col text-muted">
+                                Address of your Home Assistant server
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="hass-token" class="col-form-label">Access Token</label>
+                            <div class="col">
+                                <input id="hass-token" type="text" class="form-control" x-model="profile.home_assistant.access_token"
+                                       :disabled="profile.handle.system != 'hass'">
+                            </div>
+                            <div class="col text-muted">
+                                Long-lived access token (automatically filled in Hass.IO)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="hass-password" class="col-form-label">API Password</label>
+                            <div class="col">
+                                <input id="hass-password" type="text" class="form-control" x-model="profile.home_assistant.api_password"
+                                       :disabled="profile.handle.system != 'hass'">
+                            </div>
+                            <div class="col text-muted">
+                                Home Assistant password (deprecated)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="hass-handle-type-event" value="event" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
+                                <label class="form-check-label" for="hass-handle-type-event">
+                                    Send <strong>events</strong> to Home Assistant (<tt>/api/events</tt>)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col">
+                                <p class="text-muted">
+                                    Events will be named <tt x-html="profile.home_assistant.event_type_format.replace('{0}', 'INTENT_NAME')"></tt>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="form-row mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="hass-handle-type-intent" value="intent" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
+                                <label class="form-check-label" for="hass-handle-type-intent">
+                                    Send <strong>intents</strong> to Home Assistant (<tt>/api/intents</tt>)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col">
+                                <p class="text-muted">
+                                    Requires the <a href="https://www.home-assistant.io/integrations/intent/">intent component</a> in your <tt>configuration.yaml</tt>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <p class="font-weight-bold">For Self-Signed Certificates:</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="col-auto">
+                                <label for="pemPath" class="col-form-label col">PEM path</label>
+                            </div>
+                            <div class="col">
+                                <input id="pemPath" ref="pemPath" type="text" class="form-control" x-model="profile.home_assistant.pem_file"
+                                       :disabled="profile.handle.system != 'hass'">
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-danger"
+                                        @click="pemPath = ''"
+                                        title="Clear the PEM path (no self-signed certificate)"
+                                        :disabled="profile.handle.system != 'hass'">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <p class="muted">Full path to your <a href="http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification">CA_BUNDLE file or a directory with certificates of trusted CAs.</a></p>
+                        </div>
+                        <div class="form-row">
+                            <p class="muted">Use <tt>$RHASSPY_PROFILE_DIR</tt> environment variable for the directory of this profile.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Home Assistant -->
+
+                <!-- Remote -->
+                <div x-show="profile.handle.system == 'remote'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="remote-handle-url" class="col-form-label">Remote URL</label>
+                            <div class="col">
+                                <input id="remote-handle-url" type="text" class="form-control" x-model="profile.handle.remote.url" :disabled="profile.handle.system != 'remote'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Remote -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Intent Handling -->
+
+    <!-- Wake Word -->
+    <div class="card" id="wake">
+        <div class="card-header bg-dark" id="headingWake">
+            <h5 class="mb-0">
+                <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy' }" data-toggle="collapse" data-target="#collapseWake" aria-expanded="true" aria-controls="collapseWake" :disabled="profile.wake.system == 'dummy'">
+                    <i class="fas fa-sort-down"></i>Wake Word
+                </button>
+                <select class="ml-2" x-model="profile.wake.system">
+                    <option value="dummy">Disabled</option>
+                    <option value="porcupine">Porcupine</option>
+                    <option value="snowboy">Snowboy</option>
+                    <option value="pocketsphinx">Pocketsphinx</option>
+                    <option value="command">Local Command</option>
+                </select>
+            </h5>
+        </div>
+        <div id="collapseWake" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
+            <div class="card-body">
+
+                <!-- Pocketsphinx -->
+                <div x-show="profile.wake.system == 'pocketsphinx'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="wake-pocketsphinx-keyphrase" class="col-form-label">Wake Keyphrase</label>
+                            <div class="col-sm-auto">
+                                <input id="wake-pocketsphinx-keyphrase" type="text" class="form-control" x-model="profile.wake.pocketsphinx.keyphrase" :disabled="profile.wake.system != 'pocketsphinx'">
+                            </div>
+                            <div class="col text-muted">
+                                3-4 syllables recommended
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="wake-pocketsphinx-sensitivity" class="col-form-label">Sensitivity</label>
+                            <div class="col-sm-auto">
+                                <input id="wake-pocketsphinx-sensitivity" type="number" min="0" max="1" step="0.1" class="form-control" x-model="pocketsphinxWakeSensitivity" :disabled="profile.wake.system != 'pocketsphinx'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Pocketsphinx -->
+
+                <!-- Snowboy -->
+                <div x-show="profile.wake.system == 'snowboy'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="snowboy-model" class="col-form-label">Model Names</label>
+                            <div class="col-sm-auto">
+                                <input id="snowboy-model" type="text" class="form-control" x-model="profile.wake.snowboy.model" :disabled="profile.wake.system != 'snowboy'">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Put models in the <tt>snowboy</tt> directory in your profile
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="wake-snowboy-sensitivity" class="col-form-label">Sensitivity</label>
+                            <div class="col-sm-auto">
+                                <input id="wake-snowboy-sensitivity" type="text" class="form-control" x-model="profile.wake.snowboy.sensitivity" :disabled="profile.wake.system != 'snowboy'"> <span class="text-muted">(comma-separated)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <input type="checkbox" id="wake-snowboy-applyfrontend" x-model="profile.wake.snowboy.apply_frontend" :disabled="profile.wake.system != 'snowboy'">
+                            <label for="wake-snowboy-applyfrontend" class="col-form-label">Apply Frontend (<a href="https://github.com/kitt-ai/snowboy#pretrained-universal-models" title="Parameters for pre-trained models">more info</a>)</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <p>
+                            See <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
+                        </p>
+                    </div>
+                </div>
+                <!-- End Snowboy -->
+
+                <!-- Porcupine -->
+                <div x-show="profile.wake.system == 'porcupine'">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="porcupine-model" class="col-form-label">Keyword Files</label>
+                            <div class="col-sm-auto">
+                                <input id="porcupine-keyword" type="text" class="form-control" x-model="profile.wake.porcupine.keyword_path" :disabled="profile.wake.system != 'porcupine'">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col text-muted">
+                                Put keyword files in the <tt>porcupine</tt> directory in your profile
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="wake-porcupine-sensitivity" class="col-form-label">Sensitivity</label>
+                            <div class="col-sm-auto">
+                                <input id="wake-porcupine-sensitivity" type="text" class="form-control" x-model="profile.wake.porcupine.sensitivity" :disabled="profile.wake.system != 'porcupine'"> <span class="text-muted">(comma-separated)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Porcupine -->
+
+            </div>
+        </div>
+    </div>
+    <!-- End Wake Word -->
+
+    <button onclick="saveProfile()" class="btn btn-primary mt-3">Save Settings</button>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+ function saveProfile() {
+     rhasspy.postBusy('Saving profile',
+                      '/api/profile',
+                      JSON.stringify(rhasspy.profile),
+                      false)
+            .done(function() {
+                rhasspy.restart();
+            });
+ }
+</script>
+{% endblock %}

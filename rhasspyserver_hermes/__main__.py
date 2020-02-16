@@ -142,7 +142,7 @@ def get_template_args():
     }
 
 
-def save_profile(profile_json):
+def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
     # Ensure that JSON is valid
     recursive_remove(core.profile.system_json, profile_json)
 
@@ -909,7 +909,7 @@ async def api_restart() -> str:
     seconds_left = 30
     wait_seconds = 0.5
     while restart_path.is_file():
-        time.sleep(wait_seconds)
+        await asyncio.sleep(wait_seconds)
         seconds_left -= wait_seconds
         if seconds_left <= 0:
             raise RuntimeError("Did not receive shutdown signal within timeout")
@@ -1736,14 +1736,17 @@ async def page_slots() -> Response:
     )
 
 
-@app.route("/advanced", methods=["GET", "POST"])
+@app.route("/settings", methods=["GET"])
+async def page_settings() -> Response:
+    """Render settings web page."""
+    return await render_template(
+        "settings.html", page="Settings", **get_template_args()
+    )
+
+
+@app.route("/advanced", methods=["GET"])
 async def page_advanced() -> Response:
     """Render advanced web page."""
-    if request.method == "POST":
-        form = await request.form
-        profile_json = json.loads(form["profileJson"])
-        save_profile(profile_json)
-
     return await render_template(
         "advanced.html", page="Advanced", **get_template_args()
     )

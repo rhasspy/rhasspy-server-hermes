@@ -1,47 +1,44 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="container">
-    <form class="form" method="post" onsubmit="beforeSubmit()">
-        <input id="slotsJson" type="hidden" name="slots">
-        <div class="form-group">
-            <div class="form-row text-muted pl-1">
-                <p>
-                    Slots are named sets of values, referenced by <tt>$slotName</tt> in your sentences. A slot value can contain <tt>(alternative | words)</tt>, etc. like sentences.
-                </p>
+    <div class="form-group">
+        <div class="form-row text-muted pl-1">
+            <p>
+                Slots are named sets of values, referenced by <tt>$slotName</tt> in your sentences. A slot value can contain <tt>(alternative | words)</tt>, etc. like sentences.
+            </p>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <div class="col-xs-auto">
+                <button onclick="saveSlots()" class="btn btn-primary slots-button">Save Slots</button>
+            </div>
+            <div class="col-xs-auto">
+                <select id="slots" class="form-control" onchange="setSlot()">
+                    {% if slots: %}
+                    {% for slot_name in sorted(slots): %}
+                    <option>{{ slot_name }}</option>
+                    {% endfor %}
+                    {% else: %}
+                    <option selected value="">No Slots</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="col-xs-auto">
+                <button type="button" class="btn btn-success" onclick="showNewSlot()">New Slot</button>
             </div>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <div class="col-xs-auto">
-                    <button type="submit" class="btn btn-primary slots-button">Save Slots</button>
-                </div>
-                <div class="col-xs-auto">
-                    <select id="slots" class="form-control" onchange="setSlot()">
-                        {% if slots: %}
-                            {% for slot_name in sorted(slots): %}
-                            <option>{{ slot_name }}</option>
-                            {% endfor %}
-                        {% else: %}
-                        <option selected value="">No Slots</option>
-                        {% endif %}
-                    </select>
-                </div>
-                <div class="col-xs-auto">
-                    <button type="button" class="btn btn-success" onclick="showNewSlot()">New Slot</button>
-                </div>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <textarea id="slotValues" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSlotValues()"></textarea>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <textarea id="slotValues" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSlotValues()"></textarea>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <button onclick="saveSlots()" class="btn btn-primary slots-button"">Save Slots</button>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <button type="submit" class="btn btn-primary slots-button"">Save Slots</button>
-            </div>
-        </div>
-    </form>
+    </div>
 </div>
 
 <div id="newSlotModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newSlotModalLabel" aria-hidden="true">
@@ -76,10 +73,21 @@
      $('.slots-button').addClass('btn-danger');
  }
 
- function beforeSubmit() {
+ function clearDirty() {
      isDirty = false;
-     $('#slotsJson').val(JSON.stringify(slots))
-     rhasspy.showBusy('Saving slots');
+     $('#slotValues').css('border-color', '');
+     $('.slots-button').removeClass('btn-danger');
+ }
+
+ function saveSlots() {
+     rhasspy.postBusy('Saving slots',
+                      '/api/slots',
+                      JSON.stringify(slots),
+                      false)
+            .done(function() {
+                clearDirty();
+                rhasspy.train();
+            });
  }
 
  function updateSlotValues() {

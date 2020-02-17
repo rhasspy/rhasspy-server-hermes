@@ -74,7 +74,7 @@ def sentences_to_graph(
 
     # Load slot values
     slot_replacements = rhasspynlu.get_slot_replacements(
-        sentences,
+        intents,
         slots_dirs=slots_dirs,
         slot_programs_dirs=slot_programs_dirs,
         slot_visitor=word_visitor,

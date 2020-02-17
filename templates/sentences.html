@@ -1,46 +1,43 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="container">
-    <form class="form" method="post" onsubmit="beforeSubmit()">
-        <input id="sentencesJson" type="hidden" name="sentences">
-        <div class="form-group">
-            <div class="form-row text-muted pl-1">
-                <p>Example sentences, formatted <a href="https://docs.python.org/3/library/configparser.html">ini style</a>, with each section (intent) containing a <a href="https://rhasspy.readthedocs.io/en/latest/training/#sentencesini">simplified JSGF Grammar</a>.</p>
+    <div class="form-group">
+        <div class="form-row text-muted pl-1">
+            <p>Example sentences, formatted <a href="https://docs.python.org/3/library/configparser.html">ini style</a>, with each section (intent) containing a <a href="https://rhasspy.readthedocs.io/en/latest/training/#sentencesini">simplified JSGF Grammar</a>.</p>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <div class="col-xs-auto">
+                <button onclick="saveSentences()" class="btn btn-primary sentences-button">Save Sentences</button>
+            </div>
+            <div class="col-xs-auto">
+                <select id="sentenceFiles" class="form-control" onchange="setSentences()">
+                    {% for sentences_name in sentences: %}
+                    <option {% if sentences_name == "sentences.ini" %}selected{% endif %}>{{ sentences_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-xs-auto">
+                <button type="button" class="btn btn-success" onclick="showNewSentences()">New Sentences File</button>
             </div>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <div class="col-xs-auto">
-                    <button type="submit" class="btn btn-primary sentences-button">Save Sentences</button>
-                </div>
-                <div class="col-xs-auto">
-                    <select id="sentenceFiles" class="form-control" onchange="setSentences()">
-                        {% for sentences_name in sentences: %}
-                        <option {% if sentences_name == "sentences.ini" %}selected{% endif %}>{{ sentences_name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-xs-auto">
-                    <button type="button" class="btn btn-success" onclick="showNewSentences()">New Sentences File</button>
-                </div>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <textarea id="sentences" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSentences()"></textarea>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <textarea id="sentences" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSentences()"></textarea>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row text-muted pl-1">
+            <p>Sentences shouldn't contain non-words characters like commas and periods. Optional words are <tt>[bracketed]</tt>. Alternatives are <tt>(separated | by | pipes)</tt>. Rules have an <tt>=</tt> after their name, optionally contain <tt>{tags}</tt>, and are referenced <tt>&lt;by_name&gt;</tt>.</p>
         </div>
-        <div class="form-group">
-            <div class="form-row text-muted pl-1">
-                <p>Sentences shouldn't contain non-words characters like commas and periods. Optional words are <tt>[bracketed]</tt>. Alternatives are <tt>(separated | by | pipes)</tt>. Rules have an <tt>=</tt> after their name, optionally contain <tt>{tags}</tt>, and are referenced <tt>&lt;by_name&gt;</tt>.</p>
-            </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <button onclick="saveSentences()" class="btn btn-primary sentences-button"">Save Sentences</button>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <button type="submit" class="btn btn-primary sentences-button"">Save Sentences</button>
-            </div>
-        </div>
-    </form>
+    </div>
 </div>
 
 <div id="newSentencesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newSentencesModalLabel" aria-hidden="true">
@@ -75,10 +72,21 @@
      $('.sentences-button').addClass('btn-danger');
  }
 
- function beforeSubmit() {
+ function clearDirty() {
      isDirty = false;
-     $('#sentencesJson').val(JSON.stringify(sentences))
-     rhasspy.showBusy('Saving sentences');
+     $('#sentences').css('border-color', '');
+     $('.sentences-button').removeClass('btn-danger');
+ }
+
+ function saveSentences() {
+     rhasspy.postBusy('Saving sentences',
+                      '/api/sentences',
+                      JSON.stringify(sentences),
+                      false)
+            .done(function() {
+                clearDirty();
+                rhasspy.train();
+            });
  }
 
  function updateSentences() {

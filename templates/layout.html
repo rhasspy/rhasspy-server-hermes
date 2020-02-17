@@ -137,16 +137,18 @@
                  $('#alert').hide()
              },
 
-             postBusy: function(message, url, data, hideOnComplete) {
+             postBusy: function(message, url, data, hideOnComplete, contentType) {
                  var rhasspy = this;
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
+                 contentType = (contentType === undefined) ? 'application/json' : contentType;
 
                  rhasspy.showBusy(message);
                  return $.ajax({
                      url: url,
                      type: 'POST',
                      data: data,
-                     contentType: 'application/json',
+                     processData: false,
+                     contentType: contentType,
                      complete: function() {
                          // Hide busy modal
                          if (hideOnComplete) {
@@ -170,7 +172,7 @@
              restart: function() {
                  this.postBusy('Restarting Rhasspy', '/api/restart')
                      .done(function() {
-                         window.reload();
+                         window.location.reload()
                      });
              },
 

@@ -16,6 +16,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import jinja2
 import rhasspyprofile
 import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
@@ -53,17 +54,8 @@ from .utils import (
     recursive_remove,
 )
 
-# -----------------------------------------------------------------------------
-# Quart Web App Setup
-# -----------------------------------------------------------------------------
-
 _LOGGER = logging.getLogger(__name__)
-
 loop = asyncio.get_event_loop()
-
-app = Quart("rhasspy")
-app.secret_key = str(uuid4())
-app = cors(app)
 
 # -----------------------------------------------------------------------------
 # Parse Arguments
@@ -125,6 +117,18 @@ if args.user_profiles:
     user_profiles_dir = Path(args.user_profiles)
 else:
     user_profiles_dir = Path("~/.config/rhasspy/profiles").expanduser()
+
+# -----------------------------------------------------------------------------
+# Quart Web App Setup
+# -----------------------------------------------------------------------------
+
+web_dir = Path(args.web_dir)
+assert web_dir.is_dir(), f"Missing web directory {web_dir}"
+template_dir = web_dir.parent / "templates"
+
+app = Quart("rhasspy", template_folder=template_dir)
+app.secret_key = str(uuid4())
+app = cors(app)
 
 # -----------------------------------------------------------------------------
 # Template Functions
@@ -533,6 +537,7 @@ async def api_listen_for_command() -> Response:
                     currentSensitivity=1,
                     siteId=core.siteId,
                     sessionId=sessionId,
+                    sendAudioCaptured=True,
                 ),
                 {"wakewordId": wakewordId},
             )
@@ -888,32 +893,41 @@ async def api_restart() -> str:
     """Restart Rhasspy actors."""
     assert core is not None
     _LOGGER.debug("Restarting Rhasspy")
+    in_docker = True
 
     # Check for PID file from supervisord.
     # If present, send a SIGHUP to restart it and re-read the configuration file,
     # which should have be re-written with a POST to /api/profile.
     pid_path = core.profile.read_path("supervisord.pid")
     if pid_path.is_file():
+        in_docker = False
         pid = pid_path.read_text().strip()
         assert pid, f"No PID in {pid_path}"
         restart_command = ["kill", "-SIGHUP", pid]
         _LOGGER.debug(restart_command)
 
         subprocess.check_call(restart_command)
-        return "Restarted Rhasspy"
 
-    # Signal Docker orchestration script to restart.
-    # Wait for file to be deleted as a signal that restart is complete.
-    restart_path = core.profile.write_path(".restart_docker")
-    restart_path.write_text("")
+    if in_docker:
+        # Signal Docker orchestration script to restart.
+        # Wait for file to be deleted as a signal that restart is complete.
+        restart_path = core.profile.write_path(".restart_docker")
+        restart_path.write_text("")
 
-    seconds_left = 30
-    wait_seconds = 0.5
-    while restart_path.is_file():
-        await asyncio.sleep(wait_seconds)
-        seconds_left -= wait_seconds
-        if seconds_left <= 0:
-            raise RuntimeError("Did not receive shutdown signal within timeout")
+    # Shut down core
+    await core.shutdown()
+
+    # Start core back up
+    await start_rhasspy()
+
+    if in_docker:
+        seconds_left = 30
+        wait_seconds = 0.5
+        while restart_path.is_file():
+            await asyncio.sleep(wait_seconds)
+            seconds_left -= wait_seconds
+            if seconds_left <= 0:
+                raise RuntimeError("Did not receive shutdown signal within timeout")
 
     return "Restarted Rhasspy"
 
@@ -1603,10 +1617,6 @@ async def handle_error(err) -> typing.Tuple[str, int]:
 # Static Routes
 # ---------------------------------------------------------------------
 
-web_dir = Path(args.web_dir)
-assert web_dir.is_dir(), f"Missing web directory {web_dir}"
-
-
 css_dir = web_dir / "css"
 js_dir = web_dir / "js"
 img_dir = web_dir / "img"
@@ -1763,11 +1773,22 @@ async def page_settings() -> Response:
     )
 
 
-@app.route("/advanced", methods=["GET"])
+@app.route("/advanced", methods=["GET", "POST"])
 async def page_advanced() -> Response:
     """Render advanced web page."""
+    if request.method == "POST":
+        form = await request.form
+        profile_json = json.loads(form["profileJson"])
+        save_profile(profile_json)
+
+    profile_path = Path(core.profile.read_path("profile.json"))
+    local_profile_json = profile_path.read_text()
+
     return await render_template(
-        "advanced.html", page="Advanced", **get_template_args()
+        "advanced.html",
+        page="Advanced",
+        local_profile_json=local_profile_json,
+        **get_template_args(),
     )
 
 

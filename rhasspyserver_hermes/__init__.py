@@ -510,6 +510,7 @@ class RhasspyCore:
             return result
         finally:
             # Enable hotword
+            # TODO: Don't toggle on if ASR system is engaged
             self.publish(HotwordToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------
@@ -657,6 +658,7 @@ class RhasspyCore:
         sound_system = self.profile.get("sounds.system", "dummy")
         if sound_system == "dummy":
             # No feedback sounds
+            _LOGGER.debug("Sounds diabled (system=%s)", sound_system)
             return
 
         wav_path_str = os.path.expandvars(self.profile.get(f"sounds.{sound_name}", ""))

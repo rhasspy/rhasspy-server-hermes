@@ -15,29 +15,27 @@
                         <span>Wake Up</span>
                     </div>
                     <div class="col">
-                        <button id="play-command" onclick="playCommand()" class="btn btn-success">
+                        <button id="play-command" onclick="playCommand()" class="btn btn-success" title="Play the last recorded voice command">
                             <i class="fas fa-2x fa-play"></i>
                         </button>
-                        <span>Play Command</span>
+                        <span>Play Recording</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="card-footer">
-            <i class="fas fa-microphone"></i>
             Microphone
         </div>
     </div>
     <div class="card test-card">
         <div class="card-body">
             <input id="wav-file" type="file" onchange="uploadWAV()" hidden>
-            <button id="upload" onclick="chooseWAV()" class="btn btn-info">
+            <button id="upload" onclick="chooseWAV()" class="btn btn-info" title="Upload WAV voice command and recognize it">
                 <i class="fas fa-2x fa-upload"></i>
             </button>
             <span>Upload WAV File</span>
         </div>
         <div class="card-footer">
-            <i class="fas fa-phone-volume"></i>
             Speech to Text
         </div>
     </div>
@@ -93,16 +91,19 @@
 {% block script %}
 <script type="text/javascript">
 
+ // Show intent and slots in web UI
  function setIntent(response) {
      $('#intent-error').hide()
      $('#intent-summary').hide()
      $('#intent-slots li').remove()
 
      if (response.intent.name.length == 0) {
+         $('#intent-text').val('');
          $('#intent-error').show()
          return;
      }
 
+     $('#intent-text').val(response.raw_text || response.text);
      $('#intent-summary').show()
      $('#intent-name').text(response.intent.name)
      for (slotName in response.slots) {
@@ -115,6 +116,7 @@
      }
  }
 
+ // Wake Rhasspy up, listen for a voice command, then recognize the intent.
  function wakeUp() {
      $('#wakeup').prop('disabled', true);
      rhasspy.postBusy('Listening for command', '/api/listen-for-command')
@@ -151,7 +153,6 @@
                           '/api/speech-to-intent',
                           wavData, true, 'audio/wav')
                 .done(function(response) {
-                    $('#intent-text').val(response['raw_text']);
                     setIntent(response);
                 });
      }
@@ -195,5 +196,16 @@
 
      return false;
  }
+
+ $(function() {
+     rhasspy.makeWebSocket(
+         '/api/events/intent',
+         function(socket) {
+             socket.onmessage = function(e) {
+                 var response = JSON.parse(e.data);
+                 setIntent(response);
+             }
+         });
+ })
 </script>
 {% endblock %}

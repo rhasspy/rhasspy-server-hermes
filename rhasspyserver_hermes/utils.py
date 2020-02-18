@@ -124,7 +124,9 @@ def get_wav_duration(wav_bytes: bytes) -> float:
 # -----------------------------------------------------------------------------
 
 
-def load_phoneme_examples(path: str) -> typing.Dict[str, typing.Dict[str, str]]:
+def load_phoneme_examples(
+    path: typing.Union[str, Path]
+) -> typing.Dict[str, typing.Dict[str, str]]:
     """Loads example words and pronunciations for each phoneme."""
     examples = {}
     with open(path, "r") as example_file:
@@ -139,7 +141,7 @@ def load_phoneme_examples(path: str) -> typing.Dict[str, typing.Dict[str, str]]:
     return examples
 
 
-def load_phoneme_map(path: str) -> typing.Dict[str, str]:
+def load_phoneme_map(path: typing.Union[str, Path]) -> typing.Dict[str, str]:
     """Load phoneme map from CMU (Sphinx) phonemes to eSpeak phonemes."""
     phonemes = {}
     with open(path, "r") as phoneme_file:

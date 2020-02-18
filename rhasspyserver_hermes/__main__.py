@@ -7,7 +7,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
 import time
 import typing
 from collections import defaultdict
@@ -16,7 +15,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
-import jinja2
 import rhasspyprofile
 import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
@@ -24,9 +22,8 @@ from quart import (
     Quart,
     Response,
     jsonify,
-    redirect,
-    request,
     render_template,
+    request,
     safe_join,
     send_file,
     send_from_directory,
@@ -107,11 +104,9 @@ logging.basicConfig(level=log_level)
 _LOGGER.debug(args)
 
 # Convert profile directories to Paths
+system_profiles_dir: typing.Optional[Path] = None
 if args.system_profiles:
     system_profiles_dir = Path(args.system_profiles)
-else:
-    # Bundled
-    system_profiles_dir = None
 
 if args.user_profiles:
     user_profiles_dir = Path(args.user_profiles)
@@ -136,13 +131,19 @@ app = cors(app)
 
 
 def get_version() -> str:
+    """Return Rhasspy version"""
     return Path("VERSION").read_text().strip()
 
 
-def get_template_args():
+def get_template_args() -> typing.Dict[str, typing.Any]:
+    """Return kwargs for template rendering"""
     assert core is not None
+
+    # Profile artifacts that need to be downloaded
     missing_files = rhasspyprofile.get_missing_files(core.profile)
     missing_files_dict = {f.file_key: {"index": i} for i, f in enumerate(missing_files)}
+
+    # Guessed word pronunciations
     unknown_words = read_unknown_words()
 
     return {
@@ -157,6 +158,9 @@ def get_template_args():
 
 
 def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
+    """Save profile JSON and re-generate service configs"""
+    assert core is not None
+
     # Ensure that JSON is valid
     recursive_remove(core.profile.system_json, profile_json)
 
@@ -189,8 +193,11 @@ def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
     return msg
 
 
-def read_sentences(sentences_path: Path, sentences_dir: Path):
-    sentences_dict = {}
+def read_sentences(sentences_path: Path, sentences_dir: Path) -> typing.Dict[str, str]:
+    """Load sentences from sentences.ini and sentences_dir"""
+    assert core is not None
+
+    sentences_dict: typing.Dict[str, str] = {}
     if sentences_path.is_file():
         try:
             # Try user profile dir first
@@ -212,13 +219,16 @@ def read_sentences(sentences_path: Path, sentences_dir: Path):
     return sentences_dict
 
 
-def save_sentences(sentences_dict):
+def save_sentences(sentences_dict) -> typing.Dict[str, str]:
+    """Save sentences to profile. Delete empty sentence files."""
+    assert core is not None
+
     # Update multiple ini files at once. Paths as keys (relative to
     # profile directory), sentences as values.
     num_chars = 0
-    paths_written = []
+    paths_written: typing.List[Path] = []
 
-    new_sentences = {}
+    new_sentences: typing.Dict[str, str] = {}
     for sentences_key, sentences_text in sentences_dict.items():
         # Path is relative to profile directory
         sentences_path = core.profile.write_path(sentences_key)
@@ -241,7 +251,10 @@ def save_sentences(sentences_dict):
     return new_sentences
 
 
-def get_phonemes():
+def get_phonemes() -> typing.Dict[str, typing.Dict[str, str]]:
+    """Load phoneme examples for speech system"""
+    assert core is not None
+
     speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
     examples_path = core.profile.read_path(
         core.profile.get(
@@ -254,8 +267,10 @@ def get_phonemes():
     return load_phoneme_examples(examples_path)
 
 
-def read_slots(slots_dir: Path) -> typing.Dict[str, str]:
-    slots_dict: typing.Dict[st, str] = {}
+def read_slots(slots_dir: Path) -> typing.Dict[str, typing.List[str]]:
+    """Load static slots"""
+    assert core is not None
+    slots_dict: typing.Dict[str, typing.List[str]] = {}
 
     if slots_dir.is_dir():
         # Load slot values
@@ -271,7 +286,10 @@ def read_slots(slots_dir: Path) -> typing.Dict[str, str]:
 
 def save_slots(
     slots_dir: Path, new_slot_values: typing.Dict[str, str], overwrite_all=True
-):
+) -> typing.Dict[str, typing.List[str]]:
+    """Save static slots"""
+    assert core is not None
+
     # Write slots on POST
     if overwrite_all:
         # Remote existing values first
@@ -284,13 +302,15 @@ def save_slots(
                     _LOGGER.exception("api_slots")
 
     # Write new values
-    slots = defaultdict(list)
-    for name, values in new_slot_values.items():
-        if not values:
+    slots: typing.Dict[str, typing.List[str]] = defaultdict(list)
+    for name, value_str in new_slot_values.items():
+        if not value_str:
             continue
 
-        if isinstance(values, str):
-            values = [values]
+        if isinstance(value_str, str):
+            values = set([value_str])
+        else:
+            values = set(typing.cast(typing.Iterable[str], value_str))
 
         slots_path = slots_dir / name
 
@@ -298,7 +318,6 @@ def save_slots(
         slots_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Merge with existing values
-        values = set(values)
         if slots_path.is_file():
             values.update(slots_path.read_text().splitlines())
 
@@ -315,7 +334,7 @@ def save_slots(
 
 
 def read_unknown_words():
-    """Load unknown words"""
+    """Load words whose pronunciations have been guessed"""
     assert core is not None
     speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
     unknown_words = {}
@@ -436,7 +455,7 @@ async def api_profiles() -> Response:
 
 # -----------------------------------------------------------------------------
 
-download_status = {}
+download_status: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
 
 
 @app.route("/api/download-profile", methods=["POST"])
@@ -962,7 +981,7 @@ async def api_restart() -> str:
     await start_rhasspy()
 
     if in_docker:
-        seconds_left = 30
+        seconds_left = 30.0
         wait_seconds = 0.5
         while restart_path.is_file():
             await asyncio.sleep(wait_seconds)
@@ -1702,6 +1721,7 @@ async def page_index() -> Response:
 @app.route("/sentences", methods=["GET", "POST"])
 async def page_sentences() -> Response:
     """Render sentences web page."""
+    assert core is not None
     sentences_path = core.profile.read_path(
         core.profile.get("speech_to_text.sentences_ini", "sentences.ini")
     )
@@ -1730,6 +1750,7 @@ async def page_sentences() -> Response:
 @app.route("/words", methods=["GET", "POST"])
 async def page_words() -> Response:
     """Render words web page."""
+    assert core is not None
     custom_words = ""
     speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
     words_path = core.profile.get(
@@ -1760,10 +1781,11 @@ async def page_words() -> Response:
 @app.route("/slots", methods=["GET", "POST"])
 async def page_slots() -> Response:
     """Render slots web page."""
+    assert core is not None
     slots_dir = core.profile.read_path(
         core.profile.get("speech_to_text.slots_dir", "slots")
     )
-    slots: typing.Dict[str, str] = {}
+    slots: typing.Dict[str, typing.List[str]] = {}
 
     if request.method == "POST":
         form = await request.form
@@ -1783,7 +1805,6 @@ async def page_slots() -> Response:
         page="Slots",
         slots=slots,
         slots_json=slots_json,
-        sorted=sorted,
         **get_template_args(),
     )
 
@@ -1799,6 +1820,7 @@ async def page_settings() -> Response:
 @app.route("/advanced", methods=["GET", "POST"])
 async def page_advanced() -> Response:
     """Render advanced web page."""
+    assert core is not None
     if request.method == "POST":
         form = await request.form
         profile_json = json.loads(form["profileJson"])

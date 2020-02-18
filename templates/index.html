@@ -5,8 +5,9 @@
 {% block body %}
 
 <!-- siteId -->
-<h3 class="text-center" title="Hermes siteId">{{ profile.get("mqtt.site_id", "default").split(",")[0] }}</h3>
+<h3 class="text-center" title="Hermes Site Id">{{ profile.get("mqtt.site_id", "default").split(",")[0] }}</h3>
 
+<!-- Services Bar -->
 <div id="services" class="card-group text-center" x-data="rhasspy">
     <div class="card bg-success" x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')" x-bind:class="{ 'bg-dark': !profile.mqtt.enabled }">
         <div class="card-body p-2">
@@ -54,6 +55,7 @@
         </div>
     </div>
 </div>
+<!-- End Services Bar -->
 
 <!-- Microphone/STT Testing -->
 <div class="card-group">

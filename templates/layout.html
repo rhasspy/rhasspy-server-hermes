@@ -69,7 +69,8 @@
         <!-- Main -->
         <div class="main-container">
             <!-- Download Alert -->
-            <div x-show="missingFileCount() > 0" class="alert alert-warning alert-dismissable" role="alert">
+            {% if missing_files %}
+            <div class="alert alert-warning alert-dismissable" role="alert">
                 <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
                 <span class="ml-2">
                     Rhasspy needs to download some files for your profile (<span x-text="missingFileCount()"></span> missing)
@@ -78,7 +79,22 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            {% endif %}
             <!-- End Download Alert -->
+
+            <!-- Unknown Words Alert -->
+            {% if unknown_words: %}
+            <div class="alert alert-warning alert-dismissable" role="alert">
+                <a title="Go to Words page" href="/words" class="btn btn-primary">View</a>
+                <span class="ml-2">
+                    There are {{ len(unknown_words) }} word(s) that Rhasspy isn't sure how to pronounce
+                </span>
+                <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endif %}
+            <!-- End Unknown Words Alert -->
 
             {% block body %}{% endblock %}
         </div>
@@ -246,18 +262,18 @@
 
              // POSTs to /api/train and displays a busy modal
              train: function() {
-                 this.postBusy('Training Profile', '/api/train')
-                     .done(function(response) {
-                         rhasspy.alert(response, 'success');
-                     });
+                 return this.postBusy('Training Profile', '/api/train')
+                            .done(function(response) {
+                                rhasspy.alert(response, 'success');
+                            });
              },
 
              // POSTs to /api/restart and displays a busy modal
              restart: function() {
-                 this.postBusy('Restarting Rhasspy', '/api/restart')
-                     .done(function() {
-                         window.location.reload()
-                     });
+                 return this.postBusy('Restarting Rhasspy', '/api/restart')
+                            .done(function() {
+                                window.location.reload()
+                            });
              },
 
              downloading: false,

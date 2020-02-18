@@ -140,14 +140,19 @@ def get_version() -> str:
 
 
 def get_template_args():
+    assert core is not None
     missing_files = rhasspyprofile.get_missing_files(core.profile)
     missing_files_dict = {f.file_key: {"index": i} for i, f in enumerate(missing_files)}
+    unknown_words = read_unknown_words()
 
     return {
+        "len": len,
+        "sorted": sorted,
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
         "version": get_version(),
         "missing_files_json": json.dumps(missing_files_dict),
+        "unknown_words": unknown_words,
     }
 
 
@@ -307,6 +312,28 @@ def save_slots(
                         slots[name].append(value)
 
     return slots
+
+
+def read_unknown_words():
+    """Load unknown words"""
+    assert core is not None
+    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
+    unknown_words = {}
+    unknown_path = core.profile.read_path(
+        core.profile.get(
+            f"speech_to_text.{speech_system}.unknown_words", "unknown_words.txt"
+        )
+    )
+
+    if unknown_path.is_file():
+        # Load dictionary of unknown words
+        for line in open(unknown_path, "r"):
+            line = line.strip()
+            if line:
+                word, pronunciation = re.split(r"[ ]+", line, maxsplit=1)
+                unknown_words[word] = pronunciation
+
+    return unknown_words
 
 
 # -----------------------------------------------------------------------------
@@ -1147,25 +1174,7 @@ async def api_play_recording() -> str:
 async def api_unknown_words() -> Response:
     """Get list of unknown words."""
     assert core is not None
-    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
-    unknown_words = {}
-    unknown_path = Path(
-        core.profile.read_path(
-            core.profile.get(
-                f"speech_to_text.{speech_system}.unknown_words", "unknown_words.txt"
-            )
-        )
-    )
-
-    if unknown_path.is_file():
-        # Load dictionary of unknown words
-        for line in open(unknown_path, "r"):
-            line = line.strip()
-            if line:
-                word, pronunciation = re.split(r"[ ]+", line, maxsplit=1)
-                unknown_words[word] = pronunciation
-
-    return jsonify(unknown_words)
+    return jsonify(read_unknown_words())
 
 
 # -----------------------------------------------------------------------------

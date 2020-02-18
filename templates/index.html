@@ -1,8 +1,61 @@
 {% extends "layout.html" %}
+
+<!-- Home page for testing Rhasspy services -->
+
 {% block body %}
 
+<!-- siteId -->
 <h3 class="text-center" title="Hermes siteId">{{ profile.get("mqtt.site_id", "default").split(",")[0] }}</h3>
 
+<div id="services" class="card-group text-center" x-data="rhasspy">
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-network-wired fa-lg" x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')" x-bind:class="{ 'text-danger': !profile.mqtt.enabled }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-microphone fa-lg" x-bind:title="'Audio input: ' + profile.microphone.system" x-bind:class="{ 'text-danger': profile.microphone.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-home fa-lg" x-bind:title="'Intent handling: ' + profile.handle.system" x-bind:class="{ 'text-danger': profile.handle.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-exclamation-circle fa-lg" x-bind:title="'Wake word: ' + profile.wake.system" x-bind:class="{ 'text-danger': profile.wake.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-phone-volume fa-lg" x-bind:title="'Speech to text: ' + profile.speech_to_text.system" x-bind:class="{ 'text-danger': profile.speech_to_text.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-comment fa-lg" x-bind:title="'Intent recognition: ' + profile.intent.system" x-bind:class="{ 'text-danger': profile.intent.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-paper-plane fa-lg" x-bind:title="'Text to speech: ' + profile.text_to_speech.system" x-bind:class="{ 'text-danger': profile.text_to_speech.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-volume-up fa-lg" x-bind:title="'Audio output: ' + profile.sounds.system" x-bind:class="{ 'text-danger': profile.sounds.system == 'dummy' }"></i>
+        </div>
+    </div>
+    <div class="card bg-light">
+        <div class="card-body p-2">
+            <i class="fas fa-tasks fa-lg" x-bind:title="'Dialogue management: ' + profile.dialogue.system" x-bind:class="{ 'text-danger': profile.dialogue.system == 'dummy' }"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Microphone/STT Testing -->
 <div class="card-group">
     <div class="card test-card">
         <div class="card-body">
@@ -40,7 +93,9 @@
         </div>
     </div>
 </div>
+<!-- End Microphone/STT Testing -->
 
+<!-- Intent Recognition Testing -->
 <div class="card mt-3">
     <div class="card-body">
         <form onsubmit="recognize()">
@@ -68,7 +123,9 @@
         Intent Recognition
     </div>
 </div>
+<!-- End Intent Recognition Testing -->
 
+<!-- Text to Speech Testing -->
 <div class="card mt-3">
     <div class="card-body">
         <form onsubmit="speak()">
@@ -85,6 +142,7 @@
         Text to Speech
     </div>
 </div>
+<!-- End Text to Speech Testing -->
 
 {% endblock %}
 
@@ -129,6 +187,7 @@
             });
  }
 
+ // POST to /api/play-recording to play last recorded voice command
  function playCommand() {
      $('#play-command').prop('disabled', true);
      rhasspy.postBusy('Playing last command', '/api/play-recording')
@@ -137,12 +196,14 @@
             });
  }
 
+ // Click hidden file input for WAV upload
  function chooseWAV() {
      event.preventDefault();
      $('#wav-file').click();
      return false;
  }
 
+ // Read WAV file into a buffer and POST to /api/speech-to-intent
  function uploadWAV() {
      var file = event.target.files[0];
 
@@ -160,6 +221,7 @@
      reader.readAsArrayBuffer(file);
  }
 
+ // POST text to /api/text-to-intent and display intent
  function recognize() {
      event.preventDefault();
 
@@ -180,6 +242,7 @@
      return false;
  }
 
+ // POST text to /api/text-to-speech to speak sentence
  function speak() {
      event.preventDefault();
 
@@ -197,6 +260,7 @@
      return false;
  }
 
+ // Catch intents via websocket and display them
  $(function() {
      rhasspy.makeWebSocket(
          '/api/events/intent',

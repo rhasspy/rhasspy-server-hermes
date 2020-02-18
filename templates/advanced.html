@@ -1,4 +1,7 @@
 {% extends "layout.html" %}
+
+<!-- Page for editing Rhasspy profile JSON directly -->
+
 {% block body %}
 <div class="container">
     <div class="text-muted pl-1">
@@ -31,12 +34,14 @@
 <script type="text/javascript">
  var isDirty = false;
 
+ // Highlight textarea and buttons to indicate a save is needed
  function setDirty() {
      isDirty = true;
      $('#profile-settings').css('border-color', 'red');
      $('.profile-json-button').addClass('btn-danger');
  }
 
+ // POST to /api/profile to save and then restart Rhasspy
  function saveProfile() {
      rhasspy.postBusy('Saving profile',
                       '/api/profile',
@@ -49,6 +54,7 @@
 
  window.onbeforeunload = function() {
      if (isDirty) {
+         // Warn user before leaving page
          return 'Profile was not saved. Are you sure?"'
      }
  }

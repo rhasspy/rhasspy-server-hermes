@@ -30,10 +30,13 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                <!-- Version -->
                 <div class="navbar-container">
                     <a href="/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
                 </div>
 
+                <!-- Page Drop Down -->
                 <div class="navbar-container ml-3">
                     <div class="nav-item dropdown">
                         <a class="btn btn-outline-light  dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -49,6 +52,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Log Button -->
                 <button onclick="$('#logModal').modal('show')" class="btn btn-secondary ml-2" title="Show Rhasspy log">Log</button>
 
                 <!-- Top Bar Buttons -->
@@ -63,8 +68,14 @@
 
         <!-- Main -->
         <div class="main-container">
-            {% block body %}{% endblock %}
+            <!-- Download Alert -->
+            <div id="download-alert" style="display: none;" class="alert alert-warning" role="alert">
+                <span>Rhasspy needs to download some files for your profile</span>
+                <button class="btn btn-primary ml-2">Download</button>
+            </div>
+            <!-- End Alert -->
 
+            {% block body %}{% endblock %}
         </div>
         <!-- End Main -->
 
@@ -132,11 +143,15 @@
         <script src="/js/alpine.js" defer></script>
 
         <script type="text/javascript">
+         // Shared object with profile and functions
          var rhasspy = {
+             // Profile JSON is written directly here by web server
              profile: {{ profile_json | safe }},
 
+             // True if the busy modal should be hidden after its finished with its show animation.
              busyHidden: true,
 
+             // Show the busy modal and start the Rhasspy logo spinning
              showBusy: function(message) {
                  this.busyHidden = false;
                  $('#logo').addClass('spinner')
@@ -144,12 +159,14 @@
                  $('#busyModal').modal('show')
              },
 
+             // Hide the busy modal and stop the Rhasspy logo from spinning
              hideBusy: function(message) {
                  this.busyHidden = true;
                  $('#logo').removeClass('spinner')
                  $('#busyModal').modal('hide')
              },
 
+             // Display an alert message at the bottom of the screen for 20 seconds
              alert: function(message, level) {
                  $('#alert').addClass('alert-' + level)
                  $('#alertText').text(message)
@@ -159,6 +176,7 @@
                  setTimeout(this.clearAlert, 20000)
              },
 
+             // Hide the alert message
              clearAlert: function(message, level) {
                  $('#alert').removeClass('alert-info')
                  $('#alert').removeClass('alert-danger')
@@ -167,6 +185,8 @@
                  $('#alert').hide()
              },
 
+             // Display the busy modal with a message and do an AJAX POST.
+             // Returns the AJAX request.
              postBusy: function(message, url, data, hideOnComplete, contentType) {
                  var rhasspy = this;
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
@@ -192,6 +212,7 @@
                  })
              },
 
+             // POSTs to /api/train and displays a busy modal
              train: function() {
                  this.postBusy('Training Profile', '/api/train')
                      .done(function(response) {
@@ -199,6 +220,7 @@
                      });
              },
 
+             // POSTs to /api/restart and displays a busy modal
              restart: function() {
                  this.postBusy('Restarting Rhasspy', '/api/restart')
                      .done(function() {
@@ -206,6 +228,7 @@
                      });
              },
 
+             // Converts a Pocketsphinx threshold to a sensitivity value in [0, 1]
              thresholdToSensitivity: function(threshold) {
                  var high = 50
                  var low = 5
@@ -215,6 +238,7 @@
                  return Math.min(1, Math.max(0, s)).toFixed(1)
              },
 
+             // Converts a a sensitivity value in [0, 1] to a Pocktsphinx threshold
              sensitivityToThreshold: function(sensitivity) {
                  var high = 50
                  var low = 5
@@ -223,19 +247,25 @@
                  return Math.pow(10, -exp)
              },
 
+             // Computed getter for Pocketsphinx sensitivity
              get pocketsphinxWakeSensitivity() {
                  return this.thresholdToSensitivity(
                      this.profile.wake.pocketsphinx.threshold
                  );
              },
 
+             // Computed setter for Pocketsphinx sensitivity
              set pocketsphinxWakeSensitivity(sensitivity) {
                  this.profile.wake.pocketsphinx.threshold =
                      this.sensitivityToThreshold(sensitivity);
              },
 
+             // Creates a new websocket and the calls afterFunc with it.
+             // Websocket will automatically reconnect after 5 seconds.
              makeWebSocket: function(urlFragment, afterFunc) {
                  var rhasspy = this;
+
+                 // Use URL to decide websocket protocol
                  var wsProtocol = 'ws://';
                  if (window.location.protocol == 'https:') {
                      wsProtocol = 'wss://';
@@ -262,12 +292,14 @@
              }
          };
 
+         // Automatically hide busy modal after show animation if busyHidden
          $('#busyModal').on('shown.bs.modal', function() {
              if (rhasspy.busyHidden) {
                  $('#busyModal').modal('hide');
              }
          })
 
+         // Connect log websocket on startup
          $(function() {
              rhasspy.makeWebSocket(
                  '/api/events/log',

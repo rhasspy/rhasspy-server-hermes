@@ -1,4 +1,7 @@
 {% extends "layout.html" %}
+
+<!-- Simplified view of Rhasspy profile -->
+
 {% block body %}
 <div class="container" x-data="rhasspy">
     <button onclick="saveProfile()" class="btn btn-primary mb-3">Save Settings</button>
@@ -1054,7 +1057,7 @@
             </div>
         </div>
     </div>
-    <!-- End Audio Recording -->
+    <!-- End Audio Playing -->
 
     <button onclick="saveProfile()" class="btn btn-primary mt-3">Save Settings</button>
 </div>
@@ -1062,6 +1065,8 @@
 
 {% block script %}
 <script type="text/javascript">
+
+ // POST to /api/profile to save and then restart Rhasspy
  function saveProfile() {
      rhasspy.postBusy('Saving profile',
                       '/api/profile',
@@ -1071,5 +1076,6 @@
                 rhasspy.restart();
             });
  }
+
 </script>
 {% endblock %}

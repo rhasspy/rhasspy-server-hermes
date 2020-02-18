@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="/css/main.css">
     </head>
 
-    <body>
+    <body x-data="rhasspy">
         <noscript>
             <strong>Please enable Javascript to continue.</strong>
         </noscript>
@@ -69,11 +69,16 @@
         <!-- Main -->
         <div class="main-container">
             <!-- Download Alert -->
-            <div id="download-alert" style="display: none;" class="alert alert-warning" role="alert">
-                <span>Rhasspy needs to download some files for your profile</span>
-                <button class="btn btn-primary ml-2">Download</button>
+            <div x-show="missingFileCount() > 0" class="alert alert-warning alert-dismissable" role="alert">
+                <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
+                <span class="ml-2">
+                    Rhasspy needs to download some files for your profile (<span x-text="missingFileCount()"></span> missing)
+                </span>
+                <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <!-- End Alert -->
+            <!-- End Download Alert -->
 
             {% block body %}{% endblock %}
         </div>
@@ -91,13 +96,40 @@
                     </div>
                     <div class="modal-body">
                         <div class="progress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+                            <div class="progress-bar progress-bar-striped progress-bar-animated w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <!-- End Busy Modal -->
+
+        <!-- Download Modal -->
+        <div id="downloadModal" class="modal  fade" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Downloading Profile Files</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <template x-for="fileKey in Object.keys(missingFiles)" :key="fileKey">
+                            <div class="row mt-2">
+                                <div class="col" x-text="fileKey"></div>
+                                <div class="col">
+                                    <div class="progress">
+                                        <div x-bind:id="'progress-download-' + missingFiles[fileKey].index" class="progress-bar progress-bar-striped progress-bar-animated w-0" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Download Modal -->
 
         <!-- Alert -->
         <div id="alert" style="display: none;" class="alert alert-success main-alert alert-dismissable" role="alert">
@@ -228,6 +260,73 @@
                      });
              },
 
+             downloading: false,
+             missingFiles: {{ missing_files_json | safe }},
+
+             // Starts profile file downloads and monitors status
+             downloadProfile: function() {
+                 var rhasspy = this;
+                 this.downloading = true;
+                 $('#downloadModal').modal('show');
+
+                 // Start monitoring download status
+                 rhasspy.updateDownloadStatus()
+
+                 // POST to /api/download-profile and show progress
+                 $.ajax({
+                     url: '/api/download-profile',
+                     type: 'POST',
+                     complete: function() {
+                         this.downloading = false;
+
+                         // Hide download dialog
+                         $('#downloadModal').modal('hide')
+
+                         // Restart when done downloading
+                         rhasspy.restart();
+                     },
+                     error: function(error) {
+                         this.downloading = false;
+
+                         // Show error alert
+                         rhasspy.alert(error.responseText, 'danger');
+                     }
+                 })
+
+             },
+
+             // Polls /api/download-status for downloaded file statuses
+             updateDownloadStatus: function() {
+                 var rhasspy = this;
+
+                 if (!rhasspy.downloading) {
+                     return;
+                 }
+
+                 $.get('/api/download-status', function(response) {
+                     Object.keys(response).forEach(function(fileKey) {
+                         var remoteFile = response[fileKey];
+                         var localFile = rhasspy.missingFiles[fileKey];
+                         var progressId = '#progress-download-' + localFile.index;
+
+                         $(progressId).width(remoteFile.bytes_percent + '%');
+
+                         if (remoteFile.done) {
+                             $(progressId).removeClass('progress-bar-animated');
+                             $(progressId).addClass('bg-success');
+                         }
+                     })
+                 }).always(function() {
+                     setTimeout(function() {
+                         rhasspy.updateDownloadStatus();
+                     }, 1000);
+                 })
+             },
+
+             missingFileCount: function() {
+                 return Object.keys(this.missingFiles).length;
+             },
+
              // Converts a Pocketsphinx threshold to a sensitivity value in [0, 1]
              thresholdToSensitivity: function(threshold) {
                  var high = 50
@@ -287,6 +386,8 @@
                  return socket;
              },
 
+             // Log text stream from Rhasspy server.
+             // Wrapped in an object so alpinejs can use it in x-model.
              log: {
                  text: ''
              }
@@ -296,6 +397,13 @@
          $('#busyModal').on('shown.bs.modal', function() {
              if (rhasspy.busyHidden) {
                  $('#busyModal').modal('hide');
+             }
+         })
+
+         // Automatically hide download modal after show animation if not downloading
+         $('#downloadModal').on('shown.bs.modal', function() {
+             if (!rhasspy.downloading) {
+                 $('#downloadModal').modal('hide');
              }
          })
 

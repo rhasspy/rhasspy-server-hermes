@@ -140,10 +140,14 @@ def get_version() -> str:
 
 
 def get_template_args():
+    missing_files = rhasspyprofile.get_missing_files(core.profile)
+    missing_files_dict = {f.file_key: {"index": i} for i, f in enumerate(missing_files)}
+
     return {
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
         "version": get_version(),
+        "missing_files_json": json.dumps(missing_files_dict),
     }
 
 
@@ -388,7 +392,6 @@ async def api_profiles() -> Response:
             if profile_dir.is_dir():
                 profile_names.add(str(name))
 
-    # TODO: Check for missing profile files
     missing_files = rhasspyprofile.get_missing_files(core.profile)
     downloaded = len(missing_files) == 0
     return jsonify(
@@ -406,14 +409,25 @@ async def api_profiles() -> Response:
 
 # -----------------------------------------------------------------------------
 
+download_status = {}
+
 
 @app.route("/api/download-profile", methods=["POST"])
 async def api_download_profile() -> str:
     """Downloads the current profile."""
+    global download_status
     assert core is not None
 
-    # TODO: Report status
-    await rhasspyprofile.download_files(core.profile)
+    download_status = {}
+
+    def update_status(url, path, file_key, done, bytes_downloaded, bytes_expected):
+        bytes_percent = 100
+        if bytes_expected is not None:
+            bytes_percent = int(bytes_downloaded / bytes_expected * 100)
+
+        download_status[file_key] = {"done": done, "bytes_percent": bytes_percent}
+
+    await rhasspyprofile.download_files(core.profile, status_fun=update_status)
 
     return "OK"
 
@@ -423,7 +437,7 @@ async def api_download_status() -> str:
     """Get status of profile download"""
     assert core is not None
 
-    return ""
+    return jsonify(download_status)
 
 
 # -----------------------------------------------------------------------------

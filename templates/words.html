@@ -3,34 +3,35 @@
 <div class="container">
 
     <!-- Unknown Words -->
-    {% if unknown_words %}
-    <h5 class="text-danger">Unknown Words</h5>
-    <div class="form-group">
-        <div class="form-row pl-1">
-            <p>
-                Rhasspy guessed how the words below are pronounced, but you should <a href="#" onclick="showPhonemes()">check to be sure.</a>
-            </p>
-            <p>
-                If everything looks good, click <strong>Confirm Guesses</strong> below.</p>
+    <div x-show="!$.isEmptyObject(unknownWords)" x-cloak>
+        <h5 class="text-danger">Unknown Words</h5>
+        <div class="form-group">
+            <div class="form-row pl-1">
+                <p>
+                    Rhasspy guessed how the words below are pronounced, but you should <a href="#" onclick="showPhonemes()">check to be sure.</a>
+                </p>
+                <p>
+                    If everything looks good, click <strong>Confirm Guesses</strong> below.</p>
+            </div>
         </div>
-    </div>
-    <div class="form-group">
-        <div class="form-row">
-            <textarea id="unknownWords" class="form-control" style="border-width: 3px; border-color: red;" type="text" rows="5">{% for word in sorted(unknown_words): %}{{ "{} {}\n".format(word, unknown_words[word]) }}{% endfor %}</textarea>
+        <div class="form-group">
+            <div class="form-row">
+                <textarea id="unknownWords" class="form-control" style="border-width: 3px; border-color: red;" type="text" rows="5" x-model="unknownWordsText.value"></textarea>
+            </div>
         </div>
-    </div>
-    <div class="form-group">
-        <div class="form-row">
-            <button class="btn btn-danger" onclick="confirmGuesses()" title="Confirm that Rhasspy's pronunciation guesses are correct">Confirm Guesses</button>
+        <div class="form-group">
+            <div class="form-row">
+                <button class="btn btn-danger" onclick="confirmGuesses()" title="Confirm that Rhasspy's pronunciation guesses are correct">Confirm Guesses</button>
+            </div>
         </div>
-    </div>
 
-    <hr>
+        <hr>
 
-    <h5>Custom Words</h5>
-    {% endif %}
+        <h5>Custom Words</h5>
+    </div>
     <!-- End Unknown Words -->
 
+    <!-- Custom Words -->
     <div class="form-group">
         <div class="form-row text-muted pl-1">
             <p>
@@ -75,6 +76,8 @@
             <button onclick="saveWords()" class="btn btn-primary words-button"">Save Custom Words</button>
         </div>
     </div>
+    <!-- End Custom Words -->
+
 </div>
 
 <!-- Phoneme Table -->
@@ -82,7 +85,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 id="phonemesModalLabel" class="modal-title">Available Phonemes ({{ profile.get("speech_to_text.system") }})</h5>
+                <h5 id="phonemesModalLabel" class="modal-title">Available Phonemes (<span x-text="profile.speech_to_text.system"></span>)</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -96,13 +99,13 @@
                         <th scope="col"></th>
                     </thead>
                     <tbody>
-                        {% for phoneme, details in phonemes.items(): %}
-                        <tr>
-                            <td>{{ phoneme }}</td>
-                            <td>{{ details["word"] }}</td>
-                            <td>{{ details["phonemes"] }}</td>
-                        </tr>
-                        {% endfor %}
+                        <template x-for="p in Object.keys(phonemes)" :key="p">
+                            <tr>
+                                <td x-text="p">{{ phoneme }}</td>
+                                <td x-text="phonemes[p].word"></td>
+                                <td x-text="phonemes[p].phonemes"></td>
+                            </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>
@@ -115,13 +118,25 @@
 {% block script %}
 <script type="text/javascript">
  var isDirty = false;
+ var phonemes = {};
 
+ // Displays dialog with phoneme table
  function showPhonemes() {
-     $('#phonemesModal').modal('show');
+     $.get('/api/phonemes', (r) => {
+         phonemes = r;
+         $('#phonemesModal').modal('show');
+     })
  }
 
+ // Formats unknown words as a CMU pronunciation dictionary
+ function formatUnknownWords() {
+     return Object.entries(rhasspy.unknownWords)
+                  .map((kv) => kv[0] + ' ' + kv[1])
+                  .join('\n');
+ }
+
+ // Calls /api/lookup and shows word pronunciation(s)
  function guessWord() {
-     // Call /api/lookup and show word pronunciations
      $('#guesses option').remove();
      $('#guesses').hide();
      $('#addWord').hide();
@@ -148,6 +163,7 @@
      }
  }
 
+ // Copies the selected word/pronunciation into custom words text box
  function addGuessedWord() {
      var word = $('#word').val() || '';
      var phonemes = $('#guesses').val() || '';
@@ -163,18 +179,21 @@
      }
  }
 
+ // Custom words should be saved
  function setDirty() {
      isDirty = true;
      $('#customWords').css('border-color', 'red');
      $('.words-button').addClass('btn-danger');
  }
 
+ // Custom words haven been saved
  function clearDirty() {
      isDirty = false;
      $('#customWords').css('border-color', '');
      $('.words-button').removeClass('btn-danger');
  }
 
+ // Saves custom words and re-trains
  function saveWords() {
      rhasspy.postBusy('Saving custom words',
                       '/api/custom-words',
@@ -183,12 +202,10 @@
             .done(function() {
                 clearDirty();
                 rhasspy.train()
-                .done(function() {
-                    window.location.reload();
-                })
             });
  }
 
+ // Copies all guessed pronunciations to custom words and saves
  function confirmGuesses() {
      var customWords = $('#customWords').val();
      if ((customWords.length > 0) && !customWords.endsWith('\n')) {
@@ -196,13 +213,14 @@
      }
 
      $('#customWords').val(
-         customWords + $('#unknownWords').val()
+         customWords + rhasspy.unknownWordsText.value
      );
 
-     $('#unknownWords').val('')
+     rhasspy.unknownWordsText.value = '';
      saveWords();
  }
 
+ // Warns users that custom words are not saved
  window.onbeforeunload = function() {
      if (isDirty) {
          return 'Custom words were not saved. Are you sure?"'
@@ -210,6 +228,7 @@
  }
 
  $(function() {
+     // Catch ENTER and guess word pronuncation(s)
      $("#word").keypress(function() {
          if (event.which == 13) {
              event.preventDefault();

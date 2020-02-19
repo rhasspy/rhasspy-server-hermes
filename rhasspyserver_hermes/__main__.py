@@ -139,21 +139,11 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
     """Return kwargs for template rendering"""
     assert core is not None
 
-    # Profile artifacts that need to be downloaded
-    missing_files = rhasspyprofile.get_missing_files(core.profile)
-    missing_files_dict = {f.file_key: {"index": i} for i, f in enumerate(missing_files)}
-
-    # Guessed word pronunciations
-    unknown_words = read_unknown_words()
-
     return {
         "len": len,
         "sorted": sorted,
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
-        "version": get_version(),
-        "missing_files_json": json.dumps(missing_files_dict),
-        "unknown_words": unknown_words,
     }
 
 
@@ -294,25 +284,32 @@ def save_slots(
     if overwrite_all:
         # Remote existing values first
         for name in new_slot_values:
-            slots_path = safe_join(slots_dir, f"{name}")
+            slots_path = safe_join(slots_dir, name)
             if slots_path.is_file():
                 try:
                     slots_path.unlink()
                 except Exception:
-                    _LOGGER.exception("api_slots")
+                    _LOGGER.exception("save_slots")
 
     # Write new values
     slots: typing.Dict[str, typing.List[str]] = defaultdict(list)
     for name, value_str in new_slot_values.items():
-        if not value_str:
-            continue
+        values:typing.Set[str] = set()
 
         if isinstance(value_str, str):
-            values = set([value_str])
+            # Add value if not empty
+            value_str = value_str.strip()
+            if value_str:
+                values.add(value_str)
         else:
-            values = set(typing.cast(typing.Iterable[str], value_str))
+            # Add non-empty values from list
+            value_list = typing.cast(typing.Iterable[str], value_str)
+            for value in value_list:
+                value = value.strip()
+                if value:
+                    values.add(value)
 
-        slots_path = slots_dir / name
+        slots_path = safe_join(slots_dir, name)
 
         # Create directories
         slots_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1231,48 +1228,15 @@ async def api_slots() -> typing.Union[str, Response]:
     assert core is not None
 
     if request.method == "POST":
+        slots_dir = core.profile.write_path(
+            core.profile.get("speech_to_text.slots_dir", "slots")
+        )
+
         # Write slots on POST
         overwrite_all = request.args.get("overwrite_all", "false").lower() == "true"
         new_slot_values = await request.json
 
-        slots_dir = Path(
-            core.profile.write_path(
-                core.profile.get("speech_to_text.slots_dir", "slots")
-            )
-        )
-
-        if overwrite_all:
-            # Remote existing values first
-            for name in new_slot_values:
-                slots_path = safe_join(slots_dir, f"{name}")
-                if slots_path.is_file():
-                    try:
-                        slots_path.unlink()
-                    except Exception:
-                        _LOGGER.exception("api_slots")
-
-        # Write new values
-        for name, values in new_slot_values.items():
-            if isinstance(values, str):
-                values = [values]
-
-            slots_path = slots_dir / name
-
-            # Create directories
-            slots_path.parent.mkdir(parents=True, exist_ok=True)
-
-            # Merge with existing values
-            values = set(values)
-            if slots_path.is_file():
-                values.update(slots_path.read_text().splitlines())
-
-            # Write merged values
-            if values:
-                with open(slots_path, "w") as slots_file:
-                    for value in values:
-                        value = value.strip()
-                        if value:
-                            print(value, file=slots_file)
+        save_slots(slots_dir, new_slot_values, overwrite_all=overwrite_all)
 
         return "OK"
 
@@ -1721,92 +1685,21 @@ async def page_index() -> Response:
 @app.route("/sentences", methods=["GET", "POST"])
 async def page_sentences() -> Response:
     """Render sentences web page."""
-    assert core is not None
-    sentences_path = core.profile.read_path(
-        core.profile.get("speech_to_text.sentences_ini", "sentences.ini")
-    )
-    sentences_dir = core.profile.write_path(
-        core.profile.get("speech_to_text.sentences_dir", "intents")
-    )
-
-    sentences = read_sentences(sentences_path, sentences_dir)
-
-    if request.method == "POST":
-        form = await request.form
-        new_sentences = json.loads(form["sentences"])
-        sentences = save_sentences(new_sentences)
-
-    sentences_json = json.dumps(sentences, indent=4)
-
     return await render_template(
-        "sentences.html",
-        page="Sentences",
-        sentences=sentences,
-        sentences_json=sentences_json,
-        **get_template_args(),
+        "sentences.html", page="Sentences", **get_template_args()
     )
 
 
 @app.route("/words", methods=["GET", "POST"])
 async def page_words() -> Response:
     """Render words web page."""
-    assert core is not None
-    custom_words = ""
-    speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")
-    words_path = core.profile.get(
-        f"speech_to_text.{speech_system}.custom_words", "custom_words.txt"
-    )
-
-    words_write_path = core.profile.write_path(words_path)
-
-    if request.method == "POST":
-        form = await request.form
-        custom_words = form["customWords"]
-        words_write_path.write_text(custom_words)
-    elif words_write_path.is_file():
-        custom_words = words_write_path.read_text()
-
-    # Load phoneme examples
-    phonemes = get_phonemes()
-
-    return await render_template(
-        "words.html",
-        page="Words",
-        custom_words=custom_words,
-        phonemes=phonemes,
-        **get_template_args(),
-    )
+    return await render_template("words.html", page="Words", **get_template_args())
 
 
 @app.route("/slots", methods=["GET", "POST"])
 async def page_slots() -> Response:
     """Render slots web page."""
-    assert core is not None
-    slots_dir = core.profile.read_path(
-        core.profile.get("speech_to_text.slots_dir", "slots")
-    )
-    slots: typing.Dict[str, typing.List[str]] = {}
-
-    if request.method == "POST":
-        form = await request.form
-        newline_slots = json.loads(form["slots"])
-        new_slot_values = {
-            name: value.splitlines() for name, value in newline_slots.items()
-        }
-        slots = save_slots(slots_dir, new_slot_values)
-    elif slots_dir.is_dir():
-        slots = read_slots(slots_dir)
-
-    slots_json = json.dumps(
-        {name: "\n".join(values) for name, values in slots.items()}, indent=4
-    )
-    return await render_template(
-        "slots.html",
-        page="Slots",
-        slots=slots,
-        slots_json=slots_json,
-        **get_template_args(),
-    )
+    return await render_template("slots.html", page="Slots", **get_template_args())
 
 
 @app.route("/settings", methods=["GET"])
@@ -1821,19 +1714,8 @@ async def page_settings() -> Response:
 async def page_advanced() -> Response:
     """Render advanced web page."""
     assert core is not None
-    if request.method == "POST":
-        form = await request.form
-        profile_json = json.loads(form["profileJson"])
-        save_profile(profile_json)
-
-    profile_path = Path(core.profile.read_path("profile.json"))
-    local_profile_json = profile_path.read_text()
-
     return await render_template(
-        "advanced.html",
-        page="Advanced",
-        local_profile_json=local_profile_json,
-        **get_template_args(),
+        "advanced.html", page="Advanced", **get_template_args()
     )
 
 

@@ -10,6 +10,10 @@
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/fontawesome-all.min.css">
         <link rel="stylesheet" href="/css/main.css">
+
+        <style>
+         [x-cloak] { display: none; }
+        </style>
     </head>
 
     <body x-data="rhasspy">
@@ -33,7 +37,7 @@
 
                 <!-- Version -->
                 <div class="navbar-container">
-                    <a href="/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
+                    <a href="/api/" x-text="version.value" title="HTTP API" class="badge badge-info"></a>
                 </div>
 
                 <!-- Page Drop Down -->
@@ -58,7 +62,7 @@
 
                 <!-- Top Bar Buttons -->
                 <div class="navbar-container ml-auto">
-                    <span title="Profile name" class="badge badge-primary ml-2" style="font-size: 1em">{{ profile.get("name", "") }}</span>
+                    <span title="Profile name" class="badge badge-primary ml-2" style="font-size: 1em" x-text="profile.name"></span>
 
                     <button onclick="rhasspy.train()" class="btn btn-success ml-2" title="Train profile">Train</button>
                     <button onclick="rhasspy.restart()" class="btn btn-danger ml-2" title="Restart Rhasspy">Restart</button>
@@ -69,31 +73,27 @@
         <!-- Main -->
         <div class="main-container">
             <!-- Download Alert -->
-            {% if missing_files %}
-            <div class="alert alert-warning alert-dismissable" role="alert">
+            <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
                 <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
                 <span class="ml-2">
-                    Rhasspy needs to download some files for your profile (<span x-text="missingFileCount()"></span> missing)
+                    Rhasspy needs to download some files for your profile (<span x-text="Object.keys(missingFiles).length"></span> missing)
                 </span>
                 <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            {% endif %}
             <!-- End Download Alert -->
 
             <!-- Unknown Words Alert -->
-            {% if unknown_words: %}
-            <div class="alert alert-warning alert-dismissable" role="alert">
+            <div id="unknown-words-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(unknownWords)" x-cloak>
                 <a title="Go to Words page" href="/words" class="btn btn-primary">View</a>
                 <span class="ml-2">
-                    There are {{ len(unknown_words) }} word(s) that Rhasspy isn't sure how to pronounce
+                    There are <span x-text="Object.keys(unknownWords).length"></span> word(s) that Rhasspy isn't sure how to pronounce
                 </span>
-                <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
+                <button type="button" onclick="$('#unknown-words-alert').hide()" class="close ml-auto" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            {% endif %}
             <!-- End Unknown Words Alert -->
 
             {% block body %}{% endblock %}
@@ -149,7 +149,7 @@
 
         <!-- Alert -->
         <div id="alert" style="display: none;" class="alert alert-success main-alert alert-dismissable" role="alert">
-            <button @click="clearAlert" type="button" class="close" aria-label="Close">
+            <button @click="clearAlert()" type="button" class="close" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
             <span id="alertText"></span>
@@ -163,13 +163,13 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="logModalLabel">Rhasspy Log</h5>
 
-                        <button type="button" class="btn btn-primary ml-2" onclick="rhasspy.log.text = ''">Clear</button>
+                        <button type="button" class="btn btn-primary ml-2" @click="log.text = ''">Clear</button>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div class="container" x-data="rhasspy">
+                        <div class="container">
                             <div class="text-muted pl-1">
                                 <p>
                                     This log is streamed live from your Rhasspy server at <tt>ws://<span x-text="window.location.host"></span>/api/events/log</tt>
@@ -193,39 +193,84 @@
         <script type="text/javascript">
          // Shared object with profile and functions
          var rhasspy = {
-             // Profile JSON is written directly here by web server
+
+             // Profile object and non-default settings
              profile: {{ profile_json | safe }},
+             localProfileJson: { value: '' },
+
+             // Words with guessed pronunciations
+             unknownWords: {},
+             unknownWordsText: { value: '' },
+
+             // Server version
+             version: { value: '' },
+
+             // Files that need to be downloaded
+             missingFiles: {},
+
+             // Do API calls for generally needed bits of data
+             init: () => {
+                 // Load profile
+                 $.get('/api/profile', (r) => {
+                     rhasspy.profile = r;
+                 })
+
+                 // Local profile
+                 $.get('/api/profile?layers=profile', (r) => {
+                     rhasspy.localProfileJson.value = JSON.stringify(r, null, 4);
+                 })
+
+                 // Load missing files
+                 $.get('/api/profiles', (r) => {
+                     rhasspy.missingFiles = r.missing_files;
+                 })
+
+                 // Load unknown words
+                 $.get('/api/unknown-words', (r) => {
+                     rhasspy.unknownWords = r;
+                     rhasspy.unknownWordsText.value =
+                         Object.entries(rhasspy.unknownWords)
+                               .map((kv) => kv[0] + ' ' + kv[1])
+                               .join('\n');
+                 })
+
+                 // Load version
+                 $.get('/api/version', (r) => {
+                     rhasspy.version.value = r;
+                  })
+
+             },
 
              // True if the busy modal should be hidden after its finished with its show animation.
              busyHidden: true,
 
              // Show the busy modal and start the Rhasspy logo spinning
-             showBusy: function(message) {
-                 this.busyHidden = false;
+             showBusy: (message) => {
+                 rhasspy.busyHidden = false;
                  $('#logo').addClass('spinner')
                  $('#busyText').html(message)
                  $('#busyModal').modal('show')
              },
 
              // Hide the busy modal and stop the Rhasspy logo from spinning
-             hideBusy: function(message) {
-                 this.busyHidden = true;
+             hideBusy: (message) => {
+                 rhasspy.busyHidden = true;
                  $('#logo').removeClass('spinner')
                  $('#busyModal').modal('hide')
              },
 
              // Display an alert message at the bottom of the screen for 20 seconds
-             alert: function(message, level) {
+             alert: (message, level) => {
                  $('#alert').addClass('alert-' + level)
                  $('#alertText').text(message)
                  $('#alert').show()
 
                  // Hide alert after 20 seconds
-                 setTimeout(this.clearAlert, 20000)
+                 setTimeout(rhasspy.clearAlert, 20000)
              },
 
              // Hide the alert message
-             clearAlert: function(message, level) {
+             clearAlert: (message, level) => {
                  $('#alert').removeClass('alert-info')
                  $('#alert').removeClass('alert-danger')
                  $('#alert').removeClass('alert-warning')
@@ -235,8 +280,7 @@
 
              // Display the busy modal with a message and do an AJAX POST.
              // Returns the AJAX request.
-             postBusy: function(message, url, data, hideOnComplete, contentType) {
-                 var rhasspy = this;
+             postBusy: (message, url, data, hideOnComplete, contentType) => {
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
                  contentType = (contentType === undefined) ? 'application/json' : contentType;
 
@@ -247,42 +291,42 @@
                      data: data,
                      processData: false,
                      contentType: contentType,
-                     complete: function() {
+                     complete: () => {
                          // Hide busy modal
                          if (hideOnComplete) {
                              rhasspy.hideBusy();
                          }
                      },
-                     error: function(error) {
+                     error: (r) => {
                          // Show error alert
-                         rhasspy.alert(error.responseText, 'danger');
+                         rhasspy.alert(r.responseText || r, 'danger');
                      }
                  })
              },
 
              // POSTs to /api/train and displays a busy modal
-             train: function() {
-                 return this.postBusy('Training Profile', '/api/train')
-                            .done(function(response) {
-                                rhasspy.alert(response, 'success');
+             train: () => {
+                 return rhasspy.postBusy('Training Profile', '/api/train')
+                            .done((r) => {
+                                rhasspy.alert(r, 'success');
+                                rhasspy.init();
                             });
              },
 
              // POSTs to /api/restart and displays a busy modal
-             restart: function() {
-                 return this.postBusy('Restarting Rhasspy', '/api/restart')
-                            .done(function() {
-                                window.location.reload()
+             restart: () => {
+                 return rhasspy.postBusy('Restarting Rhasspy', '/api/restart')
+                            .done((r) => {
+                                rhasspy.alert(r);
+                                rhasspy.init();
                             });
              },
 
              downloading: false,
-             missingFiles: {{ missing_files_json | safe }},
 
              // Starts profile file downloads and monitors status
-             downloadProfile: function() {
-                 var rhasspy = this;
-                 this.downloading = true;
+             downloadProfile: () => {
+                 rhasspy.downloading = true;
                  $('#downloadModal').modal('show');
 
                  // Start monitoring download status
@@ -292,36 +336,34 @@
                  $.ajax({
                      url: '/api/download-profile',
                      type: 'POST',
-                     complete: function() {
-                         this.downloading = false;
+                     complete: () => {
+                         rhasspy.downloading = false;
 
                          // Hide download dialog
                          $('#downloadModal').modal('hide')
 
-                         // Restart when done downloading
-                         rhasspy.restart();
+                         // Re-train when done downloading
+                         rhasspy.train();
                      },
-                     error: function(error) {
-                         this.downloading = false;
+                     error: (error) => {
+                         rhasspy.downloading = false;
 
                          // Show error alert
-                         rhasspy.alert(error.responseText, 'danger');
+                         rhasspy.alert(error.responseText || error, 'danger');
                      }
                  })
 
              },
 
              // Polls /api/download-status for downloaded file statuses
-             updateDownloadStatus: function() {
-                 var rhasspy = this;
-
+             updateDownloadStatus: () => {
                  if (!rhasspy.downloading) {
                      return;
                  }
 
-                 $.get('/api/download-status', function(response) {
-                     Object.keys(response).forEach(function(fileKey) {
-                         var remoteFile = response[fileKey];
+                 $.get('/api/download-status', (r) => {
+                     Object.keys(r).forEach((fileKey) => {
+                         var remoteFile = r[fileKey];
                          var localFile = rhasspy.missingFiles[fileKey];
                          var progressId = '#progress-download-' + localFile.index;
 
@@ -332,19 +374,15 @@
                              $(progressId).addClass('bg-success');
                          }
                      })
-                 }).always(function() {
-                     setTimeout(function() {
+                 }).always(() => {
+                     setTimeout(() => {
                          rhasspy.updateDownloadStatus();
                      }, 1000);
                  })
              },
 
-             missingFileCount: function() {
-                 return Object.keys(this.missingFiles).length;
-             },
-
              // Converts a Pocketsphinx threshold to a sensitivity value in [0, 1]
-             thresholdToSensitivity: function(threshold) {
+             thresholdToSensitivity: (threshold) => {
                  var high = 50
                  var low = 5
 
@@ -354,7 +392,7 @@
              },
 
              // Converts a a sensitivity value in [0, 1] to a Pocktsphinx threshold
-             sensitivityToThreshold: function(sensitivity) {
+             sensitivityToThreshold: (sensitivity) => {
                  var high = 50
                  var low = 5
 
@@ -377,8 +415,8 @@
 
              // Creates a new websocket and the calls afterFunc with it.
              // Websocket will automatically reconnect after 5 seconds.
-             makeWebSocket: function(urlFragment, afterFunc) {
-                 var rhasspy = this;
+             makeWebSocket: (urlFragment, afterFunc) => {
+                 var rhasspy = rhasspy;
 
                  // Use URL to decide websocket protocol
                  var wsProtocol = 'ws://';
@@ -390,7 +428,7 @@
                  var socket = new WebSocket(wsURL);
                  socket.onclose = () => {
                      // Try to reconnect
-                     setTimeout(function() {
+                     setTimeout(() => {
                          rhasspy.makeWebSocket(urlFragment, afterFunc);
                      }, 5000);
                  }
@@ -403,32 +441,35 @@
              },
 
              // Log text stream from Rhasspy server.
-             // Wrapped in an object so alpinejs can use it in x-model.
-             log: {
-                 text: ''
-             }
+             log: { text: '' }
+
          };
 
          // Automatically hide busy modal after show animation if busyHidden
-         $('#busyModal').on('shown.bs.modal', function() {
+         $('#busyModal').on('shown.bs.modal', () => {
              if (rhasspy.busyHidden) {
                  $('#busyModal').modal('hide');
              }
          })
 
          // Automatically hide download modal after show animation if not downloading
-         $('#downloadModal').on('shown.bs.modal', function() {
+         $('#downloadModal').on('shown.bs.modal', () => {
              if (!rhasspy.downloading) {
                  $('#downloadModal').modal('hide');
              }
          })
 
-         // Connect log websocket on startup
-         $(function() {
+         $(() => {
+             // Disable GET caches
+             $.ajaxSetup({ cache: false });
+
+             rhasspy.init();
+
+             // Connect log websocket on startup
              rhasspy.makeWebSocket(
                  '/api/events/log',
-                 function(socket) {
-                     socket.onmessage = function(e) {
+                 (socket) => {
+                     socket.onmessage = (e) => {
                          rhasspy.log.text = e.data + '\n' + rhasspy.log.text;
                      }
              });

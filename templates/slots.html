@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="container">
+    <div class="container" x-data="{ ...rhasspy, 'slots': slots }">
     <div class="form-group">
         <div class="form-row text-muted pl-1">
             <p>
@@ -11,32 +11,26 @@
     <div class="form-group">
         <div class="form-row">
             <div class="col-xs-auto">
-                <button onclick="saveSlots()" class="btn btn-primary slots-button">Save Slots</button>
+                <button onclick="saveSlots()" x-bind:class="{ 'btn-danger': slots.isDirty.value }" class="btn btn-primary">Save Slots</button>
             </div>
             <div class="col-xs-auto">
-                <select id="slots" class="form-control" onchange="setSlot()">
-                    {% if slots: %}
-                    {% for slot_name in sorted(slots): %}
-                    <option>{{ slot_name }}</option>
-                    {% endfor %}
-                    {% else: %}
-                    <option selected value="">No Slots</option>
-                    {% endif %}
+                <select id="slotKeys" class="form-control" x-model="slots.currentKey">
+                    <option disabled>No slots</option>
                 </select>
             </div>
             <div class="col-xs-auto">
-                <button type="button" class="btn btn-success" onclick="showNewSlot()">New Slot</button>
+                <button type="button" class="btn btn-success" onclick="$('#newSlotModal').modal('show')">New Slot</button>
             </div>
         </div>
     </div>
     <div class="form-group">
         <div class="form-row">
-            <textarea id="slotValues" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSlotValues()"></textarea>
+            <textarea x-model="slots.currentText.value" x-bind:class="{ 'border-danger': slots.isDirty.value }" class="form-control" style="border-width: 3px" type="text" rows="25" @input="slots.isDirty = true"></textarea>
         </div>
     </div>
     <div class="form-group">
         <div class="form-row">
-            <button onclick="saveSlots()" class="btn btn-primary slots-button"">Save Slots</button>
+            <button onclick="saveSlots()" x-bind:class="{ 'btn-danger': slots.isDirty.value }" class="btn btn-primary">Save Slots</button>
         </div>
     </div>
 </div>
@@ -51,7 +45,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <input id="newSlotName" type="text" class="form-control" placeholder="Slot Name">
+                <input id="newSlotKey" x-model="slots.newKey" type="text" class="form-control" placeholder="Slot Name">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -64,81 +58,111 @@
 
 {% block script %}
 <script type="text/javascript">
- var isDirty = false;
- var slots = {{ slots_json | safe }};
+ var slots = {
+     isDirty: { value: false },
+     currentText: {
+         _value: '',
+         get value() { return this._value; },
+         set value(v) {
+             this._value = v;
+             slots.textByKey[slots.currentKey] = v;
+         }
+     },
 
- function setDirty() {
-     isDirty = true;
-     $('#slotValues').css('border-color', 'red');
-     $('.slots-button').addClass('btn-danger');
+     newKey: '',
+     textByKey: {},
+
+     _currentKey: '',
+     get currentKey() {
+         return this._currentKey;
+     },
+
+     set currentKey(value) {
+         this._currentKey = value;
+         this.currentText.value = this.textByKey[value];
+     }
  }
 
- function clearDirty() {
-     isDirty = false;
-     $('#slotValues').css('border-color', '');
-     $('.slots-button').removeClass('btn-danger');
+ function syncKeys() {
+     $('#slotKeys option').remove();
+     Object.keys(slots.textByKey).forEach((k) => {
+         $('#slotKeys').append(
+             '<option>' + k + '</option>'
+         )
+     })
  }
-
+ 
  function saveSlots() {
+     // Convert to lists
+     var slotsLists = Object.fromEntries(
+         Object.entries(slots.textByKey)
+               .map((kv) => [kv[0], kv[1].split('\n')])
+     );
+
      rhasspy.postBusy('Saving slots',
-                      '/api/slots',
-                      JSON.stringify(slots),
+                      '/api/slots?overwrite_all=true',
+                      JSON.stringify(slotsLists),
                       false)
             .done(function() {
-                clearDirty();
+                slots.isDirty = false;
                 rhasspy.train();
             });
  }
 
- function updateSlotValues() {
-     var slotName = $('#slots').val() || '';
-     if (slotName.length > 0) {
-         // Copy text
-         slots[slotName] = $('#slotValues').val();
-     }
-
-     setDirty();
- }
-
- function setSlot() {
-     var slotName = $('#slots').val() || '';
-     if (slotName.length > 0) {
-         $('#slotValues').val(slots[slotName]);
-     }
- }
-
- function showNewSlot() {
-     $('#newSlotModal').modal('show');
- }
-
  function makeNewSlot() {
-     var newSlotName = $('#newSlotName').val();
-     if (newSlotName.length == 0) {
+     if (slots.newKey.length == 0) {
          alert('Please enter a slot name');
-     } else if (newSlotName in slots) {
+         return;
+     }
+
+     if (slots.newKey in slots.textByKey) {
          alert('Slot already exists');
      } else {
-         slots[newSlotName] = '';
-         $('#slots').append('<option>' + newSlotName + '</option>')
-         $('#slots').val(newSlotName)
          $('#newSlotModal').modal('hide');
-         $('#slotValues').val('')
+         slots.textByKey[slots.newKey] = '';
+         syncKeys();
+         slots.currentKey = slots.newKey;
+         slots.newKey = '';
      }
  }
 
- window.onbeforeunload = function() {
-     if (isDirty) {
+ // Warn user that slots haven't been saved
+ window.onbeforeunload = () => {
+     if (slots.isDirty.value) {
          return 'Slots were not saved. Are you sure?"'
      }
  }
 
- $(function() {
-     if (slots.length == 0) {
-         $('.slots-button').prop('disabled', true);
-         $('#slotValues').prop('disabled', true);
-     } else {
-         setSlot();
-     }
+ $(() => {
+     // Load slots on start up
+     $.get({
+         url: '/api/slots',
+         dataType: 'json',
+     }).done((r) => {
+         slots.textByKey = Object.fromEntries(
+             Object.entries(r)
+             .map((kv) => [kv[0], kv[1].join('\n')])
+         );
+
+         syncKeys();
+
+         if (!$.isEmptyObject(slots.textByKey)) {
+             slots.currentKey = Object.keys(slots.textByKey)[0];
+         }
+     })
+
+     // Catch ENTER in dialog
+     $("#newSlotKey").keypress(() => {
+         if (event.which == 13) {
+             event.preventDefault();
+             makeNewSlot();
+         }
+     })
+
+     // Focus text box when dialog shown
+     $('#newSlotModal').on('shown.bs.modal', () => {
+         $('#newSlotKey').focus();
+     })
  })
 </script>
 {% endblock %}

@@ -1,45 +1,54 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="container">
+<div class="container" x-data="{ ...rhasspy, 'sentences': sentences }">
     <div class="form-group">
         <div class="form-row text-muted pl-1">
             <p>Example sentences, formatted <a href="https://docs.python.org/3/library/configparser.html">ini style</a>, with each section (intent) containing a <a href="https://rhasspy.readthedocs.io/en/latest/training/#sentencesini">simplified JSGF Grammar</a>.</p>
         </div>
     </div>
+
+    <!-- Buttons and Drop Down -->
     <div class="form-group">
         <div class="form-row">
             <div class="col-xs-auto">
-                <button onclick="saveSentences()" class="btn btn-primary sentences-button">Save Sentences</button>
+                <button onclick="saveSentences()" x-bind:class="{ 'btn-danger': sentences.isDirty.value }" class="btn btn-primary">Save Sentences</button>
             </div>
             <div class="col-xs-auto">
-                <select id="sentenceFiles" class="form-control" onchange="setSentences()">
-                    {% for sentences_name in sentences: %}
-                    <option {% if sentences_name == "sentences.ini" %}selected{% endif %}>{{ sentences_name }}</option>
-                    {% endfor %}
+                <select id="sentenceKeys" class="form-control" x-model="sentences.currentKey">
+                    <option disabled>No sentences</option>
                 </select>
             </div>
             <div class="col-xs-auto">
-                <button type="button" class="btn btn-success" onclick="showNewSentences()">New Sentences File</button>
+                <button type="button" class="btn btn-success" onclick="$('#newSentencesModal').modal('show')">New Sentences File</button>
             </div>
         </div>
     </div>
+    <!-- End Buttons and Drop Down -->
+
+    <!-- Sentences -->
     <div class="form-group">
         <div class="form-row">
-            <textarea id="sentences" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="updateSentences()"></textarea>
+            <textarea x-model="sentences.currentText.value" x-bind:class="{ 'border-danger': sentences.isDirty.value }" class="form-control" style="border-width: 3px" type="text" rows="25" @input="sentences.isDirty.value = true"></textarea>
         </div>
     </div>
+    <!-- End Sentences -->
+
     <div class="form-group">
         <div class="form-row text-muted pl-1">
-            <p>Sentences shouldn't contain non-words characters like commas and periods. Optional words are <tt>[bracketed]</tt>. Alternatives are <tt>(separated | by | pipes)</tt>. Rules have an <tt>=</tt> after their name, optionally contain <tt>{tags}</tt>, and are referenced <tt>&lt;by_name&gt;</tt>.</p>
+            <p>
+                Sentences shouldn't contain non-words characters like commas and periods. Optional words are <tt>[bracketed]</tt>. Alternatives are <tt>(separated | by | pipes)</tt>. Rules have an <tt>=</tt> after their name, optionally contain <tt>{tags}</tt>, and are referenced <tt>&lt;by_name&gt;</tt>.
+            </p>
         </div>
     </div>
+
     <div class="form-group">
         <div class="form-row">
-            <button onclick="saveSentences()" class="btn btn-primary sentences-button"">Save Sentences</button>
+            <button onclick="saveSentences()" x-bind:class="{ 'btn-danger': sentences.isDirty.value }" class="btn btn-primary"">Save Sentences</button>
         </div>
     </div>
 </div>
 
+<!-- New Sentences File Dialog -->
 <div id="newSentencesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newSentencesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -50,94 +59,130 @@
                 </button>
             </div>
             <div class="modal-body">
-                <input id="newSentenceFile" type="text" class="form-control" placeholder="Sentence File Name">
+                <input id="newSentencesKey" x-model="sentences.newKey" type="text" class="form-control" placeholder="Sentence File Name">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="makeNewSentences()">New Sentence File</button>
+                <button type="button" class="btn btn-primary" onclick="makeSentencesFile()">New Sentence File</button>
             </div>
         </div>
     </div>
 </div>
+<!-- End New Sentences File Dialog -->
+
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript">
- var isDirty = false;
- var sentences = {{ sentences_json | safe }};
+ var sentences = {
+     isDirty: { value: false },
+     currentText: {
+         _value: '',
+         get value() { return this._value; },
+         set value(v) {
+             this._value = v;
+             sentences.textByKey[sentences.currentKey] = v;
+         }
+     },
 
- function setDirty() {
-     isDirty = true;
-     $('#sentences').css('border-color', 'red');
-     $('.sentences-button').addClass('btn-danger');
+     newKey: '',
+     textByKey: {},
+
+     _currentKey: '',
+     get currentKey() {
+         return this._currentKey;
+     },
+
+     set currentKey(value) {
+         this._currentKey = value;
+         this.currentText.value = this.textByKey[value];
+     }
  }
 
- function clearDirty() {
-     isDirty = false;
-     $('#sentences').css('border-color', '');
-     $('.sentences-button').removeClass('btn-danger');
+ function syncKeys() {
+     $('#sentenceKeys option').remove();
+     Object.keys(sentences.textByKey).forEach((k) => {
+         $('#sentenceKeys').append(
+             '<option>' + k + '</option>'
+         )
+     })
  }
 
  function saveSentences() {
      rhasspy.postBusy('Saving sentences',
                       '/api/sentences',
-                      JSON.stringify(sentences),
+                      JSON.stringify(sentences.textByKey),
                       false)
             .done(function() {
-                clearDirty();
+                sentences.isDirty.value = false;
                 rhasspy.train();
             });
  }
 
- function updateSentences() {
-     var sentenceFile = $('#sentenceFiles').val() || '';
-     if (sentenceFile.length > 0) {
-         // Copy text
-         sentences[sentenceFile] = $('#sentences').val();
-     }
-
-     setDirty();
- }
-
- function setSentences() {
-     var sentenceFile = $('#sentenceFiles').val() || '';
-     if (sentenceFile.length > 0) {
-         $('#sentences').val(sentences[sentenceFile]);
-     }
- }
-
- function showNewSentences() {
-     $('#newSentencesModal').modal('show');
- }
-
- function makeNewSentences() {
-     var newSentenceFile = $('#newSentenceFile').val();
-     if (newSentenceFile.length == 0) {
+ function makeSentencesFile() {
+     if (sentences.newKey.length == 0) {
          alert('Please enter a sentence file name');
-     } else if (newSentenceFile in sentences) {
+         return;
+     }
+
+     // Prefix key with sentences_dir (e.g., 'intents/')
+     var keyPrefix = rhasspy.profile.speech_to_text.sentences_dir;
+     if (!keyPrefix.endsWith('/')) {
+         keyPrefix += '/';
+     }
+
+     if (!sentences.newKey.startsWith(keyPrefix)) {
+         sentences.newKey = keyPrefix + sentences.newKey;
+     }
+
+     // Suffix with .ini
+     if (!sentences.newKey.endsWith('.ini')) {
+         sentences.newKey += '.ini';
+     }
+
+     if (sentences.newKey in sentences.textByKey) {
+         // Already exists
          alert('Sentence file already exists');
      } else {
-         sentences[newSentenceFile] = '';
-         $('#sentenceFiles').append('<option>' + newSentenceFile + '</option>')
-         $('#sentenceFiles').val(newSentenceFile)
+         // New key
          $('#newSentencesModal').modal('hide');
-         $('#sentences').val('')
+         sentences.textByKey[sentences.newKey] = '';
+         syncKeys();
+         sentences.currentKey = sentences.newKey;
+         sentences.newKey = '';
      }
  }
 
- window.onbeforeunload = function() {
-     if (isDirty) {
+ // Warn user that sentences need to be saved
+ window.onbeforeunload = () => {
+     if (sentences.isDirty.value) {
          return 'Sentences were not saved. Are you sure?"'
      }
  }
 
- $(function() {
-     if (sentences.length == 0) {
-         $('.sentences-button').prop('disabled', true);
-         $('#sentences').prop('disabled', true);
-     } else {
-         setSentences();
-     }
+ $(() => {
+     // Load sentences on start up
+     $.get({
+         url: '/api/sentences',
+         dataType: 'json',
+     }).done((r) => {
+         sentences.textByKey = r;
+         syncKeys();
+         sentences.currentKey = 'sentences.ini';
+     })
+
+     // Catch ENTER in dialog
+     $("#newSentencesKey").keypress(() => {
+         if (event.which == 13) {
+             event.preventDefault();
+             makeSentencesFile();
+         }
+     })
+
+     // Focus text box when dialog shown
+     $('#newSentencesModal').on('shown.bs.modal', () => {
+         $('#newSentencesKey').focus();
+     })
  })
 </script>
 {% endblock %}

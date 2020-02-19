@@ -3,7 +3,7 @@
 <!-- Simplified view of Rhasspy profile -->
 
 {% block body %}
-<div class="container" x-data="rhasspy">
+<div class="container">
     <button onclick="saveProfile()" class="btn btn-primary mb-3">Save Settings</button>
 
     <!-- siteId -->
@@ -926,7 +926,7 @@
             <h5 class="mb-0">
                 <i class="fas fa-inverse fa-volume-up"></i>
                 <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#collapseSounds" aria-expanded="true" aria-controls="collapseSounds" :disabled="profile.sounds.system == 'dummy'">
-                    <i class="fas fa-sort-down"></i>Audio Recording
+                    <i class="fas fa-sort-down"></i>Audio Playing
                 </button>
                 <select class="ml-2" x-model="profile.sounds.system">
                     <option value="dummy">Disabled</option>

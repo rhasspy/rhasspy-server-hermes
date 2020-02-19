@@ -1,82 +1,80 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="container">
-
-    <!-- Unknown Words -->
-    <div x-show="!$.isEmptyObject(unknownWords)" x-cloak>
-        <h5 class="text-danger">Unknown Words</h5>
-        <div class="form-group">
-            <div class="form-row pl-1">
-                <p>
-                    Rhasspy guessed how the words below are pronounced, but you should <a href="#" onclick="showPhonemes()">check to be sure.</a>
-                </p>
-                <p>
-                    If everything looks good, click <strong>Confirm Guesses</strong> below.</p>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <textarea id="unknownWords" class="form-control" style="border-width: 3px; border-color: red;" type="text" rows="5" x-model="unknownWordsText.value"></textarea>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <button class="btn btn-danger" onclick="confirmGuesses()" title="Confirm that Rhasspy's pronunciation guesses are correct">Confirm Guesses</button>
-            </div>
-        </div>
-
-        <hr>
-
-        <h5>Custom Words</h5>
-    </div>
-    <!-- End Unknown Words -->
-
-    <!-- Custom Words -->
+<!-- Unknown Words -->
+<div x-show="!$.isEmptyObject(unknownWords)" x-cloak>
+    <h5 class="text-danger">Unknown Words</h5>
     <div class="form-group">
-        <div class="form-row text-muted pl-1">
+        <div class="form-row pl-1">
             <p>
-                These are words whose pronunciations you want to customize.
-                Each line contains a word followed <a href="#" onclick="showPhonemes()">its phonetic pronunciation</a> (separated by spaces):
-                <br>
-                <tt>test T EH S T</tt>
+                Rhasspy guessed how the words below are pronounced, but you should <a href="#" onclick="showPhonemes()">check to be sure.</a>
             </p>
+            <p>
+                If everything looks good, click <strong>Confirm Guesses</strong> below.</p>
         </div>
     </div>
     <div class="form-group">
         <div class="form-row">
-            <div class="col-xs-auto">
-                <button onclick="saveWords()" class="btn btn-primary words-button">Save Custom Words</button>
-            </div>
-            <div class="col-xs-auto">
-                <button type="button" class="btn btn-success" onclick="guessWord()">Guess Word</button>
-            </div>
-            <div class="col-xs-auto">
-                <input id="word" type="text" class="form-control" placeholder="word">
-            </div>
-            <span id="inDictionary" title="Word is in a dictionary" style="display:none">
-                <i class="fas fa-book"></i>
-            </span>
-            <div class="col-xs-auto">
-                <select id="guesses" class="form-control" style="display: none;">
-                    <option disabled value="">Select Guess</option>
-                </select>
-            </div>
-            <div class="col-xs-auto">
-                <button id="addWord" type="button" class="btn btn-info" onclick="addGuessedWord()" style="display: none;">Add</button>
-            </div>
+            <textarea id="unknownWords" class="form-control" style="border-width: 3px; border-color: red;" type="text" rows="5" x-model="unknownWordsText.value"></textarea>
         </div>
     </div>
     <div class="form-group">
         <div class="form-row">
-            <textarea id="customWords" name="customWords" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="setDirty()">{{ custom_words | safe }}</textarea>
+            <button class="btn btn-danger" onclick="confirmGuesses()" title="Confirm that Rhasspy's pronunciation guesses are correct">Confirm Guesses</button>
         </div>
     </div>
-    <div class="form-group">
-        <div class="form-row">
-            <button onclick="saveWords()" class="btn btn-primary words-button"">Save Custom Words</button>
+
+    <hr>
+
+    <h5>Custom Words</h5>
+</div>
+<!-- End Unknown Words -->
+
+<!-- Custom Words -->
+<div class="form-group">
+    <div class="form-row text-muted pl-1">
+        <p>
+            These are words whose pronunciations you want to customize.
+            Each line contains a word followed <a href="#" onclick="showPhonemes()">its phonetic pronunciation</a> (separated by spaces):
+            <br>
+            <tt>test T EH S T</tt>
+        </p>
+    </div>
+</div>
+<div class="form-group">
+    <div class="form-row">
+        <div class="col-xs-auto">
+            <button onclick="saveWords()" class="btn btn-primary words-button">Save Custom Words</button>
+        </div>
+        <div class="col-xs-auto">
+            <button type="button" class="btn btn-success" onclick="guessWord()">Guess Word</button>
+        </div>
+        <div class="col-xs-auto">
+            <input id="word" type="text" class="form-control" placeholder="word">
+        </div>
+        <span id="inDictionary" title="Word is in a dictionary" style="display:none">
+            <i class="fas fa-book"></i>
+        </span>
+        <div class="col-xs-auto">
+            <select id="guesses" class="form-control" style="display: none;">
+                <option disabled value="">Select Guess</option>
+            </select>
+        </div>
+        <div class="col-xs-auto">
+            <button id="addWord" type="button" class="btn btn-info" onclick="addGuessedWord()" style="display: none;">Add</button>
         </div>
     </div>
-    <!-- End Custom Words -->
+</div>
+<div class="form-group">
+    <div class="form-row">
+        <textarea id="customWords" name="customWords" class="form-control" style="border-width: 3px" type="text" rows="25" oninput="setDirty()">{{ custom_words | safe }}</textarea>
+    </div>
+</div>
+<div class="form-group">
+    <div class="form-row">
+        <button onclick="saveWords()" class="btn btn-primary words-button"">Save Custom Words</button>
+    </div>
+</div>
+<!-- End Custom Words -->
 
 </div>
 
@@ -111,130 +109,129 @@
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
-<!-- End Phoneme Table -->
+    {% endblock %}
+    <!-- End Phoneme Table -->
 
-{% block script %}
-<script type="text/javascript">
- var isDirty = false;
- var phonemes = {};
+    {% block script %}
+    <script type="text/javascript">
+     var isDirty = false;
+     var phonemes = {};
 
- // Displays dialog with phoneme table
- function showPhonemes() {
-     $.get('/api/phonemes', (r) => {
-         phonemes = r;
-         $('#phonemesModal').modal('show');
-     })
- }
-
- // Formats unknown words as a CMU pronunciation dictionary
- function formatUnknownWords() {
-     return Object.entries(rhasspy.unknownWords)
-                  .map((kv) => kv[0] + ' ' + kv[1])
-                  .join('\n');
- }
-
- // Calls /api/lookup and shows word pronunciation(s)
- function guessWord() {
-     $('#guesses option').remove();
-     $('#guesses').hide();
-     $('#addWord').hide();
-     $('#inDictionary').hide();
-
-     let word = $('#word').val() || '';
-     if (word.length > 0) {
-         rhasspy.postBusy('Guessing word', '/api/lookup', word)
-                .done(function(response) {
-                    if (response.in_dictionary) {
-                        $('#inDictionary').show();
-                    } else {
-                        $('#addWord').show();
-                    }
-
-                    response.pronunciations.forEach(function(phonemes) {
-                        $('#guesses').append('<option>' + phonemes + '</option>');
-                    })
-
-                    $('#guesses').show();
-                });
-     } else {
-         alert('Please enter a word to guess')
+     // Displays dialog with phoneme table
+     function showPhonemes() {
+         $.get('/api/phonemes', (r) => {
+             phonemes = r;
+             $('#phonemesModal').modal('show');
+         })
      }
- }
 
- // Copies the selected word/pronunciation into custom words text box
- function addGuessedWord() {
-     var word = $('#word').val() || '';
-     var phonemes = $('#guesses').val() || '';
-     if ((word.length > 0) && (phonemes.length > 0)) {
+     // Formats unknown words as a CMU pronunciation dictionary
+     function formatUnknownWords() {
+         return Object.entries(rhasspy.unknownWords)
+                      .map((kv) => kv[0] + ' ' + kv[1])
+                      .join('\n');
+     }
+
+     // Calls /api/lookup and shows word pronunciation(s)
+     function guessWord() {
+         $('#guesses option').remove();
+         $('#guesses').hide();
+         $('#addWord').hide();
+         $('#inDictionary').hide();
+
+         let word = $('#word').val() || '';
+         if (word.length > 0) {
+             rhasspy.postBusy('Guessing word', '/api/lookup', word)
+                    .done(function(response) {
+                        if (response.in_dictionary) {
+                            $('#inDictionary').show();
+                        } else {
+                            $('#addWord').show();
+                        }
+
+                        response.pronunciations.forEach(function(phonemes) {
+                            $('#guesses').append('<option>' + phonemes + '</option>');
+                        })
+
+                        $('#guesses').show();
+                    });
+         } else {
+             alert('Please enter a word to guess')
+         }
+     }
+
+     // Copies the selected word/pronunciation into custom words text box
+     function addGuessedWord() {
+         var word = $('#word').val() || '';
+         var phonemes = $('#guesses').val() || '';
+         if ((word.length > 0) && (phonemes.length > 0)) {
+             var customWords = $('#customWords').val();
+             if ((customWords.length > 0) && !customWords.endsWith('\n')) {
+                 customWords += '\n';
+             }
+
+             $('#customWords').val(customWords + word + ' ' + phonemes);
+         } else {
+             alert('No word or pronunciation')
+         }
+     }
+
+     // Custom words should be saved
+     function setDirty() {
+         isDirty = true;
+         $('#customWords').css('border-color', 'red');
+         $('.words-button').addClass('btn-danger');
+     }
+
+     // Custom words haven been saved
+     function clearDirty() {
+         isDirty = false;
+         $('#customWords').css('border-color', '');
+         $('.words-button').removeClass('btn-danger');
+     }
+
+     // Saves custom words and re-trains
+     function saveWords() {
+         rhasspy.postBusy('Saving custom words',
+                          '/api/custom-words',
+                          $('#customWords').val(),
+                          false)
+                .done(function() {
+                    clearDirty();
+                    rhasspy.train()
+                });
+     }
+
+     // Copies all guessed pronunciations to custom words and saves
+     function confirmGuesses() {
          var customWords = $('#customWords').val();
          if ((customWords.length > 0) && !customWords.endsWith('\n')) {
              customWords += '\n';
          }
 
-         $('#customWords').val(customWords + word + ' ' + phonemes);
-     } else {
-         alert('No word or pronunciation')
-     }
- }
+         $('#customWords').val(
+             customWords + rhasspy.unknownWordsText.value
+         );
 
- // Custom words should be saved
- function setDirty() {
-     isDirty = true;
-     $('#customWords').css('border-color', 'red');
-     $('.words-button').addClass('btn-danger');
- }
-
- // Custom words haven been saved
- function clearDirty() {
-     isDirty = false;
-     $('#customWords').css('border-color', '');
-     $('.words-button').removeClass('btn-danger');
- }
-
- // Saves custom words and re-trains
- function saveWords() {
-     rhasspy.postBusy('Saving custom words',
-                      '/api/custom-words',
-                      $('#customWords').val(),
-                      false)
-            .done(function() {
-                clearDirty();
-                rhasspy.train()
-            });
- }
-
- // Copies all guessed pronunciations to custom words and saves
- function confirmGuesses() {
-     var customWords = $('#customWords').val();
-     if ((customWords.length > 0) && !customWords.endsWith('\n')) {
-         customWords += '\n';
+         rhasspy.unknownWordsText.value = '';
+         saveWords();
      }
 
-     $('#customWords').val(
-         customWords + rhasspy.unknownWordsText.value
-     );
-
-     rhasspy.unknownWordsText.value = '';
-     saveWords();
- }
-
- // Warns users that custom words are not saved
- window.onbeforeunload = function() {
-     if (isDirty) {
-         return 'Custom words were not saved. Are you sure?"'
-     }
- }
-
- $(function() {
-     // Catch ENTER and guess word pronuncation(s)
-     $("#word").keypress(function() {
-         if (event.which == 13) {
-             event.preventDefault();
-             guessWord();
+     // Warns users that custom words are not saved
+     window.onbeforeunload = function() {
+         if (isDirty) {
+             return 'Custom words were not saved. Are you sure?"'
          }
+     }
+
+     $(function() {
+         // Catch ENTER and guess word pronuncation(s)
+         $("#word").keypress(function() {
+             if (event.which == 13) {
+                 event.preventDefault();
+                 guessWord();
+             }
+         })
      })
- })
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}

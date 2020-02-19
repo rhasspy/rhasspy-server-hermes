@@ -3,29 +3,27 @@
 <!-- Page for editing Rhasspy profile JSON directly -->
 
 {% block body %}
-<div class="container">
-    <div class="text-muted pl-1">
-        <p>
-            You can edit <a href="https://rhasspy.readthedocs.io/en/latest/profiles/">your Rhasspy profile</a> directly here as JSON.
-            Only settings that <strong>differ from the defaults</strong> are shown.
-        </p>
+<div class="text-muted pl-1">
+    <p>
+        You can edit <a href="https://rhasspy.readthedocs.io/en/latest/profiles/">your Rhasspy profile</a> directly here as JSON.
+        Only settings that <strong>differ from the defaults</strong> are shown.
+    </p>
+</div>
+<div class="form-group">
+    <div class="form-row">
+        <button onclick="saveProfile()" x-bind:class="{ 'btn-danger': isDirty }" class="btn btn-primary">Save Profile</button>
     </div>
-    <div class="form-group">
-        <div class="form-row">
-            <button onclick="saveProfile()" x-bind:class="{ 'btn-danger': isDirty }" class="btn btn-primary">Save Profile</button>
-        </div>
-    </div>
+</div>
 
-    <div class="form-group">
-        <div class="form-row">
-            <textarea id="profileJson" x-model="localProfileJson.value" x-bind:class="{ 'border-danger': isDirty }" class="form-control" style="border-width: 3px" type="text" rows="25" @input="isDirty = true"></textarea>
-        </div>
+<div class="form-group">
+    <div class="form-row">
+        <textarea id="profileJson" x-model="localProfileJson.value" x-bind:class="{ 'border-danger': isDirty }" class="form-control" style="border-width: 3px" type="text" rows="25" @input="isDirty = true"></textarea>
     </div>
+</div>
 
-    <div class="form-group">
-        <div class="form-row">
-            <button onclick="saveProfile()" x-bind:class="{ 'btn-danger': isDirty }" class="btn btn-primary">Save Profile</button>
-        </div>
+<div class="form-group">
+    <div class="form-row">
+        <button onclick="saveProfile()" x-bind:class="{ 'btn-danger': isDirty }" class="btn btn-primary">Save Profile</button>
     </div>
 </div>
 {% endblock %}

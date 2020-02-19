@@ -102,7 +102,7 @@
     <div class="card-body">
         <form onsubmit="recognize()">
             <div class="input-group">
-                <button type="submit" id="intent-recognize" class="btn btn-primary">
+                <button type="submit" id="intent-recognize" title="Recognize an intent from text" class="btn btn-primary">
                     <i class="fas fa-inverse fa-comment"></i>
                     Recognize
                 </button>
@@ -113,13 +113,13 @@
             </div>
             <div id="intent-summary" style="display:none;" class="form-group mt-3 mb-0">
                 <div class="form-row">
-                    <div id="intent-name" class="badge badge-danger"></div>
+                    <div id="intent-name" title="Intent name" class="badge badge-danger"></div>
                 </div>
                 <div class="form-row">
-                    <ul id="intent-slots" class="mt-1"></ul>
+                    <ul id="intent-slots" title="Intent slots" class="mt-1"></ul>
                 </div>
                 <div class="form-row">
-                    <button onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
+                    <button title="Show intent JSON" onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
                 </div>
             </div>
         </form>
@@ -153,7 +153,7 @@
     <div class="card-body">
         <form onsubmit="speak()">
             <div class="input-group">
-                <button type="submit" id="tts-speak" class="btn btn-primary">
+                <button type="submit" id="tts-speak" title="Speak a sentence using text to speech" class="btn btn-primary">
                     <i class="fas fa-inverse fa-paper-plane"></i>
                     Speak
                 </button>

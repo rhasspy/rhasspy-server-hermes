@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="container" x-data="{ ...rhasspy, 'sentences': sentences }">
+<div x-data="{ ...rhasspy, 'sentences': sentences }">
     <div class="form-group">
         <div class="form-row text-muted pl-1">
             <p>Example sentences, formatted <a href="https://docs.python.org/3/library/configparser.html">ini style</a>, with each section (intent) containing a <a href="https://rhasspy.readthedocs.io/en/latest/training/#sentencesini">simplified JSGF Grammar</a>.</p>

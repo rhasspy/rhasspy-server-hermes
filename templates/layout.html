@@ -212,7 +212,8 @@
              init: () => {
                  // Load profile
                  $.get('/api/profile', (r) => {
-                     rhasspy.profile = r;
+                     // Update in-place to avoid breaking alpine js proxies
+                     Object.assign(rhasspy.profile, r);
                  })
 
                  // Local profile

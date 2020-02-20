@@ -47,12 +47,24 @@
                             {{ page }}
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="/">Home</a>
-                            <a class="dropdown-item" href="/sentences">Sentences</a>
-                            <a class="dropdown-item" href="/slots">Slots</a>
-                            <a class="dropdown-item" href="/words">Words</a>
-                            <a class="dropdown-item" href="/settings">Settings</a>
-                            <a class="dropdown-item" href="/advanced">Advanced</a>
+                            <a class="dropdown-item" href="/">
+                                <i class="fas fa-hammer mr-2"></i>Test
+                            </a>
+                            <a class="dropdown-item" href="/sentences">
+                                <i class="fas fa-align-left mr-2"></i>Sentences
+                            </a>
+                            <a class="dropdown-item" href="/slots">
+                                <i class="fas fa-dot-circle mr-2"></i>Slots
+                            </a>
+                            <a class="dropdown-item" href="/words">
+                                <i class="fas fa-quote-right mr-2"></i>Words
+                            </a>
+                            <a class="dropdown-item" href="/settings">
+                                <i class="fas fa-toolbox mr-2"></i>Settings
+                            </a>
+                            <a class="dropdown-item" href="/advanced">
+                                <i class="fas fa-hat-wizard mr-2"></i>Advanced
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -76,7 +88,7 @@
             <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
                 <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
                 <span class="ml-2">
-                    Rhasspy needs to download some files for your profile (<span x-text="Object.keys(missingFiles).length"></span> missing)
+                    Rhasspy needs to download some files for your profile <a href="#" onclick="showFilesToDownload()">(<span x-text="Object.keys(missingFiles).length"></span> missing)</a>
                 </span>
                 <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -146,6 +158,24 @@
             </div>
         </div>
         <!-- End Download Modal -->
+
+        <!-- Download Files Modal -->
+        <div id="downloadFilesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="downloadFilesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="downloadFilesModalLabel">Files to Download</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea id="downloadFiles" type="text" class="form-control" rows="15"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Download Files Modal -->
 
         <!-- Alert -->
         <div id="alert" style="display: none;" class="alert alert-success main-alert alert-dismissable" role="alert">
@@ -328,7 +358,7 @@
              restart: () => {
                  return rhasspy.postBusy('Restarting Rhasspy', '/api/restart')
                             .done((r) => {
-                                rhasspy.alert(r);
+                                rhasspy.alert(r.responseText || r);
                                 rhasspy.init();
                             });
              },
@@ -486,6 +516,11 @@
                      }
              });
          })
+
+         function showFilesToDownload() {
+             $('#downloadFiles').val(JSON.stringify(rhasspy.missingFiles, null, 4));
+             $('#downloadFilesModal').modal('show');
+         }
         </script>
 
         {% block script %}{% endblock %}

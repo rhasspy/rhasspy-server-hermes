@@ -285,7 +285,7 @@ class RhasspyCore:
         graph_dict = rhasspynlu.graph_to_json(intent_graph)
 
         # Save to JSON file
-        graph_path = self.profile.read_path(
+        graph_path = self.profile.write_path(
             self.profile.get("intent.fsticuffs.intent_graph", "intent.json")
         )
 

@@ -465,7 +465,7 @@ async def api_download_profile() -> str:
 
     def update_status(url, path, file_key, done, bytes_downloaded, bytes_expected):
         bytes_percent = 100
-        if bytes_expected is not None:
+        if (bytes_expected is not None) and (bytes_expected > 0):
             bytes_percent = int(bytes_downloaded / bytes_expected * 100)
 
         download_status[file_key] = {"done": done, "bytes_percent": bytes_percent}
@@ -1679,7 +1679,7 @@ async def webfonts(filename) -> Response:
 @app.route("/", methods=["GET"])
 async def page_index() -> Response:
     """Render main web page."""
-    return await render_template("index.html", page="Home", **get_template_args())
+    return await render_template("index.html", page="Test", **get_template_args())
 
 
 @app.route("/sentences", methods=["GET", "POST"])

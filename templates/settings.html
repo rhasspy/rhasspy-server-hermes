@@ -368,7 +368,7 @@
     <div class="card-header bg-dark" id="headingWake">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-exclamation-circle"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy' }" data-toggle="collapse" data-target="#collapseWake" aria-expanded="true" aria-controls="collapseWake" :disabled="profile.wake.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#collapseWake" aria-expanded="true" aria-controls="collapseWake" :disabled="profile.wake.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Wake Word
             </button>
             <select class="ml-2" x-model="profile.wake.system">
@@ -379,6 +379,10 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes</option>
             </select>
+
+            <span class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
+                Not compatible with this profile
+            </span>
         </h5>
     </div>
     <div id="collapseWake" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
@@ -529,7 +533,7 @@
     <div class="card-header bg-dark" id="headingSpeech">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-phone-volume"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy' }" data-toggle="collapse" data-target="#collapseSpeech" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#collapseSpeech" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Speech to Text
             </button>
             <select class="ml-2" x-model="profile.speech_to_text.system">
@@ -540,6 +544,10 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes</option>
             </select>
+
+            <span class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
+                Not compatible with this profile
+            </span>
         </h5>
     </div>
     <div id="collapseSpeech" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
@@ -551,9 +559,6 @@
                     <div class="form-row">
                         <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#pocketsphinx">Documentation</a>
                     </div>
-                </div>
-                <div class="alert alert-warning" x-show="!profile.speech_to_text.pocketsphinx.compatible">
-                    Not compatible with this profile
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -587,9 +592,6 @@
                     <div class="form-row">
                         <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#kaldi">Documentation</a>
                     </div>
-                </div>
-                <div class="alert alert-warning" x-show="!profile.speech_to_text.kaldi.compatible">
-                    Not compatible with this profile
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -1203,6 +1205,16 @@
              });
          }
      });
+ }
+
+ function isSpeechCompatible() {
+     var speechSystem = rhasspy.profile.speech_to_text.system;
+     return rhasspy.profile.speech_to_text[speechSystem].compatible;
+ }
+
+ function isWakeCompatible() {
+     var wakeSystem = rhasspy.profile.wake.system;
+     return rhasspy.profile.wake[wakeSystem].compatible;
  }
 
  $(() => {

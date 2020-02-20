@@ -98,6 +98,29 @@
                         <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#pyaudio">Documentation</a>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="microphone-pyaudio-device">Device:</label>
+                        </div>
+                        <div class="col">
+                            <input id="microphone-pyaudio-device" x-model="profile.microphone.pyaudio.device" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="microphone-pyaudio-devices" x-model="profile.microphone.pyaudio.device" class="form-control">
+                                <option value="" selected>Default Input Device</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshInputDevices('pyaudio')" class="btn btn-primary form-control">Refresh</button>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="testInputDevices('pyaudio')" class="btn btn-secondary form-control">Test</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End PyAudio -->
 
@@ -106,6 +129,29 @@
                 <div class="form-group">
                     <div class="form-row">
                         <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#alsa">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="microphone-arecord-device">Device:</label>
+                        </div>
+                        <div class="col">
+                            <input id="microphone-arecord-device" x-model="profile.microphone.arecord.device" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="microphone-arecord-devices" x-model="profile.microphone.arecord.device" class="form-control">
+                                <option value="" selected>Default Input Device</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshInputDevices('arecord')" class="btn btn-primary form-control">Refresh</button>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="testInputDevices('arecord')" class="btn btn-secondary form-control">Test</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -524,6 +570,14 @@
                         <label for="pocketsphinx-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_dictionary")) }}</tt> </li>
+                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <!-- End Pocketsphinx -->
 
@@ -549,6 +603,15 @@
                     <div class="form-row">
                         <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
                         <label for="kaldi-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_dictionary")) }}</tt> </li>
+                            <li>Base Graph Directory: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_graph")) }}</tt> </li>
+                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model")) }}</tt> </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -946,6 +1009,24 @@
                         <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#alsa">Documentation</a>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="col-xs-auto">
+                        <label for="sounds-aplay-device">Device:</label>
+                    </div>
+                    <div class="col">
+                        <input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row mt-2">
+                    <div class="col">
+                        <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
+                            <option value="" selected>Default Output Device</option>
+                        </select>
+                    </div>
+                    <div class="col-xs-auto">
+                        <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control">Refresh</button>
+                    </div>
+                </div>
             </div>
             <!-- End aplay -->
 
@@ -1074,6 +1155,68 @@
                 rhasspy.restart();
             });
  }
+
+ // Load available audio input devices
+ function refreshInputDevices(micSystem) {
+     var selectId = 'microphone-' + micSystem + '-devices';
+     $('#' + selectId + ' option:not(:first)').remove();
+
+     $.get({
+         url:'/api/microphones',
+         dataType: 'json',
+         success: (r) => {
+             Object.entries(r).forEach((kv) => {
+                 $('#' + selectId)
+                     .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+             });
+         }
+     });
+ }
+
+ // Test available audio input devices
+ function testInputDevices(micSystem) {
+     var selectId = 'microphone-' + micSystem + '-devices';
+     $('#' + selectId + ' option:not(:first)').remove();
+
+     rhasspy.getBusy('Testing microphones',
+                     '/api/test-microphones')
+            .done((r) => {
+                Object.entries(r).forEach((kv) => {
+                    $('#' + selectId)
+                        .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+                });
+            });
+ }
+
+ // Load available audio output devices
+ function refreshOutputDevices(soundSystem) {
+     var selectId = 'sounds-' + soundSystem + '-devices';
+     $('#' + selectId + ' option:not(:first)').remove();
+
+     $.get({
+         url:'/api/speakers',
+         dataType: 'json',
+         success: (r) => {
+             Object.entries(r).forEach((kv) => {
+                 $('#' + selectId)
+                     .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+             });
+         }
+     });
+ }
+
+ $(() => {
+     // Refresh audio devices on start up
+     var micSystem = rhasspy.profile.microphone.system;
+     if ((micSystem == 'pyaudio') || (micSystem == 'arecord')) {
+         refreshInputDevices(micSystem);
+     }
+
+     var soundSystem = rhasspy.profile.sounds.system;
+     if (soundSystem == 'aplay') {
+         refreshOutputDevices(soundSystem);
+     }
+ })
 
 </script>
 {% endblock %}

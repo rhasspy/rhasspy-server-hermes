@@ -280,15 +280,25 @@
              },
 
              // Display the busy modal with a message and do an AJAX POST.
-             // Returns the AJAX request.
              postBusy: (message, url, data, hideOnComplete, contentType) => {
+                 return rhasspy.ajaxBusy('POST', message, url, data, hideOnComplete, contentType);
+             },
+
+             // Display the busy modal with a message and do an AJAX GET.
+             getBusy: (message, url, data, hideOnComplete, contentType) => {
+                 return rhasspy.ajaxBusy('GET', message, url, data, hideOnComplete, contentType);
+             },
+
+             // Display the busy modal with a message and do an AJAX call.
+             // Returns the AJAX request.
+             ajaxBusy: (method, message, url, data, hideOnComplete, contentType) => {
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
                  contentType = (contentType === undefined) ? 'application/json' : contentType;
 
                  rhasspy.showBusy(message);
                  return $.ajax({
                      url: url,
-                     type: 'POST',
+                     type: method,
                      data: data,
                      processData: false,
                      contentType: contentType,
@@ -342,7 +352,8 @@
 
                          // Hide download dialog
                          $('#downloadModal').modal('hide')
-
+                     },
+                     success: () => {
                          // Re-train when done downloading
                          rhasspy.train();
                      },

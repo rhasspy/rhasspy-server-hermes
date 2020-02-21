@@ -395,6 +395,10 @@ class RhasspyCore:
         self, text: str
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
+        if self.profile.get("intent.system", "dummy") == "dummy":
+            _LOGGER.debug("No intent system configured")
+            return NluIntentNotRecognized()
+
         nlu_id = str(uuid4())
         query = NluQuery(id=nlu_id, input=text, siteId=self.siteId)
 
@@ -422,8 +426,12 @@ class RhasspyCore:
 
     async def speak_sentence(
         self, sentence: str, language: typing.Optional[str] = None
-    ):
+    ) -> TtsSayFinished:
         """Speak a sentence using text to speech."""
+        if self.profile.get("text_to_speech.system", "dummy") == "dummy":
+            _LOGGER.debug("No text to speech system configured")
+            return TtsSayFinished()
+
         tts_id = str(uuid4())
 
         def handle_finished():
@@ -450,6 +458,10 @@ class RhasspyCore:
         self, wav_bytes: bytes, frames_per_chunk: int = 1024
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
+        if self.profile.get("speech_to_text.system", "dummy") == "dummy":
+            _LOGGER.debug("No speech to text system configured")
+            return AsrTextCaptured(text="", likelihood=0, seconds=0)
+
         sessionId = str(uuid4())
 
         def handle_captured():
@@ -517,6 +529,10 @@ class RhasspyCore:
 
     async def play_wav_data(self, wav_bytes: bytes) -> AudioPlayFinished:
         """Play WAV data through speakers."""
+        if self.profile.get("sounds.system", "dummy") == "dummy":
+            _LOGGER.debug("No audio output system configured")
+            return AudioPlayFinished()
+
         requestId = str(uuid4())
 
         def handle_finished():

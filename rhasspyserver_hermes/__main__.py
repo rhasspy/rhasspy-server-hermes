@@ -294,7 +294,7 @@ def save_slots(
     # Write new values
     slots: typing.Dict[str, typing.List[str]] = defaultdict(list)
     for name, value_str in new_slot_values.items():
-        values:typing.Set[str] = set()
+        values: typing.Set[str] = set()
 
         if isinstance(value_str, str):
             # Add value if not empty
@@ -566,6 +566,7 @@ async def api_listen_for_command() -> Response:
     """Wake Rhasspy up and listen for a voice command"""
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
     wakewordId = request.args.get("wakewordId", "default")
     sessionId = str(uuid4())
 
@@ -606,8 +607,17 @@ async def api_listen_for_command() -> Response:
         async for response in core.publish_wait(handle_intent(), messages, topics):
             result = response
 
-        if isinstance(result, (NluIntent, NluIntentNotRecognized)):
-            # Convert to dict
+        assert isinstance(result, (NluIntent, NluIntentNotRecognized))
+        if output_format == "hermes":
+            if isinstance(result, NluIntent):
+                intent_dict = {"type": "intent", "value": attr.asdict(result)}
+            else:
+                intent_dict = {
+                    "type": "intentNotRecognized",
+                    "value": attr.asdict(result),
+                }
+        else:
+            # Rhasspy format
             intent_dict = result.to_rhasspy_dict()
 
         return jsonify(intent_dict)
@@ -657,23 +667,31 @@ async def api_lookup() -> Response:
     word = data.decode().strip().lower()
     assert word, "No word to look up"
 
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
+
+    # Get pronunciations
     result = await core.get_word_pronunciations([word], n)
 
-    # Convert to Rhasspy format
-    pronunciations = {
-        word: {
-            "in_dictionary": any(
-                not word_pron.guessed for word_pron in result.wordPhonemes[word]
-            ),
-            "pronunciations": [
-                " ".join(word_pron.phonemes) for word_pron in result.wordPhonemes[word]
-            ],
-            "phonemes": get_espeak_phonemes(word),
-        }
-        for word in result.wordPhonemes
-    }
+    if output_format == "hermes":
+        pronunciation_dict = {"type": "phonemes", "value": attr.asdict(result)}
+    else:
+        # Convert to Rhasspy format
+        pronunciation_dict = {}
+        for pron_word in result.wordPhonemes:
+            if pron_word == word:
+                pronunciation_dict = {
+                    "in_dictionary": any(
+                        not word_pron.guessed
+                        for word_pron in result.wordPhonemes[pron_word]
+                    ),
+                    "pronunciations": [
+                        " ".join(word_pron.phonemes)
+                        for word_pron in result.wordPhonemes[pron_word]
+                    ],
+                    "phonemes": get_espeak_phonemes(pron_word),
+                }
 
-    return jsonify(pronunciations[word])
+    return jsonify(pronunciation_dict)
 
 
 # -----------------------------------------------------------------------------
@@ -995,8 +1013,9 @@ async def api_restart() -> str:
 @app.route("/api/speech-to-text", methods=["POST"])
 async def api_speech_to_text() -> str:
     """Transcribe speech from WAV file."""
-    no_header = request.args.get("noheader", "false").lower() == "true"
     assert core is not None
+    no_header = request.args.get("noheader", "false").lower() == "true"
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
     wav_bytes = await request.data
@@ -1008,7 +1027,9 @@ async def api_speech_to_text() -> str:
     result = await core.transcribe_wav(wav_bytes)
     end_time = time.perf_counter()
 
-    if prefers_json():
+    if output_format == "hermes":
+        return jsonify({"type": "textCaptured", "value": attr.asdict(result)})
+    elif prefers_json():
         # Return extra info in JSON
         return jsonify(
             {
@@ -1032,6 +1053,7 @@ async def api_text_to_intent():
     data = await request.data
     text = data.decode()
     no_hass = request.args.get("nohass", "false").lower() == "true"
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
 
     if no_hass:
         # Temporarily disable intent handling
@@ -1039,15 +1061,8 @@ async def api_text_to_intent():
 
     try:
         # Convert text to intent
-        start_time = time.time()
-        intent = (await core.recognize_intent(text)).to_rhasspy_dict()
-        intent["raw_text"] = text
-        intent["speech_confidence"] = 1
-
-        intent_sec = time.time() - start_time
-        intent["time_sec"] = intent_sec
-
-        return jsonify(intent)
+        intent_dict = await text_to_intent_dict(text, output_format=output_format)
+        return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
         core.publish(HandleToggleOn(siteId=core.siteId))
@@ -1061,6 +1076,7 @@ async def api_speech_to_intent() -> Response:
     """Transcribe speech, recognize intent, and optionally handle."""
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
 
     if no_hass:
         # Temporarily disable intent handling
@@ -1074,22 +1090,18 @@ async def api_speech_to_intent() -> Response:
         start_time = time.time()
         transcription = await core.transcribe_wav(wav_bytes)
         text = transcription.text
-        _LOGGER.debug(text)
 
         # text -> intent
-        intent = (await core.recognize_intent(text)).to_rhasspy_dict()
-        intent["raw_text"] = transcription.text
-        intent["speech_confidence"] = transcription.likelihood
+        intent_dict = await text_to_intent_dict(text, output_format=output_format)
 
-        intent_sec = time.time() - start_time
-        intent["time_sec"] = intent_sec
+        if output_format == "rhasspy":
+            intent_dict["raw_text"] = transcription.text
+            intent_dict["speech_confidence"] = transcription.likelihood
 
-        _LOGGER.debug(intent)
+        return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
         core.publish(HandleToggleOn(siteId=core.siteId))
-
-    return jsonify(intent)
 
 
 # -----------------------------------------------------------------------------
@@ -1125,6 +1137,7 @@ async def api_stop_recording() -> Response:
     """End recording voice command. Transcribe and handle."""
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
+    output_format = request.args.get("outputFormat", "rhasspy").lower()
 
     if no_hass:
         # Temporarily disable intent handling
@@ -1157,13 +1170,8 @@ async def api_stop_recording() -> Response:
 
         assert isinstance(text_captured, AsrTextCaptured)
         text = text_captured.text
-        result = await core.recognize_intent(text)
-
-        if isinstance(result, (NluIntent, NluIntentNotRecognized)):
-            # Convert to dict
-            intent = result.to_rhasspy_dict()
-
-        return jsonify(intent)
+        intent_dict = await text_to_intent_dict(text, output_format=output_format)
+        return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
         core.publish(HandleToggleOn(siteId=core.siteId))
@@ -1749,6 +1757,29 @@ def quality(accept, key: str) -> float:
         if accept._values_match(key, option.value):
             return option.quality
     return 0.0
+
+
+async def text_to_intent_dict(text, output_format="rhasspy"):
+    assert core is not None
+    start_time = time.perf_counter()
+    result = await core.recognize_intent(text)
+
+    if output_format == "hermes":
+        if isinstance(result, NluIntent):
+            intent_dict = {"type": "intent", "value": attr.asdict(result)}
+        else:
+            intent_dict = {"type": "intentNotRecognized", "value": attr.asdict(result)}
+    else:
+        # Rhasspy format
+        intent_dict = result.to_rhasspy_dict()
+
+        intent_dict["raw_text"] = text
+        intent_dict["speech_confidence"] = 1
+
+        intent_sec = time.time() - start_time
+        intent_dict["time_sec"] = intent_sec
+
+    return intent_dict
 
 
 # -----------------------------------------------------------------------------

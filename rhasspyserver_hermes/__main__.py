@@ -1662,21 +1662,20 @@ async def webfonts(filename) -> Response:
     return await send_from_directory(webfonts_dir, filename)
 
 
-# @app.route("/docs", methods=["GET"])
-# @app.route("/docs/", methods=["GET"])
-# async def docs_index() -> Response:
-#     """Documentation index static endpoint."""
-#     return await send_from_directory(docs_dir, "index.html")
+@app.route("/docs/")
+async def docs_index() -> Response:
+    """Documentation index static endpoint."""
+    return await send_from_directory(docs_dir, "index.html")
 
 
-# @app.route("/docs/<path:filename>", methods=["GET"])
-# async def docs(filename) -> Response:
-#     """Documentation static endpoint."""
-#     doc_file = Path(safe_join(docs_dir, filename))
-#     if doc_file.is_dir():
-#         doc_file = doc_file / "index.html"
+@app.route("/docs/<path:filename>")
+async def docs(filename) -> Response:
+    """Documentation static endpoint."""
+    doc_file = Path(safe_join(docs_dir, filename))
+    if doc_file.is_dir():
+        doc_file = doc_file / "index.html"
 
-#     return await send_file(doc_file)
+    return await send_file(doc_file)
 
 
 # ----------------------------------------------------------------------------

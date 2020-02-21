@@ -380,8 +380,8 @@
                 <option value="hermes">Hermes</option>
             </select>
 
-            <span class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
-                Not compatible with this profile
+            <span title="Wake system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
+                Not compatible
             </span>
         </h5>
     </div>
@@ -545,8 +545,8 @@
                 <option value="hermes">Hermes</option>
             </select>
 
-            <span class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
-                Not compatible with this profile
+            <span title="Speech system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
+                Not compatible
             </span>
         </h5>
     </div>
@@ -1227,6 +1227,14 @@
      var soundSystem = rhasspy.profile.sounds.system;
      if (soundSystem == 'aplay') {
          refreshOutputDevices(soundSystem);
+     }
+
+     // Highlight selected section from URL
+     var hash = $(location).attr('hash') || '';
+     if (hash.length > 0) {
+         var header = hash + ' .card-header';
+         $(header).addClass('bg-primary');
+         $(header).removeClass('bg-dark');
      }
  })
 

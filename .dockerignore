@@ -3,4 +3,6 @@
 !requirements.txt
 !requirements_rhasspy.txt
 !web
+!templates
 !VERSION
+!etc

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Audio Input - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Audio Input";
+    var mkdocs_page_input_path = "audio-input.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../services/">Services</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Usage</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../training/">Training</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Audio Input</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#audio-input">Audio Input</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#mqtthermes">MQTT/Hermes</a></li>
+        
+            <li><a class="toctree-l3" href="#pyaudio">PyAudio</a></li>
+        
+            <li><a class="toctree-l3" href="#alsa">ALSA</a></li>
+        
+            <li><a class="toctree-l3" href="#gstreamer">GStreamer</a></li>
+        
+            <li><a class="toctree-l3" href="#dummy">Dummy</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../wake-word/">Wake Word</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-recognition/">Intent Recognition</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Audio Input</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="audio-input">Audio Input</h1>
+<p>Rhasspy can listen to audio input from a local microphone or a remote audio
+stream. Most of the local audio testing has been done with a USB <a href="https://en.wikipedia.org/wiki/PlayStation_Eye">PlayStation
+Eye camera</a>.</p>
+<h2 id="mqtthermes">MQTT/Hermes</h2>
+<p>Rhasspy receives audio over <a href="https://mqtt.org">MQTT</a> using the <a href="https://docs.snips.ai/reference/hermes">Hermes protocol</a>: specifically, audio chunks in the <a href="https://en.wikipedia.org/wiki/WAV">WAV format</a> on the topic <code>hermes/audioServer/&lt;siteId&gt;/audioFrame</code></p>
+<p>To avoid unnecessary conversion overhead, the WAV audio should be 16-bit 16Khz mono.</p>
+<h2 id="pyaudio">PyAudio</h2>
+<p>Streams microphone data from a <a href="https://people.csail.mit.edu/hubert/pyaudio/">PyAudio</a> device.
+This is the default audio input system, and should work with both <a href="https://www.alsa-project.org/main/index.php/Main_Page">ALSA</a> and <a href="https://www.freedesktop.org/wiki/Software/PulseAudio/">PulseAudio</a>.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;microphone&quot;: {
+  &quot;system&quot;: &quot;pyaudio&quot;,
+  &quot;pyaudio&quot;: {
+    &quot;device&quot;: &quot;&quot;,
+    &quot;frames_per_buffer&quot;: 480
+  }
+}
+</code></pre>
+
+<p>Set <code>microphone.pyaudio.device</code> to a PyAudio device number or leave blank for the default device.
+Streams 30ms chunks of 16-bit, 16 kHz mono audio by default (480 frames).</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-microphone-pyaudio-hermes">rhasspy-microphone-pyaudio-hermes</a></p>
+<h2 id="alsa">ALSA</h2>
+<p>Starts an <code>arecord</code> process locally and reads audio data from its standard out.
+Works best with <a href="https://www.alsa-project.org/main/index.php/Main_Page">ALSA</a>.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;microphone&quot;: {
+  &quot;system&quot;: &quot;arecord&quot;,
+  &quot;arecord&quot;: {
+    &quot;device&quot;: &quot;&quot;,
+    &quot;chunk_size&quot;: 960
+  }
+}
+</code></pre>
+
+<p>Set <code>microphone.arecord.device</code> to the name of the ALSA device to use (<code>-D</code> flag
+to <code>arecord</code>) or leave blank for the default device.
+By default, calls <code>arecord -t raw -r 16000 -f S16_LE -c 1</code> and reads 30ms (960
+bytes) of audio data at a time.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-microphone-cli-hermes">rhasspy-microphone-cli-hermes</a></p>
+<h2 id="gstreamer">GStreamer</h2>
+<p>Receives audio chunks via stdout from a <a href="https://gstreamer.freedesktop.org/">GStreamer</a> pipeline.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;microphone&quot;: {
+  &quot;system&quot;: &quot;gstreamer&quot;,
+  &quot;gstreamer&quot;: {
+    &quot;pipeline&quot;: &quot;...&quot;,
+  }
+}
+</code></pre>
+
+<p>Set <code>microphone.gstreamer.pipeline</code> to your GStreamer pipeline <strong>without a sink</strong> (this will be added by Rhasspy). By default, the pipeline is:</p>
+<pre><code>udpsrc port=12333 ! rawaudioparse use-sink-caps=false format=pcm pcm-format=s16le sample-rate=16000 num-channels=1 ! queue ! audioconvert ! audioresample
+</code></pre>
+
+<p>which "simply" receives raw 16-bit 16 kHz audio chunks via UDP port 12333. You could stream microphone audio to Rhasspy from another machine by running the following terminal command:</p>
+<pre><code class="bash">gst-launch-1.0 \
+    autoaudiosrc ! \
+    audioconvert ! \
+    audioresample ! \
+    audio/x-raw, rate=16000, channels=1, format=S16LE ! \
+    udpsink host=RHASSPY_SERVER port=12333
+</code></pre>
+
+<p>where <code>RHASSPY_SERVER</code> is the hostname of your Rhasspy server (e.g., <code>localhost</code>).</p>
+<p>The Rhasspy Docker images contains the <a href="https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/">"good" plugin</a> set for GStreamer, which includes a wide variety of ways to stream/transform audio.</p>
+<p>TODO: Not Implemented</p>
+<h2 id="dummy">Dummy</h2>
+<p>Disables microphone recording.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;microphone&quot;: {
+  &quot;system&quot;: &quot;dummy&quot;
+}
+</code></pre>
+
+<p>See <code>rhasspy.audio_recorder.DummyAudioRecorder</code> for details.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../audio-output/" class="btn btn-neutral float-right" title="Audio Output">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../hardware/" class="btn btn-neutral" title="Hardware"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../hardware/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../audio-output/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Usage - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Usage";
+    var mkdocs_page_input_path = "usage.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../services/">Services</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Usage</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#usage">Usage</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#web-interface">Web Interface</a></li>
+        
+            <li><a class="toctree-l3" href="#home-assistant">Home Assistant</a></li>
+        
+            <li><a class="toctree-l3" href="#node-red">Node-RED</a></li>
+        
+            <li><a class="toctree-l3" href="#mqtt-and-snips">MQTT and Snips</a></li>
+        
+            <li><a class="toctree-l3" href="#http-api">HTTP API</a></li>
+        
+            <li><a class="toctree-l3" href="#command-line">Command Line</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../training/">Training</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-input/">Audio Input</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../wake-word/">Wake Word</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-recognition/">Intent Recognition</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Usage</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="usage">Usage</h1>
+<p>You can interact with Rhasspy in more ways than your voice:</p>
+<ul>
+<li><a href="#web-interface">Web Interface</a></li>
+<li><a href="#home-assistant">Home Assistant</a></li>
+<li><a href="#node-red">Node-RED with Websockets</a></li>
+<li><a href="#mqtt-and-snips">MQTT and Snips</a></li>
+<li><a href="#http-api">HTTP API</a></li>
+<li><a href="#command-line">Command Line</a></li>
+</ul>
+<h2 id="web-interface">Web Interface</h2>
+<p>A browser-based interface for Rhasspy is available on port 12101 by default (<a href="http://localhost:12101">http://localhost:12101</a> if running locally). From this interface, you can test voice commands, add new voice commands, re-train, and edit your profile.</p>
+<h3 id="top-bar">Top Bar</h3>
+<p>The top bar of the web interface lets you perform some global actions on Rhasspy, regardless of which tab you have selected.</p>
+<p><img alt="Web interface top bar" src="../img/web-top.png" /></p>
+<ul>
+<li>Click the Rhasspy logo to reload the page</li>
+<li>Click the version number to test the <a href="#http-api">HTTP API</a></li>
+<li>The green <code>Train</code> button will re-train your profile</li>
+<li>The red <code>Restart</code> button forces Rhasspy to restart</li>
+</ul>
+<h3 id="speech-tab">Speech Tab</h3>
+<p>Test voice and text commands.</p>
+<p><img alt="Web interface speech tab" src="../img/web-speech.png" /></p>
+<ul>
+<li>Wake up Rhasspy and have it listen for a voice command</li>
+<li>Upload a WAV file with a voice command</li>
+<li>Enter a text command and Rhasspy recognize the intent</li>
+<li>Speak a sentence using the text to speech system</li>
+</ul>
+<h3 id="sentences-tab">Sentences Tab</h3>
+<p>Add new voice commands to Rhasspy using the <a href="../training/#sentencesini">template syntax</a>.</p>
+<p><img alt="Web interface sentences tab" src="../img/web-sentences.png" /></p>
+<ul>
+<li>Edits <code>sentences.ini</code> by default</li>
+<li>Create additional template files<ul>
+<li>These should be prefixed by the <code>sentences_dir</code> in your <a href="../profiles/">profile</a>. For example, <code>intents/more-commands.ini</code></li>
+</ul>
+</li>
+<li>The drop down can be used to switch editing between different template files</li>
+</ul>
+<h3 id="slots-tab">Slots Tab</h3>
+<p>Edit your <a href="../training/#slots-lists">slots lists</a>.</p>
+<p><img alt="Web interface slots tab" src="../img/web-slots.png" /></p>
+<ul>
+<li>Slot values will overwrite previous ones</li>
+<li>Create new slots (files in your <code>slots</code> directory)</li>
+<li>Delete a slot by deleting all values and saving</li>
+</ul>
+<h3 id="words-tab">Words Tab</h3>
+<p>Teach Rhasspy how to pronounce new words.</p>
+<p><img alt="Web interface words tab" src="../img/web-words.png" /></p>
+<ul>
+<li>Look up pronunciation(s) for known words (in your profile's <code>base_dictionary.txt</code> file)</li>
+<li>Have Rhasspy guess how to pronounce a new (unknown) word</li>
+<li>Add new words to your <code>custom_words.txt</code> file</li>
+</ul>
+<h3 id="settings-tab">Settings Tab</h3>
+<p>Simplified interface for editing your <a href="../profiles/">profile</a>.
+Make sure to restart Rhasspy after saving changes.</p>
+<p><img alt="Web interface settings tab" src="../img/web-settings.png" /></p>
+<h3 id="advanced-tab">Advanced Tab</h3>
+<p>Direct interface for editing your <a href="../profiles/">profile</a>.
+<strong>Be careful!</strong> Entering invalid settings here can cause Rhasspy to not start.</p>
+<p><img alt="Web interface advanced tab" src="../img/web-advanced.png" /></p>
+<h3 id="log-tab">Log Tab</h3>
+<p>Streams Rhasspy's log output over a websocket.</p>
+<p>TODO</p>
+<h2 id="home-assistant">Home Assistant</h2>
+<p>Rhasspy communicates with Home Assistant directly over its <a href="https://developers.home-assistant.io/docs/en/external_api_rest.html">REST API</a>.
+Specifically, Rhasspy intents are POST-ed to the <a href="https://developers.home-assistant.io/docs/en/external_api_rest.html#post-api-events-lt-event_type">events endpoint</a>.</p>
+<p>If you have a Rhasspy intent named <code>ChangeLightColor</code> with <code>name</code> and <code>color</code> slots like in the <a href="..#rgb-light-example">RGB light example</a>, then Home Assistant will receive an event of type <code>rhasspy_ChangeLightColor</code> whose event data is:</p>
+<pre><code class="json">{
+  &quot;name&quot;: &quot;bedroom&quot;,
+  &quot;color&quot;: &quot;red&quot;
+}
+</code></pre>
+
+<p>when you say "set the bedroom to red". You should write a custom <a href="https://www.home-assistant.io/docs/automation/trigger/#event-trigger">automation with an event trigger</a> to do something when this event arrives. Catching the example event would look like:</p>
+<pre><code class="yaml">automation:
+  trigger:
+    platform: event
+    event_type: rhasspy_ChangeLightColor
+    event_data:
+      color: red
+  action:
+    ...
+</code></pre>
+
+<p>You've now added offline, private voice commands to your Home Assistant. Happy automating!</p>
+<h3 id="getting-the-spoken-text">Getting the Spoken Text</h3>
+<p>The Home Assistant event will contain two extra slots besides the ones you specify:</p>
+<ul>
+<li><code>_text</code> - spoken voice command text with <a href="../training/#substitutions">substitutions</a></li>
+<li><code>_raw_text</code> - literal transcription of voice command</li>
+</ul>
+<h2 id="node-red">Node-RED</h2>
+<p>Rhasspy can interact directly with <a href="https://nodered.org">Node-RED</a> directly through <a href="./#websocket-events">websockets</a>.
+Simply add a websocket input and set the path to <code>ws://&lt;rhasspy&gt;:12101/api/events/intent</code> where <code>&lt;rhasspy&gt;</code> is the hostname or IP address of your Rhasspy server.
+Make sure to also set send/receive to "entire message".</p>
+<p><img alt="Node-RED websocket example" src="../img/nodered-websocket.png" /></p>
+<p>More example flows are available <a href="https://github.com/synesthesiam/rhasspy/tree/master/examples/nodered">on Github</a>.</p>
+<h3 id="websocket-events">WebSocket Events</h3>
+<p>Rhasspy supports multiple websocket event endpoints:</p>
+<ul>
+<li><code>/api/events/intent</code><ul>
+<li>Intent recognized or not</li>
+</ul>
+</li>
+<li><code>/api/events/wake</code><ul>
+<li>Wake word detected</li>
+</ul>
+</li>
+<li><code>/api/events/text</code><ul>
+<li>Speech transcription</li>
+</ul>
+</li>
+</ul>
+<h4 id="websocket-intents">WebSocket Intents</h4>
+<p>Whenever a voice command is recognized, Rhasspy emits JSON events over a websocket connection available at <code>ws://YOUR_SERVER:12101/api/events/intent</code> (replace <code>ws://</code> with <code>wss://</code> if you're using <a href="./#secure-hosting-with-https">secure hosting</a>).
+You can listen to these events in a <a href="https://nodered.org">Node-RED</a> flow, and easily add offline, private voice commands to your home automation set up!</p>
+<p>For the <code>ChangLightState</code> intent from the <a href="..#rgb-light-example">RGB Light Example</a>, Rhasspy will emit a JSON event like this over the websocket:</p>
+<pre><code class="json">{
+  &quot;text&quot;: &quot;set the bedroom light to red&quot;,
+  &quot;intent&quot;: {
+    &quot;name&quot;: &quot;ChangeLightColor&quot;,
+    &quot;confidence&quot;: 1
+  },
+  &quot;entities&quot;: [
+    {
+      &quot;entity&quot;: &quot;name&quot;,
+      &quot;value&quot;: &quot;bedroom&quot;
+    },
+    {
+      &quot;entity&quot;: &quot;color&quot;,
+      &quot;value&quot;: &quot;red&quot;
+    }
+  ],
+  &quot;slots&quot;: {
+    &quot;name&quot;: &quot;bedroom&quot;,
+    &quot;color&quot;: &quot;red&quot;
+  }
+}
+</code></pre>
+
+<h4 id="websocket-wake">WebSocket Wake</h4>
+<p>When the wake word is detected, or Rhasspy is woken up via the <code>/api/listen-for-command</code> HTTP endpoint, a JSON event is emitted at <code>ws://YOUR_SERVER:12101/api/events/wake</code> (<code>wss://</code> if using HTTPS) like:</p>
+<pre><code class="json">{
+    &quot;wakewordId&quot;: &quot;default&quot;,
+    &quot;siteId&quot;: &quot;default&quot;
+}
+</code></pre>
+
+<p>The <code>wakewordId</code> is set using the model or file name of your wakeword model (e.g., <code>porcupine</code> for <code>porcupine.ppn</code>). The <code>siteId</code> comes from your <code>mqtt.siteId</code> profile setting.</p>
+<h4 id="websocket-transcriptions">WebSocket Transcriptions</h4>
+<p>Each time a voice command is transcribed, Rhasspy emits a JSON event at <code>ws://YOUR_SERVER:12101/api/events/text</code> (<code>wss://</code> if using HTTPS) like:</p>
+<pre><code class="json">{
+    &quot;text&quot;: &quot;text from voice command&quot;,
+    &quot;wakewordId&quot;: &quot;default&quot;,
+    &quot;siteId&quot;: &quot;default&quot;
+}
+</code></pre>
+
+<p>The transcription is contained in the <code>text</code> property. <code>wakewordId</code> is the id of the wakeword that initiated the voice command (or <code>default</code>). The <code>siteId</code> comes from your <code>mqtt.siteId</code> profile setting.</p>
+<h3 id="websocket-mqtt-messages">Websocket MQTT Messages</h3>
+<p>You can send and receive MQTT messages over a special websocket endpoint at <code>ws://YOUR_SERVER:12101/api/mqtt</code> (<code>wss://</code> if using HTTPS).</p>
+<h4 id="subscribing-to-topics">Subscribing to Topics</h4>
+<p>Send a JSON message with the following form:</p>
+<pre><code class="json">{
+  &quot;type&quot;: &quot;subscribe&quot;,
+  &quot;topic&quot;: &quot;the/mqtt/topic&quot;
+}
+</code></pre>
+
+<h4 id="receiving-messages">Receiving Messages</h4>
+<p>When a message whose topic you have subscribed to is received, you will get a JSON message like:</p>
+<pre><code class="json">{
+  &quot;topic&quot;: &quot;/the/mqtt/topic&quot;,
+  &quot;payload&quot;: ...
+}
+</code></pre>
+
+<p>You should only subscribe to messages whose payloads can be serialized in JSON.</p>
+<h4 id="publishing-messages">Publishing Messages</h4>
+<p>To send a message to all of Rhasspy's services, send a JSON message like:</p>
+<pre><code class="json">{
+  &quot;type&quot;: &quot;publish&quot;,
+  &quot;topic&quot;: &quot;/the/mqtt/topic&quot;,
+  &quot;payload&quot;: ...
+}
+</code></pre>
+
+<h2 id="mqtt-and-snips">MQTT and Snips</h2>
+<p>Rhasspy is able to interoperate with Snips.AI services using the <a href="https://docs.snips.ai/reference/hermes">Hermes protocol</a> over <a href="http://mqtt.org">MQTT</a>. See the description of <a href="../services/">Rhasspy's services</a> for details.</p>
+<h2 id="http-api">HTTP API</h2>
+<p>Rhasspy features a comprehensive HTTP API available at <code>/api/</code>, documented with <a href="https://github.com/OAI/OpenAPI-Specification">OpenAPI 3</a> (Swagger). See the <a href="../reference/#http-api">HTTP API reference</a> for more details.</p>
+<h3 id="secure-hosting-with-https">Secure Hosting with HTTPS</h3>
+<p>If you need to access Rhasspy's web interface/API through HTTPS (formally SSL), you can provide a certificate and key file via command-line parameters or the Hass.io configuration.</p>
+<p>If you're running Rhasspy via Docker or in a virtual environment, add <code>--ssl &lt;CERT_FILE&gt; &lt;KEY_FILE&gt;</code> to the command-line arguments where <code>&lt;CERT_FILE&gt;</code> is your SSL certificate and <code>&lt;KEY_FILE&gt;</code> is your SSL key file.</p>
+<p>You can generate a self-signed certificate with the following command:</p>
+<pre><code>openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365
+</code></pre>
+<p>After answering the series of questions, you should have <code>cert.pem</code> and <code>key.pem</code> in your current directory. Then run Rhasspy with:</p>
+<pre><code>&lt;RHASSPY COMMAND&gt; --ssl cert.pem key.pem
+</code></pre>
+<p>The web interface will now be available at <a href="https://localhost:12101">https://localhost:12101</a> and the web socket events at <code>wss://localhost:12101/api/events/intent</code></p>
+<p>In Hass.io, you will need to set the following options via the web interface or in your JSON configuration:</p>
+<ul>
+<li><code>ssl</code>: <code>true</code></li>
+<li><code>certfile</code>: <code>cert.pem</code></li>
+<li><code>keyfile</code>: <code>key.pem</code></li>
+</ul>
+<h2 id="command-line">Command Line</h2>
+<p>A command-line client for the Rhasspy <a href="#http-api">HTTP API</a> is available in the <a href="https://github.com/rhasspy/rhasspy-client">rhasspy-client</a> library.</p>
+<p>You can install it with:</p>
+<pre><code class="bash">pip install rhasspy-client
+</code></pre>
+
+<p>and then run it:</p>
+<pre><code class="bash">rhasspy-client --help
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../profiles/" class="btn btn-neutral float-right" title="Profiles">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../tutorials/" class="btn btn-neutral" title="Tutorials"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../tutorials/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../profiles/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

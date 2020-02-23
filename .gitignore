@@ -6,6 +6,5 @@ debian/rhasspy-server-hermes*
 dist/
 *.egg-info/
 pyinstaller/
-web/
 .vscode/
 download/

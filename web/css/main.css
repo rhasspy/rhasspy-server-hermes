@@ -1,0 +1,60 @@
+body {
+    padding-top: 4rem;
+}
+
+.main-container {
+    padding: 1rem;
+}
+
+.main-alert {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 9999;
+}
+
+.response {
+    text-align: center;
+}
+
+.tab-pane {
+    padding-top: 2rem;
+    padding-left: 0.5rem;
+}
+
+.spinner {
+    -webkit-animation:spin 4s linear infinite;
+    -moz-animation:spin 4s linear infinite;
+    animation:spin 4s linear infinite;
+}
+
+div.card-header .fas {
+    padding-right: 8px;
+}
+
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+
+.dropdown-menu a:hover
+{
+    color: #fff;
+    background-color: #0069d9;
+    border-color: #fff;
+}
+
+.test-card {
+    text-align: center;
+}
+
+.test-card .card-body {
+    padding: 0.25rem;
+}
+
+.test-card .col {
+    padding: 0 0.25rem;
+}
+
+.test-card .btn {
+    width: 100%;
+}

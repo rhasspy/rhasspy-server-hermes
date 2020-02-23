@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Training - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Training";
+    var mkdocs_page_input_path = "training.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../services/">Services</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Usage</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Training</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#training">Training</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#sentencesini">sentences.ini</a></li>
+        
+            <li><a class="toctree-l3" href="#custom-words">Custom Words</a></li>
+        
+            <li><a class="toctree-l3" href="#language-model-mixing">Language Model Mixing</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-input/">Audio Input</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../wake-word/">Wake Word</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-recognition/">Intent Recognition</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Training</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="training">Training</h1>
+<p>Rhasspy is designed to recognize voice commands <a href="#sentencesini">in a template language</a>. These commands are categorized by <strong>intent</strong>, and may contain <a href="#slots-lists">slots</a> or <a href="#tags">named entities</a>, such as the color and name of a light.</p>
+<ul>
+<li>Intent Recognition<ul>
+<li><a href="#basic-syntax">Basic Syntax</a></li>
+<li><a href="#tags">Named Entities</a></li>
+<li><a href="#number-ranges">Number Ranges</a></li>
+<li><a href="#slots-lists">Slots</a><ul>
+<li><a href="#slot-synonyms">Slot Synonyms</a></li>
+<li><a href="#slot-programs">Slot Programs</a></li>
+</ul>
+</li>
+<li><a href="#converters">Converters</a></li>
+</ul>
+</li>
+<li>Speech Recognition<ul>
+<li><a href="#custom-words">Custom Words</a></li>
+<li><a href="#language-model-mixing">Language Model Mixing</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="sentencesini">sentences.ini</h2>
+<p>Voice commands stored in an <a href="https://docs.python.org/3/library/configparser.html">ini file</a> whose "sections" are intents and "values" are sentence templates.</p>
+<h3 id="basic-syntax">Basic Syntax</h3>
+<p>To get started, simply list your intents (surround by brackets) and the possible ways of invoking them below:</p>
+<pre><code>[TestIntent1]
+this is a sentence
+this is another sentence for the same intent
+
+[TestIntent2]
+this is a sentence for a different intent
+</code></pre>
+
+<p>If you say "this is a sentence" after hitting the <code>Train</code> button, it will generate a <code>TestIntent1</code>.</p>
+<h3 id="groups">Groups</h3>
+<p>You can group multiple words together using <code>(parentheses)</code> like:</p>
+<pre><code>turn on the (living room lamp)
+</code></pre>
+
+<p>Groups (sometimes called sequences) can be <a href="#tags">tagged</a> and <a href="#substitutions">substituted</a> like single words. They may also contain <a href="#alternatives">alternatives</a>.</p>
+<h3 id="optional-words">Optional Words</h3>
+<p>Within a sentence template, you can specify optional word(s) by surrounding them <code>[with brackets]</code>. For example:</p>
+<pre><code>[an] example sentence [with] some optional words
+</code></pre>
+
+<p>will match:</p>
+<ul>
+<li><code>an example sentence with some optional words</code></li>
+<li><code>example sentence with some optional words</code></li>
+<li><code>an example sentence some optional words</code></li>
+<li><code>example sentence some optional words</code></li>
+</ul>
+<h3 id="alternatives">Alternatives</h3>
+<p>A set of items where only one is matched at a time is <code>(specified | like | this)</code>. For N items, there will be N matched sentences (unless you nest optional words, etc.). The template:</p>
+<pre><code>set the light to (red | green | blue)
+</code></pre>
+
+<p>will match:</p>
+<ul>
+<li><code>set the light to red</code></li>
+<li><code>set the light to green</code></li>
+<li><code>set the light to blue</code></li>
+</ul>
+<h3 id="tags">Tags</h3>
+<p>Named entities are marked in your sentence templates with <code>{tags}</code>. The name of the <code>{entity}</code> is between the curly braces, while the <code>(value of the){entity}</code> comes immediately before:</p>
+<pre><code>[SetLightColor]
+set the light to (red | green | blue){color}
+</code></pre>
+
+<p>With the <code>{color}</code> tag attached to <code>(red | green | blue)</code>, Rhasspy will match:</p>
+<ul>
+<li><code>set the light to [red](color)</code></li>
+<li><code>set the light to [green](color)</code></li>
+<li><code>set the light to [blue](color)</code></li>
+</ul>
+<p>When the <code>SetLightColor</code> intent is recognized, the JSON event will contain a <code>color</code> property whose value is either "red", "green" or "blue".</p>
+<h4 id="tag-synonyms">Tag Synonyms</h4>
+<p>Tag/named entity values can be (substituted](#substitutions) using the colon (<code>:</code>) inside the <code>{curly:braces}</code> like:</p>
+<pre><code>turn on the (living room lamp){name:light_1}
+</code></pre>
+
+<p>Now the <code>name</code> property of the intent JSON event will contain "light_1" instead of "living room lamp".</p>
+<h3 id="substitutions">Substitutions</h3>
+<p>The colon (<code>:</code>) is used to put something different than what's spoken into the recognized intent JSON. The left-hand side of the <code>:</code> is what Rhasspy expects to hear, while the right-hand side is what gets put into the intent:</p>
+<pre><code>turn on the (living room lamp):light_1
+</code></pre>
+
+<p>In this example, the spoken phrase "living room lamp" will be replaced by "light_1" in the recognized intent. Substitutions work for single words, <a href="#groups">groups</a>, <a href="#alternatives">alternatives</a>, and <a href="#tags">tags</a>:</p>
+<pre><code>turn on the living room lamp:light
+(turn | switch):switch on the living room lamp
+turn (on){action:activate} the living room lamp
+</code></pre>
+
+<p>See <a href="#tag-synonyms">tag synonyms</a> for more details on tag substitution.</p>
+<p>You can leave the left-hand or right-hand side (or both!) of the <code>:</code> empty:</p>
+<pre><code>these: words: will: be: dropped:
+:these :will :be :added
+</code></pre>
+
+<p>When the right-hand side is empty (<code>dropped:</code>), the spoken word will not appear in the intent. An empty left-hand side (<code>:added</code>) means the word is <em>not</em> spoken, but will appear in the intent.</p>
+<p>Leaving <strong>both</strong> sides empty does nothing unless you attach a <a href="#tags">tag</a> it. This allows you to embed a named entity in a voice command without matching specific words:</p>
+<pre><code>turn on the living room lamp (:){domain:light}
+</code></pre>
+
+<p>An intent from the example above will contain a <code>domain</code> entity whose value is <code>light</code>.</p>
+<h3 id="rules">Rules</h3>
+<p>Rules allow you to reuse parts of your sentence templates. They're defined by <code>rule_name = ...</code> alongside other sentences and referenced by <code>&lt;rule_name&gt;</code>. For example:</p>
+<pre><code>colors = (red | green | blue)
+set the light to &lt;colors&gt;
+</code></pre>
+
+<p>which is equivalent to:</p>
+<pre><code>set the light to (red | green | blue)
+</code></pre>
+
+<p>You can <strong>share rules</strong> across intents by referencing them as <code>&lt;IntentName.rule_name&gt;</code> like:</p>
+<pre><code>[SetLightColor]
+colors = (red | green | blue)
+set the light to &lt;colors&gt;
+
+[GetLightColor]
+is the light &lt;SetLightColor.colors&gt;
+</code></pre>
+<p>The second intent (<code>GetLightColor</code>) references the <code>colors</code> rule from <code>SetLightColor</code>. Rule references without a dot must exist in the current intent.</p>
+<h3 id="number-ranges">Number Ranges</h3>
+<p>Rhasspy supports using number literals (<code>75</code>) and number ranges (<code>1..10</code>) directly in your sentence templates. During training, the <a href="https://pypi.org/project/num2words">num2words</a> package is used to generate words that the speech recognizer can handle ("seventy five"). For example:</p>
+<pre><code>[SetBrightness]
+set brightness to (0..100){brightness}
+</code></pre>
+
+<p>The <code>brightness</code> property of the recognized <code>SetBrightness</code> intent will automatically be <a href="#converters">converted</a> to an integer for you. You can optionally add a step to the integer range:</p>
+<pre><code>evens = 0..100,2
+odds = 1..100,2
+</code></pre>
+
+<p>Under the hood, number ranges are actually references to the <code>rhasspy/number</code> <a href="#slot-programs">slot program</a>. You can override this behavior by creating your <code>slot_programs/rhasspy/number</code> program or disable it entirely by setting <code>intent.replace_numbers</code> to <code>false</code> in <a href="../profiles/">your profile</a>.</p>
+<h3 id="slots-lists">Slots Lists</h3>
+<p>Large <a href="#alternatives">alternatives</a> can become unwieldy quickly. For example, say you have a list of movie names:</p>
+<pre><code>movies = (&quot;Primer&quot; | &quot;Moon&quot; | &quot;Chronicle&quot; | &quot;Timecrimes&quot; | &quot;Mulholland Drive&quot; | ... )
+</code></pre>
+
+<p>Rather than keep this list in <code>sentences.ini</code>, you may put each movie name on a separate line in a file named <code>slots/movies</code> (no file extension) and reference it as <code>$movies</code>. Rhasspy automatically loads all files in the <code>slots</code> directory of your <a href="#profiles.md">profile</a> and makes them available as slots lists.</p>
+<p>For the example above, the file <code>slots/movies</code> should contain:</p>
+<pre><code>Primer
+Moon
+Chronicle
+Timecrimes
+Mullholand Drive
+</code></pre>
+
+<p>Now you can simply use the placeholder <code>$movies</code> in your sentence templates:</p>
+<pre><code>[PlayMovie]
+play ($movies){movie_name}
+</code></pre>
+
+<p>When matched, the <code>PlayMovie</code> intent JSON will contain <code>movie_name</code> property with either "Primer", "Moon", etc.</p>
+<p>Make sure to <strong>re-train</strong> Rhasspy whenever you update your slot values!</p>
+<h4 id="slot-directories">Slot Directories</h4>
+<p>Slot files can be put in <strong>sub-directories</strong> under <code>slots</code>. A list in <code>slots/foo/bar</code> should be referenced in <code>sentences.ini</code> as <code>$foo/bar</code>.</p>
+<h4 id="slot-synonyms">Slot Synonyms</h4>
+<p>Slot values are themselves sentence templates! So you can use all of the familiar syntax from above. Slot "synonyms" can be created simply using <a href="#substitutions">substitutions</a>. So a file named <code>slots/rooms</code> may contain:</p>
+<pre><code>[the:] (den | playroom | downstairs):den
+</code></pre>
+
+<p>which is referenced by <code>$rooms</code> and will match:</p>
+<ul>
+<li>the den</li>
+<li>den</li>
+<li>the playroom</li>
+<li>playroom</li>
+<li>the downstairs</li>
+<li>downstairs</li>
+</ul>
+<p>This will always output just "den" because <code>[the:]</code> optionally matches "the" and then drops the word.</p>
+<h4 id="slot-programs">Slot Programs</h4>
+<p>Slot lists are great if your slot values always stay the same and are easily written out by hand. If you have slot values that you need to be generated <em>each time Rhasspy is trained</em>, you can use slot programs.</p>
+<p>Create a directory named <code>slot_programs</code> in your profile (e.g., <code>$HOME/.config/rhasspy/profiles/en/slot_programs</code>):</p>
+<pre><code class="bash">slot_programs=&quot;${HOME}/.config/rhasspy/profiles/en/slot_programs&quot;
+mkdir -p &quot;${slot_programs}&quot;
+</code></pre>
+
+<p>Add a file in <code>slot_programs</code> with the name of your slot, e.g. <code>colors</code>. Write a program in this file, such as a bash script. Make sure to include the <a href="https://en.wikipedia.org/wiki/Shebang_(Unix)">shebang</a> and mark the file as executable:</p>
+<pre><code class="bash">cat &lt;&lt;EOF &gt; &quot;${slot_programs}/colors&quot;
+#!/usr/bin/env bash
+echo 'red'
+echo 'green'
+echo 'blue'
+EOF
+
+chmod +x &quot;${slot_programs}/colors&quot;
+</code></pre>
+
+<p>Now, when you reference <code>$colors</code> in your <code>sentences.ini</code>, Rhasspy will run the program you wrote and collect the slot values from each line. Note that you can output all the same things as regular <a href="#slots-lists">slots lists</a>, including optional words, alternatives, etc.</p>
+<p>You can pass <strong>arguments</strong> to your program using the syntax <code>$name,arg1,arg2,...</code> in <code>sentences.ini</code> (no spaces). Arguments will be pass on the command-line, so <code>arg1</code> and <code>arg2</code> will be <code>$1</code> and <code>$2</code> in a bash script. </p>
+<p>Like regular slots lists, slot programs can also be put in sub-directories under <code>slot_programs</code>. A program in <code>slot_programs/foo/bar</code> should be referenced in <code>sentences.ini</code> as <code>$foo/bar</code>.</p>
+<h4 id="built-in-slots">Built-in Slots</h4>
+<p>Rhasspy includes a few built-in slots for each language:</p>
+<ul>
+<li><code>$rhasspy/days</code> - day names of the week</li>
+<li><code>$rhasspy/months</code> - month names of the year</li>
+</ul>
+<h3 id="converters">Converters</h3>
+<p>By default, all named entity values in a recognized intent's JSON are strings. If you need a different data type, such as an integer or float, or want to do some kind of complex <em>conversion</em>, use a converter:</p>
+<pre><code>[SetBrightness]
+set brightness to (low:0 | medium:0.5 | high:1){brightness!float}
+</code></pre>
+
+<p>The <code>!name</code> syntax calls a converter by name. Rhasspy includes several built-in converters:</p>
+<ul>
+<li>int - convert to integer</li>
+<li>float - convert to real</li>
+<li>bool - convert to boolean</li>
+<li>lower - lower-case</li>
+<li>upper - upper-case</li>
+</ul>
+<p>You can define your own converters by placing a file in the <code>converters</code> directory of your profile. Like <a href="#slot-programs">slot programs</a>, this file should contain a <a href="https://en.wikipedia.org/wiki/Shebang_(Unix)">shebang</a> and be marked as executable (<code>chmod +x</code>). A file named <code>converters/foo/bar</code> should be referenced as <code>!foo/bar</code> in <code>sentences.ini</code>.</p>
+<p>Your custom converter will receive the value to convert on standard in (<code>stdin</code>) encoded as JSON. You should print a converted JSON value to standard out <code>stdout</code>. The example below demonstrates converting a string value into an integer:</p>
+<pre><code class="python">#!/usr/bin/env python3
+import sys
+import json
+
+value = json.load(sys.stdin)
+print(int(value))
+</code></pre>
+
+<p>Converters can be <em>chained</em>, so <code>!foo!bar</code> will call the <code>foo</code> converter and then pass the result to <code>bar</code>.</p>
+<h3 id="special-cases">Special Cases</h3>
+<p>If one of your sentences happens to start with an optional word (e.g., <code>[the]</code>), this can lead to a problem:</p>
+<pre><code>[SomeIntent]
+[the] problem sentence
+</code></pre>
+<p>Python's <a href="https://docs.python.org/3/library/configparser.html">configparser</a> will interpret <code>[the]</code> as a new section header, which will produce a new intent, grammar, etc. Rhasspy handles this special case by using a backslash escape sequence (<code>\[</code>):</p>
+<pre><code>[SomeIntent]
+\[the] problem sentence
+</code></pre>
+<p>Now <code>[the]</code> will be properly interpreted as a sentence under <code>[SomeIntent]</code>. You only need to escape a <code>[</code> if it's the <strong>very first</strong> character in your sentence.</p>
+<h3 id="motivation">Motivation</h3>
+<p>The combination of an ini file and JSGF is arguably an abuse of two file formats, so why do this? At a minimum, Rhasspy needs a set of sentences grouped by intent in order to train the speech and intent recognizers. A fairly pleasant way to express this in text is as follows:</p>
+<pre><code>[Intent 1]
+sentence 1
+sentence 2
+...
+
+[Intent 2]
+sentence 3
+sentence 4
+...
+</code></pre>
+<p>Compared to JSON, YAML, etc., there is minimal syntactic overhead for the purposes of just writing down sentences. However, its shortcomings become painfully obvious once you have more than a handful of sentences and intents:</p>
+<ol>
+<li>If two sentences are nearly identical, save for an <em>optional word</em> like "the" or "a", you have to maintain two nearly identical copies of a sentence.</li>
+<li>When speaking about collections of things, like colors or states (on/off), you need a sentence for every <em>alternative choice</em>.</li>
+<li>You cannot share commonly <em>repeated phrases</em> across sentences or intents.</li>
+<li>There is no way to <em>tag phrases</em> so the intent recognizer knows the values for an intent's slots (e.g., color).</li>
+</ol>
+<p>Each of these shortcomings are addressed by considering the space between intent headings (<code>[Intent 1]</code>, etc.) as a <strong>grammar</strong> that represent many possible voice commands. The possible sentences, stripped of their tags, are used as input to <a href="https://www.opengrm.org">opengrm</a> to produce a standard ARPA language model for <a href="https://github.com/cmusphinx/pocketsphinx">pocketsphinx</a> or <a href="https://kaldi-asr.org">Kaldi</a>. The tagged sentences are then used to train an intent recognizer.</p>
+<h2 id="custom-words">Custom Words</h2>
+<p>Rhasspy looks for words you've defined outside of your profile's base dictionary (typically <code>base_dictionary.txt</code>) in a custom words file (typically <code>custom_words.txt</code>). This is just a <a href="https://cmusphinx.github.io/wiki/tutorialdict/">CMU phonetic dictionary</a> with words/pronunciations separated by newlines:</p>
+<pre><code>hello H EH L OW
+world W ER L D
+</code></pre>
+<p>You can use the <a href="../usage/#words-tab">Words tab</a> in Rhasspy's web interface to generate this dictionary. During training, Rhasspy will merge <code>custom_words.txt</code> into your <code>dictionary.txt</code> file so the <a href="../speech-to-text/">speech to text</a> system knows the words in your voice commands are pronounced.</p>
+<h2 id="language-model-mixing">Language Model Mixing</h2>
+<p>Rhasspy is designed to only respond to the voice commands you specify in <a href="./#sentencesini">sentences.ini</a>, but both the Pocketsphinx and Kaldi speech to text systems are capable of transcribing open ended speech. While this will never be as good as a cloud-based system, Rhasspy <a href="../speech-to-text/#open-transcription">offers it as an option</a>.</p>
+<p>A middle ground between open transcription and custom voice commands is <strong>language model mixing</strong>. During training, Rhasspy can mix a (large) pre-built language model with the custom-generated one. You specify a <strong>mixture weight</strong> (0-1), which controls how much of an influence the large language model has; a mixture weight of 0 makes Rhasspy sensitive <em>only</em> to your voice commands, which is the default.</p>
+<p><img alt="Diagram of Rhasspy's training process" src="../img/training.svg" /></p>
+<p>To see the effect of language model mixing, consider a simple <code>sentences.ini</code> file:</p>
+<pre><code>[ChangeLightState]
+turn (on){state} the living room lamp
+</code></pre>
+
+<p>This will only allow Rhasspy to understand the voice command "turn on the living room lamp". If we train Rhasspy and perform speech to text on a WAV file with this command, the output is no surprise:</p>
+<pre><code>$ rhasspy-cli --profile en train
+OK
+
+$ rhasspy-cli --profile en wav2text &lt; turn_on_living_room_lamp.wav
+turn on the living room lamp
+</code></pre>
+
+<p>Now let's do speech to text on a variation of the command, a WAV file with the speech "would you please turn on the living room lamp":</p>
+<pre><code>$ rhasspy-cli --profile en wav2text &lt; would_you_please_turn_on_living_room_lamp.wav
+on the the the turn on the living room lamp
+</code></pre>
+
+<p>The word salad here is because we're trying to recognize a voice command that was not present in <code>sentences.ini</code>. We could always add it, of course, and that is the preferred method for Rhasspy. There may be cases, however, where we cannot anticipate all of the variations of a voice command. For these cases, you should increase the <code>mix_weight</code> in your <a href="../profiles/">profile</a> to something above 0:</p>
+<pre><code>$ rhasspy-cli --profile en \
+    --set 'speech_to_text.pocketsphinx.mix_weight' '0.05' \
+    train
+
+OK
+</code></pre>
+
+<p>Note that training will take <strong>significantly</strong> longer because of the size of the base language model. Now, let's test our two WAV files:</p>
+<pre><code>$ rhasspy-cli --profile en wav2text &lt; turn_on_living_room_lamp.wav
+turn on the living room lamp
+
+$ rhasspy-cli --profile en wav2text &lt; would_you_please_turn_on_living_room_lamp.wav
+would you please turn on the living room lamp
+</code></pre>
+
+<p>Great! Rhasspy was able to transcribe a sentence that it wasn't explicitly trained on. If you're trying this at home, you surely noticed that it takes a lot longer to process the WAV files too. In practice, it's not recommended to do mixed language modeling on lower-end hardware like a Raspberry Pi. If you need open ended speech recognition, try running Rhasspy in a <a href="../speech-to-text/#remote-http-server">client/server set up</a>.</p>
+<h3 id="the-elephant-in-the-room">The Elephant in the Room</h3>
+<p>This isn't the end of the story for open ended speech recognition in Rhasspy, however, because Rhasspy also does <em>intent recognition</em> using the transcribed text as input. When the set of possible voice commands is known ahead of time, it's relatively easy to know what to do with each and every sentence. The flexibility gained from mixing in a base language model unfortunately places a large burden on the intent recognizer.</p>
+<p>In our <code>ChangeLightState</code> example above, we're fortunate that everything works as expected:</p>
+<pre><code>$ echo 'would you please turn on the living room lamp' | \
+    rhasspy-cli --profile en text2intent
+
+{
+    &quot;would you please turn on the living room lamp&quot;: {
+        &quot;text&quot;: &quot;turn on the living room lamp&quot;,
+        &quot;intent&quot;: {
+            &quot;name&quot;: &quot;ChangeLightState&quot;,
+            &quot;confidence&quot;: 1.0
+        },
+        &quot;entities&quot;: [
+            {
+                &quot;entity&quot;: &quot;state&quot;,
+                &quot;value&quot;: &quot;on&quot;
+            }
+        ],
+        &quot;slots&quot;: {
+            &quot;state&quot;: &quot;on&quot;
+        }
+    }
+}
+</code></pre>
+
+<p>But this works only because the default intent recognizer (<a href="../intent-recognition/#fsticuffs">fsticuffs</a>) ignores unknown words by default, so "would you please" is not interpreted. Changing "lamp" to "light" in the input sentence will reveal the problem:</p>
+<pre><code>$ echo 'would you please turn on the living room light | \
+    rhasspy-cli --profile en text2intent
+
+{
+    &quot;would you please turn on the living room light&quot;: {
+        &quot;text&quot;: &quot;&quot;,
+        &quot;intent&quot;: {
+            &quot;name&quot;: &quot;&quot;,
+            &quot;confidence&quot;: 0
+        },
+        &quot;entities&quot;: [],
+        &quot;slots&quot;: {}
+    }
+}
+</code></pre>
+
+<p>This sentence would be impossible for the speech to text system to recognize without language model mixing, but it's quite possible now. We can band-aid over the problem a bit by switching to the <a href="../intent-recognition/#fuzzywuzzy">fuzzywuzzy</a> intent recognizer:</p>
+<pre><code>$ rhasspy-cli --profile en \
+    --set 'speech_to_text.pocketsphinx.mix_weight' '0.05' \
+    --set 'intent.system' 'fuzzywuzzy' \
+    train
+
+OK
+</code></pre>
+
+<p>Now when we interpret the sentence with "light" instead of "lamp", we still get the expected output:</p>
+<pre><code>$ echo 'would you please turn on the living room light' | \
+    rhasspy-cli --profile en --set 'intent.system' 'fuzzywuzzy' text2intent
+
+{
+    &quot;would you please turn on the living room light&quot;: {
+        &quot;text&quot;: &quot;turn on the living room lamp&quot;,
+        &quot;intent&quot;: {
+            &quot;name&quot;: &quot;ChangeLightState&quot;,
+            &quot;confidence&quot;: 0.86
+        },
+        &quot;entities&quot;: [
+            {
+                &quot;entity&quot;: &quot;state&quot;,
+                &quot;value&quot;: &quot;on&quot;
+            }
+        ],
+        &quot;slots&quot;: {
+            &quot;state&quot;: &quot;on&quot;
+        }
+    }
+}
+</code></pre>
+
+<p>This works well for our toy example, but will not scale well when there are thousands of voice commands represented in <code>sentences.ini</code> or if the words used are significantly different than in the training set ("light" and "lamp" are close enough for <code>fuzzywuzzy</code>).</p>
+<p>A machine learning-based intent recognizer, like <a href="../intent-recognition/#flair">flair</a> or <a href="../intent-recognition/#rasanlu">Rasa</a>, would be a better choice for open ended speech.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../hardware/" class="btn btn-neutral float-right" title="Hardware">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../profiles/" class="btn btn-neutral" title="Profiles"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../profiles/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../hardware/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

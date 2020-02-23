@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Services - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Services";
+    var mkdocs_page_input_path = "services.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Services</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#services">Services</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#web-server">Web Server</a></li>
+        
+            <li><a class="toctree-l3" href="#dialogue-manager">Dialogue Manager</a></li>
+        
+            <li><a class="toctree-l3" href="#audio-input">Audio Input</a></li>
+        
+            <li><a class="toctree-l3" href="#wake-word-detection">Wake Word Detection</a></li>
+        
+            <li><a class="toctree-l3" href="#speech-to-text">Speech to Text</a></li>
+        
+            <li><a class="toctree-l3" href="#intent-recognition">Intent Recognition</a></li>
+        
+            <li><a class="toctree-l3" href="#intent-handling">Intent Handling</a></li>
+        
+            <li><a class="toctree-l3" href="#text-to-speech">Text to Speech</a></li>
+        
+            <li><a class="toctree-l3" href="#audio-output">Audio Output</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Usage</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../training/">Training</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-input/">Audio Input</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../wake-word/">Wake Word</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-recognition/">Intent Recognition</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Services</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="services">Services</h1>
+<p>Rhasspy is composed of independent services that communicate over <a href="https://mqtt.org">MQTT</a> using a superset of the <a href="https://docs.snips.ai/reference/hermes">Hermes protocol</a> for these components:</p>
+<ul>
+<li><a href="#web-server">Web Server</a></li>
+<li><a href="#dialogue-manager">Dialogue Manager</a></li>
+<li><a href="#audio-input">Audio Input</a></li>
+<li><a href="#wake-word-detection">Wake Word Detection</a></li>
+<li><a href="#speech-to-text">Speech to Text</a></li>
+<li><a href="#intent-recognition">Intent Recognition</a></li>
+<li><a href="#intent-handling">Intent Handling</a></li>
+<li><a href="#text-to-speech">Text to Speech</a></li>
+<li><a href="#audio-output">Audio Output</a></li>
+</ul>
+<p>Message payloads are typically <a href="https://json.org">JSON objects</a>, except for the following messages whose payloads are binary <a href="https://en.wikipedia.org/wiki/WAV">WAV audio</a>:</p>
+<ul>
+<li><a href="../reference/#audioserver_audioframe"><code>hermes/audioServer/&lt;siteId&gt;/audioFrame</code></a><ul>
+<li>WAV chunk from microphone</li>
+</ul>
+</li>
+<li><a href="../reference/#audioserver_playbytes"><code>hermes/audioServer/&lt;siteId&gt;/playBytes/&lt;requestId&gt;</code></a> <ul>
+<li>WAV audio to play through speakers</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_audiocaptured"><code>rhasspy/asr/&lt;siteId&gt;/&lt;sessionId&gt;/audioCaptured</code></a> <ul>
+<li>WAV audio recorded from session</li>
+</ul>
+</li>
+</ul>
+<p>Most messages contain a string <code>siteId</code> property, whose default value is "default". Each service takes one or more <code>--siteId &lt;NAME&gt;</code> arguments that determine which site IDs the service will listen for. If not specified, the service will listen for <strong>all sites</strong>.</p>
+<h2 id="web-server">Web Server</h2>
+<p>Provides a <a href="../usage/#web-interface">graphical web interface</a> for managing Rhasspy, and handles downloading language-specific profile artifacts.</p>
+<h3 id="available-services">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-server-hermes">rhasspy-server-hermes</a><ul>
+<li><a href="https://vuejs.org/">Vue.js</a> based web UI at <code>http://YOUR_SERVER:12101</code></li>
+<li>Implements Rhasspy's <a href="../reference/#http-api">HTTP API</a> and <a href="../reference/#websocket-api">websocket API</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="dialogue-manager">Dialogue Manager</h2>
+<p>Manages sessions initiated by a wake word <a href="../reference/#hotword_detected"><code>detection</code></a> or a <a href="../reference/#dialoguemanager_startsession"><code>startSession</code></a>.</p>
+<p><img alt="Hermes dialogue message flow" src="../img/hermes-flow.png" /></p>
+<h3 id="available-services_1">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-dialogue-hermes">rhasspy-dialogue-hermes</a></li>
+</ul>
+<h3 id="input-messages">Input Messages</h3>
+<ul>
+<li><a href="../reference/#dialoguemanager_startsession"><code>hermes/dialogueManager/startSession</code></a> <ul>
+<li>Start a new session</li>
+</ul>
+</li>
+<li><a href="../reference/#dialoguemanager_continuesession"><code>hermes/dialogueManager/continueSession</code></a><ul>
+<li>Continue an existing session</li>
+</ul>
+</li>
+<li><a href="../reference/#dialoguemanager_endsession"><code>hermes/dialogueManager/endSession</code></a> <ul>
+<li>End an existing session</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages">Output Messages</h3>
+<ul>
+<li><a href="../reference/#dialoguemanager_sessionstarted"><code>hermes/dialogueManager/sessionStarted</code></a><ul>
+<li>New session has started</li>
+</ul>
+</li>
+<li><a href="../reference/#dialoguemanager_sessionqueued"><code>hermes/dialogueManager/sessionQueued</code></a><ul>
+<li>New session has be enqueued</li>
+</ul>
+</li>
+<li><a href="../reference/#dialoguemanager_sessionended"><code>hermes/dialogueManager/sessionEnded</code></a><ul>
+<li>Existing session has terminated</li>
+</ul>
+</li>
+<li><a href="../reference/#dialoguemanager_intentnotrecognized"><code>hermes/dialogueManager/intentNotRecognized</code></a><ul>
+<li>Voice command was not recognized in existing session</li>
+</ul>
+</li>
+</ul>
+<h2 id="audio-input">Audio Input</h2>
+<p>Records audio from a microphone and streams it as WAV chunks over MQTT. See <a href="../audio-input/">Audio Input</a> for details.</p>
+<h3 id="available-services_2">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-microphone-cli-hermes">rhasspy-microphone-cli-hermes</a><ul>
+<li>Calls an external program for audio input</li>
+<li>Implements <a href="../audio-input/#alsa">arecord</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/rhasspy/rhasspy-microphone-pyaudio-hermes">rhasspy-microphone-pyaudio-hermes</a><ul>
+<li>Records directly from a <a href="https://people.csail.mit.edu/hubert/pyaudio/">PyAudio</a> device</li>
+<li>Implements <a href="../audio-input/#pyaudio">pyaudio</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="input-messages_1">Input Messages</h3>
+<ul>
+<li><a href="../reference/#audioserver_getdevices"><code>rhasspy/audioServer/getDevices</code></a><ul>
+<li>Requests available input devices</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_1">Output Messages</h3>
+<ul>
+<li><a href="../reference/#audioserver_audioframe"><code>hermes/audioServer/&lt;siteId&gt;/audioFrame</code></a><ul>
+<li>WAV chunk from microphone</li>
+</ul>
+</li>
+<li><a href="../reference/#audioserver_devices"><code>rhasspy/audioServer/devices</code></a><ul>
+<li>Description of available audio input devices</li>
+</ul>
+</li>
+</ul>
+<h2 id="wake-word-detection">Wake Word Detection</h2>
+<p>Listens to WAV chunks and tries to detect a wake/hotword. See <a href="../wake-word/">Wake Word</a> for details.</p>
+<h3 id="available-services_3">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-wake-porcupine-hermes">rhasspy-wake-porcupine-hermes</a></li>
+<li><a href="https://github.com/rhasspy/rhasspy-wake-pocketsphinx-hermes">rhasspy-wake-pocketsphinx-hermes</a></li>
+<li><a href="https://github.com/rhasspy/rhasspy-wake-snowboy-hermes">rhasspy-wake-snowboy-hermes</a></li>
+</ul>
+<h3 id="input-messages_2">Input Messages</h3>
+<ul>
+<li><a href="../reference/#hotword_toggleon"><code>hermes/hotword/toggleOn</code></a><ul>
+<li>Enables wake word detection</li>
+</ul>
+</li>
+<li><a href="../reference/#hotword_toggleoff"><code>hermes/hotword/toggleOff</code></a><ul>
+<li>Disables wake word detection</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_2">Output Messages</h3>
+<ul>
+<li><a href="../reference/#hotword_detected"><code>hermes/wake/hotword/&lt;wakewordId&gt;/detected</code></a><ul>
+<li>Wake word successfully detected</li>
+</ul>
+</li>
+</ul>
+<h2 id="speech-to-text">Speech to Text</h2>
+<p>Listens to WAV chunks and transcribes voice commands. See <a href="../speech-to-text/">Speech to Text</a> for details.</p>
+<h3 id="available-services_4">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-asr-kaldi-hermes">rhasspy-asr-kaldi-hermes</a></li>
+<li><a href="https://github.com/rhasspy/rhasspy-asr-pocketsphinx-hermes">rhasspy-asr-pocketsphinx-hermes</a></li>
+</ul>
+<h3 id="input-messages_3">Input Messages</h3>
+<ul>
+<li><a href="../reference/#audioserver_audioframe"><code>hermes/audioServer/&lt;siteId&gt;/audioFrame</code></a><ul>
+<li>WAV chunk from microphone</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_toggleon"><code>hermes/asr/toggleOn</code></a><ul>
+<li>Enable ASR system</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_toggleoff"><code>hermes/asr/toggleOff</code></a><ul>
+<li>Disable ASR system</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_startlistening"><code>hermes/asr/startListening</code></a><ul>
+<li>Start recording a voice command</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_stoplistening"><code>hermes/asr/stopListening</code></a><ul>
+<li>Stop recording a voice command</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_train"><code>rhasspy/asr/&lt;siteId&gt;/train</code></a><ul>
+<li>Re-train ASR system</li>
+</ul>
+</li>
+<li><a href="../reference/#g2p_pronounce"><code>rhasspy/g2p/pronounce</code></a><ul>
+<li>Get phonetic pronunciations for words</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_3">Output Messages</h3>
+<ul>
+<li><a href="../reference/#asr_textcaptured"><code>hermes/asr/textCaptured</code></a><ul>
+<li>Successful voice command transcription</li>
+</ul>
+</li>
+<li><a href="../reference/#error_asr"><code>hermes/error/asr</code></a><ul>
+<li>Error during transcription/training</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_trainsuccess"><code>rhasspy/asr/&lt;siteId&gt;/trainSuccess</code></a><ul>
+<li>ASR training succeeded</li>
+</ul>
+</li>
+<li><a href="../reference/#asr_audiocaptured"><code>rhasspy/asr/&lt;siteId&gt;/&lt;sessionId&gt;/audioCaptured</code></a><ul>
+<li>Audio recorded from voice command</li>
+</ul>
+</li>
+<li><a href="../reference/#g2p_phonemes"><code>rhasspy/g2p/phonemes</code></a><ul>
+<li>Phonetic pronunciations of words</li>
+</ul>
+</li>
+</ul>
+<h2 id="intent-recognition">Intent Recognition</h2>
+<p>Recognizes user intents from text input. See <a href="../intent-recognition/">Intent Recognition</a> for details.</p>
+<h3 id="available-services_5">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-fuzzywuzzy-hermes">rhasspy-fuzzywuzzy-hermes</a></li>
+<li><a href="https://github.com/rhasspy/rhasspy-nlu-hermes">rhasspy-nlu-hermes</a></li>
+</ul>
+<h3 id="input-messages_4">Input Messages</h3>
+<ul>
+<li><a href="../reference/#nlu_query"><code>hermes/nlu/query</code></a><ul>
+<li>Recognize intent from text</li>
+</ul>
+</li>
+<li><a href="../reference/#nlu_&lt;siteid&gt;/train"><code>rhasspy/nlu/&lt;siteId&gt;/train</code></a><ul>
+<li>Retrain NLU system</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_4">Output Messages</h3>
+<ul>
+<li><a href="../reference/#nlu_intent"><code>hermes/nlu/intent/&lt;intentName&gt;</code></a><ul>
+<li>Intent successfully recognized</li>
+</ul>
+</li>
+<li><a href="../reference/#nlu_intentnotrecognized"><code>hermes/nlu/intentNotRecognized</code></a><ul>
+<li>Intent was <strong>not</strong> recognized</li>
+</ul>
+</li>
+<li><a href="../reference/#error_nlu"><code>hermes/error/nlu</code></a><ul>
+<li>Error during recognition/training</li>
+</ul>
+</li>
+<li><a href="../reference/#nlu_trainsuccess"><code>rhasspy/nlu/&lt;siteId&gt;/trainSuccess</code></a><ul>
+<li>NLU training succeeded</li>
+</ul>
+</li>
+</ul>
+<h2 id="intent-handling">Intent Handling</h2>
+<p>Dispatches recognized intents to home automation software. See <a href="../intent-handling/">Intent Handling</a> for details.</p>
+<h3 id="available-services_6">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-homeassistant-hermes">rhasspy-homeassistant-hermes</a></li>
+</ul>
+<h3 id="input-messages_5">Input Messages</h3>
+<ul>
+<li><a href="../reference/#nlu_intent"><code>hermes/nlu/intent/&lt;intentName&gt;</code></a><ul>
+<li>Intent successfully recognized</li>
+</ul>
+</li>
+<li><a href="../reference/#handle_toggleon"><code>hermes/handle/toggleOn</code></a><ul>
+<li>Enable intent handling</li>
+</ul>
+</li>
+<li><a href="../reference/#handle_toggleoff"><code>hermes/handle/toggleOff</code></a><ul>
+<li>Disable intent handling</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_5">Output Messages</h3>
+<ul>
+<li><a href="../reference/#tts_say"><code>hermes/tts/say</code></a><ul>
+<li>Speak a sentence</li>
+</ul>
+</li>
+</ul>
+<h2 id="text-to-speech">Text to Speech</h2>
+<p>Generates spoken audio for a sentence. See <a href="../text-to-speech/">Text to Speech</a> for details.</p>
+<h3 id="available-services_7">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-tts-cli-hermes">rhasspy-tts-cli-hermes</a><ul>
+<li>Calls external program for text to speech</li>
+<li>Implements <a href="../text-to-speech/#espeak">espeak</a>, <a href="../text-to-speech/#flite">flite</a>, <a href="../text-to-speech/#picotts">picoTTS</a>, and <a href="../text-to-speech/#command">command</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/rhasspy/rhasspy-remote-http-hermes">rhasspy-remote-http-hermes</a><ul>
+<li>POSTs to remote web server for text to speech</li>
+<li>Implements <a href="../text-to-speech/#remote">remote</a> (<code>--tts-url</code>) and <a href="../text-to-speech/#command">command</a> (<code>--tts-command</code>)</li>
+</ul>
+</li>
+</ul>
+<h3 id="input-messages_6">Input Messages</h3>
+<ul>
+<li><a href="../reference/#tts_say"><code>hermes/tts/say</code></a><ul>
+<li>Speak a sentence</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_6">Output Messages</h3>
+<ul>
+<li><a href="../reference/#tts_sayfinished"><code>hermes/tts/sayFinished</code></a><ul>
+<li>Finished <em>generating</em> audio</li>
+</ul>
+</li>
+</ul>
+<h2 id="audio-output">Audio Output</h2>
+<p>Plays WAV audio through an audio output device (speakers). See <a href="../audio-output/">Audio Output</a> for details.</p>
+<h3 id="available-services_8">Available Services</h3>
+<ul>
+<li><a href="https://github.com/rhasspy/rhasspy-speakers-cli-hermes">rhasspy-speakers-cli-hermes</a></li>
+</ul>
+<h3 id="input-messages_7">Input Messages</h3>
+<ul>
+<li><a href="../reference/#audioserver_playbytes"><code>hermes/audioServer/&lt;siteId&gt;/playBytes/&lt;requestId&gt;</code></a><ul>
+<li>WAV audio to play through speakers</li>
+</ul>
+</li>
+<li><a href="../reference/#audioserver_getdevices"><code>rhasspy/audioServer/getDevices</code></a><ul>
+<li>Request audio output devices</li>
+</ul>
+</li>
+</ul>
+<h3 id="output-messages_7">Output Messages</h3>
+<ul>
+<li><a href="../reference/#audioserver_playfinished"><code>hermes/audioServer/&lt;siteId&gt;/playFinished</code></a><ul>
+<li>Audio has finished playing</li>
+</ul>
+</li>
+<li><a href="../reference/#audioserver_devices"><code>rhasspy/audioServer/devices</code></a><ul>
+<li>Details of audio output devices</li>
+</ul>
+</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutorials/" class="btn btn-neutral float-right" title="Tutorials">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../installation/" class="btn btn-neutral" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../installation/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../tutorials/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

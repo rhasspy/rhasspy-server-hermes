@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Intent Recognition - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Intent Recognition";
+    var mkdocs_page_input_path = "intent-recognition.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../services/">Services</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Usage</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../training/">Training</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-input/">Audio Input</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../wake-word/">Wake Word</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Intent Recognition</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#intent-recognition">Intent Recognition</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#mqtthermes">MQTT/Hermes</a></li>
+        
+            <li><a class="toctree-l3" href="#fsticuffs">Fsticuffs</a></li>
+        
+            <li><a class="toctree-l3" href="#fuzzywuzzy">Fuzzywuzzy</a></li>
+        
+            <li><a class="toctree-l3" href="#mycroft-adapt">Mycroft Adapt</a></li>
+        
+            <li><a class="toctree-l3" href="#flair">Flair</a></li>
+        
+            <li><a class="toctree-l3" href="#rasanlu">RasaNLU</a></li>
+        
+            <li><a class="toctree-l3" href="#remote-http-server">Remote HTTP Server</a></li>
+        
+            <li><a class="toctree-l3" href="#home-assistant-conversation">Home Assistant Conversation</a></li>
+        
+            <li><a class="toctree-l3" href="#command">Command</a></li>
+        
+            <li><a class="toctree-l3" href="#dummy">Dummy</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Intent Recognition</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="intent-recognition">Intent Recognition</h1>
+<p>After your voice command has been transcribed by the <a href="../speech-to-text/">speech to text</a> system, the next step is to recognize your intent.
+The end result is a JSON event with information about the intent.</p>
+<p>Available intent recognition systems are:</p>
+<ul>
+<li><a href="./#fsticuffs">Fsticuffs</a></li>
+<li><a href="./#fuzzywuzzy">Fuzzywuzzy</a></li>
+<li><a href="./#mycroft-adapt">Mycroft Adapt</a></li>
+<li><a href="./#rasanlu">RasaNLU</a></li>
+<li><a href="./#flair">Flair</a></li>
+<li><a href="./#remote-http-server">Remote HTTP Server</a></li>
+<li><a href="./#command">External Command</a></li>
+</ul>
+<p>The following table summarizes the trade-offs of using each intent recognizer:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Ideal Sentence count</th>
+<th>Training Speed</th>
+<th>Recognition Speed</th>
+<th>Flexibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./#fsticuffs">fsticuffs</a></td>
+<td>1M+</td>
+<td>very fast</td>
+<td>very fast</td>
+<td>ignores unknown words</td>
+</tr>
+<tr>
+<td><a href="./#fuzzywuzzy">fuzzywuzzy</a></td>
+<td>12-100</td>
+<td>fast</td>
+<td>fast</td>
+<td>fuzzy string matching</td>
+</tr>
+<tr>
+<td><a href="./#mycroft-adapt">adapt</a></td>
+<td>100-1K</td>
+<td>moderate</td>
+<td>fast</td>
+<td>ignores unknown words</td>
+</tr>
+<tr>
+<td><a href="./#rasanlu">rasaNLU</a></td>
+<td>1K-100K</td>
+<td>very slow</td>
+<td>moderate</td>
+<td>handles unseen words</td>
+</tr>
+<tr>
+<td><a href="./#flair">flair</a></td>
+<td>1K-100K</td>
+<td>very slow</td>
+<td>moderate</td>
+<td>handles unseen words</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mqtthermes">MQTT/Hermes</h2>
+<p>Rhasspy receives intent recognition requests on the <code>hermes/nlu/query</code> topic. Successful recognitions are published to <code>hermes/intent/&lt;intentName&gt;</code>, and unsuccessful recognitions to <code>hermes/nlu/intentNotRecognized</code> The format of these messages adheres to the <a href="https://docs.snips.ai/reference/dialogue#intent">Hermes protocol</a>.</p>
+<h2 id="fsticuffs">Fsticuffs</h2>
+<p>Uses the <a href="https://github.com/rhasspy/rhasspy-nlu">rhasspy-nlu</a> library to recognize <strong>only</strong> those sentences that were Rhasspy was <a href="../training/#sentencesini">trained on</a>. While less flexible than the other intent recognizers, <code>fsticuffs</code> can be trained and perform recognition over <em>millions</em> of sentences in milliseconds. If you only plan to recognize voice commands from your training set (and not unseen ones via text chat), <code>fsticuffs</code> is the best choice.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;fsticuffs&quot;,
+  &quot;fsticuffs&quot;: {
+    &quot;intent_graph&quot;: &quot;intent.json&quot;,
+    &quot;ignore_unknown_words&quot;: true,
+    &quot;fuzzy&quot;: true
+  }
+}
+</code></pre>
+
+<p>By default, fuzzy mathing is enabled (<code>fuzzy</code> is true). This allows <code>fsticuffs</code> to be less strict when matching text, skipping over any words in the profile's <code>stop_words.txt</code>, and handling repeated words gracefully. Words must still appear in the correct order according to <code>sentences.ini</code>, but additional words will not cause a recognition failure.</p>
+<p>When <code>ignore_unknown_words</code> is true, any word outside of <code>sentences.ini</code> is silently ignored. This allows a lot more sentences to be accepted, but may cause unexpected results when used with arbitrary input from text chat.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-nlu-hermes">rhasspy-nlu-hermes</a></p>
+<h2 id="fuzzywuzzy">Fuzzywuzzy</h2>
+<p>Finds the closest matching intent by using the <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> between the text and the all of the <a href="../training/#sentencesini">training sentences</a> you provided. Works best when you have a small number of sentences (dozens to hundreds) and need some resiliency to spelling errors (i.e., from text chat).</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;fuzzywuzzy&quot;,
+  &quot;fuzzywuzzy&quot;: {
+    &quot;examples_json&quot;: &quot;intent_examples.json&quot;
+  }
+}
+</code></pre>
+
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-fuzzywuzzy-hermes">rhasspy-fuzzywuzzy-hermes</a></p>
+<h2 id="mycroft-adapt">Mycroft Adapt</h2>
+<p>Recognizes intents using <a href="https://github.com/MycroftAI/adapt">Mycroft Adapt</a>. Works best when you have a medium number of sentences (hundreds to thousands) and need to be able to recognize sentences not seen during training (no new words, though).</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;adapt&quot;,
+  &quot;adapt&quot;: {
+      &quot;stop_words&quot;: &quot;stop_words.txt&quot;
+  }
+}
+</code></pre>
+
+<p>The <code>intent.adapt.stop_words</code> text file contains words that should be ignored (i.e., cannot be "required" or "optional").</p>
+<p>TODO: Not implemented</p>
+<h2 id="flair">Flair</h2>
+<p>Recognizes intents using the <a href="https://github.com/zalandoresearch/flair">flair NLP framework</a>. Works best when you have a large number of sentences (thousands to hundreds of thousands) and need to handle sentences <em>and</em> words not seen during training.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;flair&quot;,
+  &quot;flair&quot;: {
+      &quot;data_dir&quot;: &quot;flair_data&quot;,
+      &quot;max_epochs&quot;: 25,
+      &quot;do_sampling&quot;: true,
+      &quot;num_samples&quot;: 10000
+  }
+}
+</code></pre>
+
+<p>By default, the flair recognizer will generate 10,000 random sentences (<code>num_samples</code>) from each intent in your <a href="../training/#sentencesini">sentences.ini</a> file. If you set <code>do_sampling</code> to <code>false</code>, Rhasspy will generate <strong>all</strong> possible sentences and use them as training data. This will produce the most accurate models, but may take a <em>long</em> time depending on the complexity of your grammars.</p>
+<p>A flair <code>TextClassifier</code> will be trained to classify unseen sentences by intent, and a <code>SequenceTagger</code> will be trained for each intent that has at least one <a href="../training/#tags">tag</a>. During recognition, sentences are first classified by intent and then run through the appropriate <code>SequenceTagger</code> model to determine slots/entities.</p>
+<p>TODO: Not implemented</p>
+<h2 id="rasanlu">RasaNLU</h2>
+<p>Recognizes intents <strong>remotely</strong> using a <a href="https://rasa.com/">Rasa NLU</a> server. You must <a href="https://rasa.com/docs/rasa/user-guide/installation/">install a Rasa NLU server</a> somewhere that Rhasspy can access. Works well when you have a large number of sentences (thousands to hundreds of thousands) and need to handle sentences <em>and</em> words not seen during training. This needs Rasa 1.0 or higher.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;rasa&quot;,
+  &quot;rasa&quot;: {
+    &quot;examples_markdown&quot;: &quot;intent_examples.md&quot;,
+    &quot;project_name&quot;: &quot;rhasspy&quot;,
+    &quot;url&quot;: &quot;http://localhost:5005/&quot;
+  }
+}
+</code></pre>
+
+<p>TODO: Not implemented</p>
+<h2 id="remote-http-server">Remote HTTP Server</h2>
+<p>Uses a remote Rhasppy server to do intent recognition. POSTs the text to an HTTP endpoint and receives an intent as JSON. An empty <code>intent.name</code> property of the returned JSON object indicates a recognition failure.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;remote&quot;,
+  &quot;remote&quot;: {
+    &quot;url&quot;: &quot;http://my-server:12101/api/text-to-intent&quot;
+  }
+}
+</code></pre>
+
+<p>If you want to also POST to an endpoint during training, add to your profile:</p>
+<pre><code class="json">&quot;training&quot;: {
+  &quot;system&quot;: &quot;auto&quot;,
+  &quot;intent&quot;: {
+    &quot;remote&quot;: {
+      &quot;url&quot;: &quot;http://my-server/intent-training-endpoint&quot;
+    }
+  }
+}
+</code></pre>
+
+<p>If <code>training.intent.remote.url</code> is set, Rhasspy will POST the intent graph generated by <a href="https://github.com/rhasspy/rhasspy-nlu">rhasspy-nlu</a> to your endpoint as JSON. No response is expected, though an HTTP error code indicates that training has failed.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-remote-http-hermes">rhasspy-remote-http-hermes</a></p>
+<h2 id="home-assistant-conversation">Home Assistant Conversation</h2>
+<p>Sends transcriptions from <a href="../speech-to-text/">speech to text</a> to <a href="https://www.home-assistant.io/integrations/conversation/">Home Assistant's conversation API</a>. If the response contains speech, Rhasspy can optionally speak it.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;conversation&quot;,
+  &quot;conversation&quot;: {
+    &quot;handle_speech&quot;: true
+  }
+}
+</code></pre>
+
+<p>When <code>handle_speech</code> is <code>true</code>, Rhasspy will forward the returned speech to your <a href="../text-to-speech/">text to speech</a> system.</p>
+<p>The settings from your profile's <code>home_assistant</code> section are automatically used (URL, access token, etc.).</p>
+<p>Because Home Assistant will already handle your intent (probably using an <a href="https://www.home-assistant.io/integrations/intent_script/">intent script</a>), Rhasspy will always generate an empty intent with this recognizer.</p>
+<p>TODO: Not implemented</p>
+<h2 id="command">Command</h2>
+<p>Recognizes intents from text using a custom external program. Your program should return a JSON object that describes the recognized intent; something like:</p>
+<pre><code class="json">{
+  &quot;intent&quot;: {
+    &quot;name&quot;: &quot;ChangeLightColor&quot;,
+    &quot;confidence&quot;: 1.0
+  },
+  &quot;entities&quot;: [
+    { &quot;entity&quot;: &quot;name&quot;,
+      &quot;value&quot;: &quot;bedroom light&quot; },
+    { &quot;entity&quot;: &quot;color&quot;,
+      &quot;value&quot;: &quot;red&quot; }
+  ],
+  &quot;text&quot;: &quot;set the bedroom light to red&quot;
+}
+</code></pre>
+
+<p>An empty <code>intent.name</code> property indicates a recognition failure.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;command&quot;,
+  &quot;command&quot;: {
+    &quot;program&quot;: &quot;/path/to/program&quot;,
+    &quot;arguments&quot;: []
+  }
+}
+</code></pre>
+
+<p>If you want to also call an external program during training, add to your profile:</p>
+<pre><code class="json">&quot;training&quot;: {
+  &quot;system&quot;: &quot;auto&quot;,
+  &quot;intent&quot;: {
+    &quot;command&quot;: {
+      &quot;program&quot;: &quot;/path/to/training/program&quot;,
+      &quot;arguments&quot;: []
+    }
+  }
+}
+</code></pre>
+
+<p>If <code>training.intent.command.program</code> is set, Rhasspy will call your program with the intent graph generated by <a href="https://github.com/rhasspy/rhasspy-nlu">rhasspy-nlu</a> provided as JSON on standard input. No response is expected, though a non-zero exit code indicates a training failure.</p>
+<p>The following environment variables are available to your program:</p>
+<ul>
+<li><code>$RHASSPY_BASE_DIR</code> - path to the directory where Rhasspy is running from</li>
+<li><code>$RHASSPY_PROFILE</code> - name of the current profile (e.g., "en")</li>
+<li><code>$RHASSPY_PROFILE_DIR</code> - directory of the current profile (where <code>profile.json</code> is)</li>
+</ul>
+<p>See <a href="https://github.com/synesthesiam/rhasspy/blob/master/bin/mock-commands/text2intent.sh">text2intent.sh</a> for an example program.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-remote-http-hermes">rhasspy-remote-http-hermes</a></p>
+<h2 id="dummy">Dummy</h2>
+<p>Disables intent recognition.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;intent&quot;: {
+  &quot;system&quot;: &quot;dummy&quot;
+}
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../intent-handling/" class="btn btn-neutral float-right" title="Intent Handling">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../speech-to-text/" class="btn btn-neutral" title="Speech to Text"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../speech-to-text/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../intent-handling/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

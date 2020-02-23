@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Wake Word - Rhasspy</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Wake Word";
+    var mkdocs_page_input_path = "wake-word.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Rhasspy</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../installation/">Installation</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../services/">Services</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../tutorials/">Tutorials</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../usage/">Usage</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../profiles/">Profiles</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../training/">Training</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../hardware/">Hardware</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-input/">Audio Input</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../audio-output/">Audio Output</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Wake Word</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#wake-word">Wake Word</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#mqtthermes">MQTT/Hermes</a></li>
+        
+            <li><a class="toctree-l3" href="#porcupine">Porcupine</a></li>
+        
+            <li><a class="toctree-l3" href="#snowboy">Snowboy</a></li>
+        
+            <li><a class="toctree-l3" href="#pocketsphinx">Pocketsphinx</a></li>
+        
+            <li><a class="toctree-l3" href="#mycroft-precise">Mycroft Precise</a></li>
+        
+            <li><a class="toctree-l3" href="#command">Command</a></li>
+        
+            <li><a class="toctree-l3" href="#dummy">Dummy</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../command-listener/">Command Listener</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../speech-to-text/">Speech to Text</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-recognition/">Intent Recognition</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../intent-handling/">Intent Handling</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../text-to-speech/">Text to Speech</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../reference/">Reference</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../development/">Development</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../license/">License</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../about/">About</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Rhasspy</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Wake Word</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="wake-word">Wake Word</h1>
+<p>The typical workflow for interacting with a voice assistant is to first activate it with a "wake" or "hot" word, then provide your voice command. Rhasspy supports listening for a wake word with one of several systems.</p>
+<p>Available wake word systems are:</p>
+<ul>
+<li><a href="./#porcupine">Porcupine</a></li>
+<li><a href="./#snowboy">Snowboy</a></li>
+<li><a href="./#pocketsphinx">Pocketsphinx</a></li>
+<li><a href="./#command">External Command</a></li>
+</ul>
+<p>You can also wake Rhasspy up using the <a href="../usage/#http-api">HTTP API</a> by POST-ing to <code>/api/listen-for-command</code>. Rhasspy will immediately wake up and start listening for a voice command.</p>
+<p>The following table summarizes the key characteristics of each wake word system:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Performance</th>
+<th>Training to Customize</th>
+<th>Online Sign Up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="./#porcupine">porcupine</a></td>
+<td>excellent</td>
+<td>yes, offline</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="./#snowboy">snowboy</a></td>
+<td>good</td>
+<td>yes, online</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><a href="./#pocketsphinx">pocketsphinx</a></td>
+<td>poor</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td><a href="./#mycroft-precise">precise</a></td>
+<td>moderate</td>
+<td>yes, offline</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mqtthermes">MQTT/Hermes</h2>
+<p>Rhasspy listens for <code>hermes/hotword/&lt;wakewordId&gt;/detected</code> messages to decide when to wake up. The <code>hermes/hotword/toggleOff</code> and <code>hermes/hotword/toggleOff</code> messages can be used to disable/enable wake word listening (done automatically during voice command recording and audio output).</p>
+<h2 id="porcupine">Porcupine</h2>
+<p>Listens for a wake word with <a href="https://github.com/Picovoice/Porcupine">porcupine</a>. This system has the best performance out of the box. If you want a custom wake word, however, you will need to re-run their optimizer tool every 30 days.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;porcupine&quot;,
+  &quot;porcupine&quot;: {
+    &quot;library_path&quot;: &quot;porcupine/libpv_porcupine.so&quot;,
+    &quot;model_path&quot;: &quot;porcupine/porcupine_params.pv&quot;,
+    &quot;keyword_path&quot;: &quot;porcupine/porcupine.ppn&quot;,
+    &quot;sensitivity&quot;: 0.5
+  }
+},
+
+&quot;rhasspy&quot;: {
+  &quot;listen_on_start&quot;: true
+}
+</code></pre>
+
+<p>There are a lot of <a href="https://github.com/Picovoice/Porcupine/tree/master/resources/keyword_files">keyword files</a> available for download. Use the <code>linux</code> platform if you're on desktop/laptop (<code>amd64</code>) and the <code>raspberrypi</code> platform if you're using a Raspberry Pi (<code>armhf</code>/<code>aarch64</code>). The <code>.ppn</code> files should go in the <code>porcupine</code> directory inside your profile (referenced by <code>keyword_path</code>).</p>
+<p>If you want to create a custom wake word, you will need to use the <a href="https://github.com/Picovoice/porcupine#picovoice-console">Picovoice Console</a>. <strong>NOTE</strong>: the generated keyword file is only valid for 30 days, though you can always just re-run the optimizer.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-wake-porcupine-hermes">rhasspy-wake-porcupine-hermes</a></p>
+<h2 id="snowboy">Snowboy</h2>
+<p>Listens for one or more wake words with <a href="https://snowboy.kitt.ai">snowboy</a>. This system has the good performance out of the box, but requires an online service to train.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;snowboy&quot;,
+  &quot;hermes&quot;: {
+    &quot;wakeword_id&quot;: &quot;default&quot;
+  },
+  &quot;snowboy&quot;: {
+    &quot;model&quot;: &quot;snowboy/snowboy.umdl&quot;,
+    &quot;audio_gain&quot;: 1,
+    &quot;sensitivity&quot;: &quot;0.5&quot;,
+    &quot;apply_frontend&quot;: false
+  }
+},
+
+&quot;rhasspy&quot;: {
+  &quot;listen_on_start&quot;: true
+}
+</code></pre>
+
+<p>If your hotword model has multiple embedded hotwords (such as <code>jarvis.umdl</code>), the "sensitivity" parameter should contain sensitivities for each embedded hotword separated by commas (e.g., "0.5,0.5").</p>
+<p>Visit <a href="https://snowboy.kitt.ai">the snowboy website</a> to train your own wake word model (requires linking to a GitHub/Google/Facebook account). This <em>personal</em> model with end with <code>.pmdl</code>, and should go in your profile directory. Then, set <code>wake.snowboy.model</code> to the name of that file.</p>
+<p>You also have the option of using a pre-train <em>universal</em> model (<code>.umdl</code>) from <a href="https://github.com/Kitt-AI/snowboy/tree/master/resources/models">Kitt.AI</a>.</p>
+<h3 id="multiple-wake-words">Multiple Wake Words</h3>
+<p>You can have <code>snowboy</code> listen for multiple wake words with different models, each with their own settings. You will need to download each model file to the <code>snowboy</code> directory in your profile.</p>
+<p>For example, to use both the <code>snowboy.umdl</code> and <code>jarvis.umdl</code> models, add this to your profile:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;snowboy&quot;,
+  &quot;snowboy&quot;: {
+    &quot;model&quot;: &quot;snowboy/snowboy.umdl,snowboy/jarvis.umdl&quot;,
+    &quot;model_settings&quot;: {
+      &quot;snowboy/snowboy.umdl&quot;: {
+        &quot;sensitivity&quot;: &quot;0.5&quot;,
+        &quot;audio_gain&quot;: 1,
+        &quot;apply_frontend&quot;: false
+      },
+      &quot;snowboy/jarvis.umdl&quot;: {
+        &quot;sensitivity&quot;: &quot;0.5,0.5&quot;,
+        &quot;audio_gain&quot;: 1,
+        &quot;apply_frontend&quot;: false
+      }
+    }
+  }
+}
+</code></pre>
+
+<p>Make sure to include all models you want in the <code>model</code> setting (separated by commas). Each model may have different settings in <code>model_settings</code>. If a setting is not present, the default values under <code>snowboy</code> will be used.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-wake-snowboy-hermes">rhasspy-wake-snowboy-hermes</a></p>
+<h2 id="pocketsphinx">Pocketsphinx</h2>
+<p>Listens for a <a href="https://cmusphinx.github.io/wiki/tutoriallm/#using-keyword-lists-with-pocketsphinx">keyphrase</a> using <a href="https://github.com/cmusphinx/pocketsphinx">pocketsphinx</a>. This is the most flexible wake system, but has the worst performance in terms of false positives/negatives.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;pocketsphinx&quot;,
+  &quot;pocketsphinx&quot;: {
+    &quot;keyphrase&quot;: &quot;okay rhasspy&quot;,
+    &quot;threshold&quot;: 1e-30,
+    &quot;chunk_size&quot;: 960
+  }
+},
+
+&quot;rhasspy&quot;: {
+  &quot;listen_on_start&quot;: true
+}
+</code></pre>
+
+<p>Set <code>wake.pocketsphinx.keyphrase</code> to whatever you like, though 3-4 syllables is recommended. Make sure to <a href="../training/">train</a> and restart Rhasspy whenever you change the keyphrase.</p>
+<p>The <code>wake.pocketsphinx.threshold</code> should be in the range 1e-50 to 1e-5. The smaller the number, the less like the keyphrase is to be observed. At least one person has written a script to <a href="https://medium.com/@PankajB96/automatic-tuning-of-keyword-spotting-thresholds-a27256869d31">automatically tune the threshold</a>.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-wake-pocketsphinx-hermes">rhasspy-wake-pocketsphinx-hermes</a></p>
+<h2 id="mycroft-precise">Mycroft Precise</h2>
+<p>Listens for a wake word with <a href="https://github.com/MycroftAI/mycroft-precise">Mycroft Precise</a>. It requires training up front, but can be done completely offline!</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;precise&quot;,
+  &quot;precise&quot;: {
+    &quot;model&quot;: &quot;model-name-in-profile.pb&quot;,
+    &quot;sensitivity&quot;: 0.5,
+    &quot;trigger_level&quot;: 3,
+    &quot;chunk_size&quot;: 2048
+  }
+},
+
+&quot;rhasspy&quot;: {
+  &quot;listen_on_start&quot;: true
+}
+</code></pre>
+
+<p>Follow <a href="https://github.com/MycroftAI/mycroft-precise/wiki/Training-your-own-wake-word#how-to-train-your-own-wake-word">the instructions from Mycroft AI</a> to train your own wake word model. When you're finished, place <strong>both</strong> the <code>.pb</code> and <code>.pb.params</code> files in your profile directory, and set <code>wake.precise.model</code> to the name of the <code>.pb</code> file.</p>
+<p>TODO: Not implemented</p>
+<h2 id="command">Command</h2>
+<p>Calls a custom external program to listen for a wake word, only waking up Rhasspy when the program exits. A <code>wakewordId</code> should be printed to standard out before exiting. You will receive chunks of raw audio on standard in.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;command&quot;,
+  &quot;command&quot;: {
+    &quot;program&quot;: &quot;/path/to/program&quot;,
+    &quot;arguments&quot;: [],
+    &quot;sample_rate&quot;: 16000,
+    &quot;sample_width&quot;: 2,
+    &quot;channels&quot;: 1
+  }
+}
+</code></pre>
+
+<p>When Rhasspy starts, your program will be called with the given arguments. Raw audio chunks will be written to standard in as Rhasspy receives <code>hermes/audioServer/&lt;siteId&gt;/audioFrame</code> messages. This audio is automatically converted to the format given by <code>wake.command.sample_rate</code> (hertz), <code>wake.command.sample_width</code> (bytes), and <code>wake.command.channels</code>.</p>
+<p>Once your program detects the wake word, it should print a <code>wakewordId</code> to standard out and exit. Rhasspy will call your program again when it goes back to sleep. If the empty string is printed, Rhasspy will use "default" for the <code>wakewordId</code>.</p>
+<p>The following environment variables are available to your program:</p>
+<ul>
+<li><code>$RHASSPY_BASE_DIR</code> - path to the directory where Rhasspy is running from</li>
+<li><code>$RHASSPY_PROFILE</code> - name of the current profile (e.g., "en")</li>
+<li><code>$RHASSPY_PROFILE_DIR</code> - directory of the current profile (where <code>profile.json</code> is)</li>
+</ul>
+<p>See <a href="https://github.com/synesthesiam/rhasspy/blob/master/bin/mock-commands/sleep.sh">sleep.sh</a> for an example program.</p>
+<p>Implemented by <a href="https://github.com/rhasspy/rhasspy-remote-http-hermes">rhasspy-remote-http-hermes</a></p>
+<h2 id="dummy">Dummy</h2>
+<p>Disables wake word functionality.</p>
+<p>Add to your <a href="../profiles/">profile</a>:</p>
+<pre><code class="json">&quot;wake&quot;: {
+  &quot;system&quot;: &quot;dummy&quot;
+}
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../command-listener/" class="btn btn-neutral float-right" title="Command Listener">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../audio-output/" class="btn btn-neutral" title="Audio Output"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../audio-output/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../command-listener/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

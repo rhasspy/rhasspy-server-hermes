@@ -1,15 +1,25 @@
 SHELL := bash
-PYTHON_NAME = rhasspyserver_hermes
-PACKAGE_NAME = rhasspy-server-hermes
+PACKAGE_NAME = $(shell basename "$PWD")
+PYTHON_NAME = $(shell echo "$(PACKAGE_NAME)" | sed -e 's/-//' | sed -e 's/-/_/g')
 SOURCE = $(PYTHON_NAME)
 PYTHON_FILES = $(SOURCE)/*.py *.py
-SHELL_FILES = bin/* debian/bin/*
-DOWNLOAD_DIR = download
+SHELL_FILES = bin/* debian/bin/* *.sh
+PIP_INSTALL ?= install
 
-.PHONY: reformat check venv dist sdist pyinstaller debian docker deploy
+.PHONY: reformat check dist venv pyinstaller debian docker deploy docker-multiarch docker-multiarch-deploy docker-multiarch-manifest docker-multiarch-manifest-init
 
 version := $(shell cat VERSION)
 architecture := $(shell bash architecture.sh)
+
+version_tag := "rhasspy/$(PACKAGE_NAME):$(version)"
+
+DOCKER_PLATFORMS = linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+
+ifneq (,$(findstring -dev,$(version)))
+	DOCKER_TAGS = -t "$(version_tag)"
+else
+	DOCKER_TAGS = -t "$(version_tag)" -t "rhasspy/$(PACKAGE_NAME):latest"
+endif
 
 # -----------------------------------------------------------------------------
 # Python
@@ -21,7 +31,7 @@ reformat:
 check:
 	scripts/check-code.sh $(PYTHON_FILES)
 
-venv: rhasspy-libs
+venv:
 	scripts/create-venv.sh
 
 dist: sdist debian
@@ -33,12 +43,48 @@ sdist:
 # Docker
 # -----------------------------------------------------------------------------
 
-docker: requirements_rhasspy.txt
+
+docker:
 	docker build . -t "rhasspy/$(PACKAGE_NAME):$(version)" -t "rhasspy/$(PACKAGE_NAME):latest"
 
+docker-multiarch:
+	scripts/build-with-docker.sh
+
+docker-multiarch-deploy:
+	docker push "$(version_tag)-amd64"
+	docker push "$(version_tag)-armhf"
+	docker push "$(version_tag)-aarch64"
+	docker push "$(version_tag)-arm32v6"
+
+docker-multiarch-manifest:
+	docker manifest push --purge "$(version_tag)"
+	docker manifest create --amend "$(version_tag)" \
+      "$(version_tag)-amd64" \
+      "$(version_tag)-armhf" \
+      "$(version_tag)-aarch64" \
+      "$(version_tag)-arm32v6"
+	docker manifest annotate "$(version_tag)" "$(version_tag)-armhf" --os linux --arch arm
+	docker manifest annotate "$(version_tag)" "$(version_tag)-aarch64" --os linux --arch arm64
+	docker manifest annotate "$(version_tag)" "$(version_tag)-arm32v6" --os linux --arch arm32v6
+	docker manifest push "$(version_tag)"
+
+docker-multiarch-manifest-init:
+	docker manifest create "$(version_tag)" \
+      "$(version_tag)-amd64" \
+      "$(version_tag)-armhf" \
+      "$(version_tag)-aarch64" \
+      "$(version_tag)-arm32v6"
+	docker manifest annotate "$(version_tag)" "$(version_tag)-armhf" --os linux --arch arm
+	docker manifest annotate "$(version_tag)" "$(version_tag)-aarch64" --os linux --arch arm64
+	docker manifest annotate "$(version_tag)" "$(version_tag)-arm32v6" --os linux --arch arm32v6
+	docker manifest push "$(version_tag)"
+
+docker-pyinstaller: pyinstaller
+	docker build . -f Dockerfile.pyinstaller -t "rhasspy/$(PACKAGE_NAME):$(version)" -t "rhasspy/$(PACKAGE_NAME):latest"
+
 deploy:
-	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
-	docker push "rhasspy/$(PACKAGE_NAME):$(version)"
+	docker login --username rhasspy --password "$$DOCKER_PASSWORD"
+	docker buildx build . --platform $(DOCKER_PLATFORMS) --push $(DOCKER_TAGS)
 
 # -----------------------------------------------------------------------------
 # Debian
@@ -48,30 +94,4 @@ pyinstaller:
 	scripts/build-pyinstaller.sh "${architecture}" "${version}"
 
 debian:
-	scripts/build-debian.sh "${architecture}" "${version}"
-
-# -----------------------------------------------------------------------------
-# Downloads
-# -----------------------------------------------------------------------------
-
-requirements_rhasspy.txt: requirements.txt
-	grep '^rhasspy-' $< | sed -e 's|=.\+|/archive/master.tar.gz|' | sed 's|^|https://github.com/rhasspy/|' > $@
-
-# Rhasspy development dependencies
-rhasspy-libs: $(DOWNLOAD_DIR)/rhasspy-profile-0.1.3.tar.gz $(DOWNLOAD_DIR)/rhasspy-hermes-0.1.6.tar.gz $(DOWNLOAD_DIR)/rhasspy-nlu-0.1.6.tar.gz $(DOWNLOAD_DIR)/rhasspy-supervisor-0.1.3.tar.gz
-
-$(DOWNLOAD_DIR)/rhasspy-profile-0.1.3.tar.gz:
-	mkdir -p "$(DOWNLOAD_DIR)"
-	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
-
-$(DOWNLOAD_DIR)/rhasspy-hermes-0.1.6.tar.gz:
-	mkdir -p "$(DOWNLOAD_DIR)"
-	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
-
-$(DOWNLOAD_DIR)/rhasspy-nlu-0.1.6.tar.gz:
-	mkdir -p "$(DOWNLOAD_DIR)"
-	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
-
-$(DOWNLOAD_DIR)/rhasspy-supervisor-0.1.3.tar.gz:
-	mkdir -p "$(DOWNLOAD_DIR)"
-	curl -sSfL -o $@ "https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz"
+	scripts/build-debian.sh "$(architecture)" "$(version)"

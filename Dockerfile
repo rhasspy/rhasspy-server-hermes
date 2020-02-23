@@ -24,7 +24,7 @@ RUN /venv/bin/pip install -r /requirements.txt
 # -----------------------------------------------------------------------------
 
 ARG BUILD_ARCH
-FROM ${BUILD_ARCH}/python:3.7-alpine as build
+FROM ${BUILD_ARCH}/python:3.7-alpine
 ARG BUILD_ARCH
 ARG FRIENDLY_ARCH
 

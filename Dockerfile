@@ -1,27 +1,43 @@
-ARG BUILD_ARCH=amd64
+ARG BUILD_ARCH
 FROM ${BUILD_ARCH}/python:3.7-alpine as build
+ARG BUILD_ARCH
+ARG FRIENDLY_ARCH
+
+# Multi-arch
+COPY etc/qemu-arm-static /usr/bin/
+COPY etc/qemu-aarch64-static /usr/bin/
 
 RUN apk add --no-cache build-base
+RUN python3 -m venv /venv
 
-ENV VENV=/usr/.venv
+COPY requirements.txt /
 
-RUN python3 -m venv $VENV
-RUN $VENV/bin/pip3 install --upgrade pip
+RUN grep '^rhasspy-' /requirements.txt | \
+    sed -e 's|=.\+|/archive/master.tar.gz|' | \
+    sed 's|^|https://github.com/rhasspy/|' \
+    > /requirements_rhasspy.txt
 
-COPY requirements_rhasspy.txt requirements.txt /tmp/
-RUN $VENV/bin/pip3 install -r /tmp/requirements_rhasspy.txt
-RUN $VENV/bin/pip3 install -r /tmp/requirements.txt
+RUN /venv/bin/pip install --upgrade pip
+RUN /venv/bin/pip install -r /requirements_rhasspy.txt
+RUN /venv/bin/pip install -r /requirements.txt
 
 # -----------------------------------------------------------------------------
 
-ARG BUILD_ARCH=amd64
-FROM ${BUILD_ARCH}/python:3.7-alpine
+ARG BUILD_ARCH
+FROM ${BUILD_ARCH}/python:3.7-alpine as build
+ARG BUILD_ARCH
+ARG FRIENDLY_ARCH
 
-WORKDIR /rhasspy
-COPY --from=build /usr/.venv /rhasspy/.venv/
+# Multi-arch
+COPY etc/qemu-arm-static /usr/bin/
+COPY etc/qemu-aarch64-static /usr/bin/
 
-COPY **/*.py /rhasspy/rhasspyserver_hermes/
-COPY web/ /rhasspy/web/
-COPY VERSION /rhasspy/
+COPY --from=build /venv/ /venv/
 
-ENTRYPOINT ["/rhasspy/.venv/bin/python3", "-m", "rhasspyserver_hermes"]
+COPY rhasspyserver_hermes/ /rhasspyserver_hermes/
+COPY web/ /web/
+COPY templates/ /templates/
+COPY VERSION /
+WORKDIR /
+
+ENTRYPOINT ["/venv/bin/python3", "-m", "rhasspyserver_hermes", "--web-dir", "/web"]

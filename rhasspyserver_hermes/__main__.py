@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import signal
 import subprocess
 import time
 import typing
@@ -129,10 +130,11 @@ app = cors(app)
 # Template Functions
 # -----------------------------------------------------------------------------
 
+version_path = web_dir.parent / "VERSION"
 
 def get_version() -> str:
     """Return Rhasspy version"""
-    return Path("VERSION").read_text().strip()
+    return version_path.read_text().strip()
 
 
 def get_template_args() -> typing.Dict[str, typing.Any]:
@@ -978,10 +980,7 @@ async def api_restart() -> str:
         in_docker = False
         pid = pid_path.read_text().strip()
         assert pid, f"No PID in {pid_path}"
-        restart_command = ["kill", "-SIGHUP", pid]
-        _LOGGER.debug(restart_command)
-
-        subprocess.check_call(restart_command)
+        os.kill(int(pid), signal.SIGHUP)
 
     if in_docker:
         # Signal Docker orchestration script to restart.

@@ -397,7 +397,7 @@ class RhasspyCore:
         """Send an NLU query and wait for intent or not recognized"""
         if self.profile.get("intent.system", "dummy") == "dummy":
             _LOGGER.debug("No intent system configured")
-            return NluIntentNotRecognized()
+            return NluIntentNotRecognized(input="")
 
         nlu_id = str(uuid4())
         query = NluQuery(id=nlu_id, input=text, siteId=self.siteId)

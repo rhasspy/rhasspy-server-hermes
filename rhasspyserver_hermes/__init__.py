@@ -29,6 +29,7 @@ from rhasspyhermes.audioserver import (
     AudioDeviceMode,
     AudioDevices,
     AudioFrame,
+    AudioSessionFrame,
     AudioGetDevices,
     AudioPlayBytes,
     AudioPlayFinished,
@@ -497,8 +498,8 @@ class RhasspyCore:
                                 )
 
                             yield (
-                                AudioFrame(wav_bytes=chunk_buffer.getvalue()),
-                                {"siteId": self.siteId},
+                                AudioSessionFrame(wav_bytes=chunk_buffer.getvalue()),
+                                {"siteId": self.siteId, "sessionId": sessionId},
                             )
 
                         frames_left -= frames_per_chunk
@@ -507,23 +508,13 @@ class RhasspyCore:
 
         topics = [AsrTextCaptured.topic()]
 
-        # Disable hotword
-        self.publish(HotwordToggleOff(siteId=self.siteId))
+        # Expecting only a single result
+        result = None
+        async for response in self.publish_wait(handle_captured(), messages(), topics):
+            result = response
 
-        try:
-            # Expecting only a single result
-            result = None
-            async for response in self.publish_wait(
-                handle_captured(), messages(), topics
-            ):
-                result = response
-
-            assert isinstance(result, AsrTextCaptured)
-            return result
-        finally:
-            # Enable hotword
-            # TODO: Don't toggle on if ASR system is engaged
-            self.publish(HotwordToggleOn(siteId=self.siteId))
+        assert isinstance(result, AsrTextCaptured)
+        return result
 
     # -------------------------------------------------------------------------
 
@@ -993,7 +984,7 @@ class RhasspyCore:
             topic = message.topic(**topic_args)
             payload: typing.Union[str, bytes]
 
-            if isinstance(message, (AudioFrame, AudioPlayBytes)):
+            if isinstance(message, (AudioFrame, AudioSessionFrame, AudioPlayBytes)):
                 # Handle binary payloads specially
                 _LOGGER.debug(
                     "-> %s(%s byte(s)) on %s",

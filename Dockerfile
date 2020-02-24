@@ -7,7 +7,7 @@ ARG FRIENDLY_ARCH
 COPY etc/qemu-arm-static /usr/bin/
 COPY etc/qemu-aarch64-static /usr/bin/
 
-RUN apk add --no-cache build-base
+RUN apk update && apk add --no-cache build-base
 RUN python3 -m venv /venv
 
 COPY requirements.txt /

@@ -136,6 +136,7 @@ class RhasspyCore:
                 HotwordDetected.topic(wakewordId="+"),
                 AsrTextCaptured.topic(),
                 NluIntentNotRecognized.topic(),
+                NluIntent.topic(intentName="#"),
             ]
         )
 

@@ -89,6 +89,17 @@
 
         <!-- Main -->
         <div class="main-container">
+            <!-- New Alert -->
+            <div id="new-alert" class="alert alert-success alert-dismissable" role="alert" x-show="allDummy()" x-cloak>
+                <span class="ml-2">
+                    New to Rhasspy? Try the <a target="_blank" href="/docs/tutorials/#getting-started-guide">Getting Started Guide</a> &#x263A;
+                </span>
+                <button type="button" onclick="$('#new-alert').hide()" class="close ml-auto" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <!-- End New Alert -->
+
             <!-- Download Alert -->
             <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
                 <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
@@ -506,6 +517,24 @@
              }
          })
 
+         function showFilesToDownload() {
+             $('#downloadFiles').val(JSON.stringify(rhasspy.missingFiles, null, 4));
+             $('#downloadFilesModal').modal('show');
+         }
+
+         function allDummy() {
+             var systems = ['microphone', 'handle', 'wake', 'speech_to_text',
+                            'intent', 'text_to_speech', 'sounds', 'dialogue'];
+
+             for (system of systems) {
+                 if (rhasspy.profile[system]['system'] != 'dummy') {
+                     return false;
+                 }
+             }
+
+             return true;
+         }
+
          $(() => {
              // Disable GET caches
              $.ajaxSetup({ cache: false });
@@ -519,13 +548,9 @@
                      socket.onmessage = (e) => {
                          rhasspy.log.text = e.data + '\n' + rhasspy.log.text;
                      }
-             });
+                 });
          })
 
-         function showFilesToDownload() {
-             $('#downloadFiles').val(JSON.stringify(rhasspy.missingFiles, null, 4));
-             $('#downloadFilesModal').modal('show');
-         }
         </script>
 
         {% block script %}{% endblock %}

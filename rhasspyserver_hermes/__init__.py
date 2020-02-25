@@ -46,7 +46,13 @@ from rhasspyhermes.nlu import (
     NluTrainSuccess,
 )
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
-from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
+from rhasspyhermes.wake import (
+    HotwordDetected,
+    HotwordToggleOff,
+    HotwordToggleOn,
+    GetHotwords,
+    Hotwords,
+)
 from rhasspyprofile import Profile
 
 from .train import sentences_to_graph
@@ -659,6 +665,34 @@ class RhasspyCore:
         assert isinstance(result, AudioDevices)
         return result
 
+    async def get_hotwords(self) -> Hotwords:
+        """Get available hotwords."""
+        if self.profile.get("wake.system", "dummy") == "dummy":
+            _LOGGER.warning(
+                "Wake word detection disabled. Cannot get available wake words."
+            )
+            return Hotwords()
+
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                _, message = yield
+
+                if isinstance(message, Hotwords) and (message.id == requestId):
+                    return message
+
+        messages = [GetHotwords(id=requestId, siteId=self.siteId)]
+        topics = [Hotwords.topic()]
+
+        # Expecting only a single result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, Hotwords)
+        return result
+
     # -------------------------------------------------------------------------
 
     async def maybe_play_sound(self, sound_name: str):
@@ -884,6 +918,13 @@ class RhasspyCore:
                     return
 
                 self.handle_message(msg.topic, AudioDevices.from_dict(json_payload))
+            elif msg.topic == Hotwords.topic():
+                # Hotword list
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, Hotwords.from_dict(json_payload))
             elif AsrTrainSuccess.is_topic(msg.topic):
                 # NLU training success
                 siteId = AsrTrainSuccess.get_siteId(msg.topic)

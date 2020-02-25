@@ -468,14 +468,21 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="porcupine-model" class="col-form-label">Keyword Files</label>
-                        <div class="col-sm-auto">
-                            <input id="porcupine-keyword" type="text" class="form-control" x-model="profile.wake.porcupine.keyword_path" :disabled="profile.wake.system != 'porcupine'">
+                        <div class="col-xs-auto">
+                            <label for="sounds-aplay-device">Keyword File:</label>
+                        </div>
+                        <div class="col">
+                            <input id="sounds-aplay-device" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Put keyword files in the <tt>porcupine</tt> directory in your profile
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="wake-porcupine-hotwords" x-model="profile.wake.porcupine.keyword_path" class="form-control">
+                                <option value="" disabled>Select keyword</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshHotwords('porcupine')" class="btn btn-primary form-control">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -1207,6 +1214,23 @@
      });
  }
 
+ // Load available hot words
+ function refreshHotwords(wakeSystem) {
+     var selectId = '#wake-' + wakeSystem + '-hotwords';
+     $(selectId + ' option').remove();
+
+     $.get({
+         url:'/api/wake-words',
+         dataType: 'json',
+         success: (r) => {
+             Object.entries(r).forEach((kv) => {
+                 $(selectId)
+                     .append('<option value="' + kv[0] + '">' + kv[1].modelWords + ' (' + kv[0] + ')</option>');
+             });
+         }
+     });
+ }
+
  function isSpeechCompatible() {
      var speechSystem = rhasspy.profile.speech_to_text.system;
      return rhasspy.profile.speech_to_text[speechSystem].compatible;
@@ -1227,6 +1251,12 @@
      var soundSystem = rhasspy.profile.sounds.system;
      if (soundSystem == 'aplay') {
          refreshOutputDevices(soundSystem);
+     }
+
+     // Refresh wake words on start up
+     var wakeSystem = rhasspy.profile.wake.system;
+     if ((wakeSystem == 'porcupine') || (wakeSystem == 'snowboy')) {
+         refreshHotwords(wakeSystem);
      }
 
      // Highlight selected section from URL

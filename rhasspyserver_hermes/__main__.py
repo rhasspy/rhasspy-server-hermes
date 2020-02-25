@@ -7,7 +7,6 @@ import logging
 import os
 import re
 import signal
-import subprocess
 import time
 import typing
 from collections import defaultdict
@@ -131,6 +130,7 @@ app = cors(app)
 # -----------------------------------------------------------------------------
 
 version_path = web_dir.parent / "VERSION"
+
 
 def get_version() -> str:
     """Return Rhasspy version"""
@@ -506,10 +506,11 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
-    # TODO: Add for PyAudio
     microphones = await core.get_microphones()
 
-    return jsonify({mic.name: mic.description for mic in microphones.devices})
+    return jsonify(
+        {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -523,7 +524,8 @@ async def api_test_microphones() -> Response:
 
     return jsonify(
         {
-            mic.name: mic.description + (" (working!)" if mic.working else "")
+            mic.id: (mic.description.strip() or mic.name)
+            + (" (working!)" if mic.working else "")
             for mic in microphones.devices
         }
     )
@@ -539,6 +541,18 @@ async def api_speakers() -> Response:
     speakers = await core.get_speakers()
 
     return jsonify({speaker.name: speaker.description for speaker in speakers.devices})
+
+
+# -----------------------------------------------------------------------------
+
+
+@app.route("/api/wake-words", methods=["GET"])
+async def api_wake_words() -> Response:
+    """Get a dictionary of available wake words"""
+    assert core is not None
+    hotwords = await core.get_hotwords()
+
+    return jsonify(attr.asdict(hotwords)["models"])
 
 
 # -----------------------------------------------------------------------------
@@ -1028,7 +1042,8 @@ async def api_speech_to_text() -> str:
 
     if output_format == "hermes":
         return jsonify({"type": "textCaptured", "value": attr.asdict(result)})
-    elif prefers_json():
+
+    if prefers_json():
         # Return extra info in JSON
         return jsonify(
             {
@@ -1086,7 +1101,6 @@ async def api_speech_to_intent() -> Response:
         wav_bytes = await request.data
 
         # speech -> text
-        start_time = time.time()
         transcription = await core.transcribe_wav(wav_bytes)
         text = transcription.text
 
@@ -1758,6 +1772,7 @@ def quality(accept, key: str) -> float:
 
 
 async def text_to_intent_dict(text, output_format="rhasspy"):
+    """Convert transcription to either Rhasspy or Hermes JSON format."""
     assert core is not None
     start_time = time.perf_counter()
     result = await core.recognize_intent(text)

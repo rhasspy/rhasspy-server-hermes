@@ -423,17 +423,29 @@
                     <div class="form-row">
                         <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#snowboy">Documentation</a>
                     </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="snowboy-model" class="col-form-label">Model Names</label>
-                        <div class="col-sm-auto">
-                            <input id="snowboy-model" type="text" class="form-control" x-model="profile.wake.snowboy.model" :disabled="profile.wake.system != 'snowboy'">
-                        </div>
-                    </div>
                     <div class="form-row">
                         <div class="col text-muted">
                             Put models in the <tt>snowboy</tt> directory in your profile
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="wake-snowboy-model">Model:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-snowboy-model" x-model="profile.wake.snowboy.model" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="wake-snowboy-hotwords" x-model="profile.wake.snowboy.model" class="form-control">
+                                <option value="" disabled>Select model</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshHotwords('snowboy')" class="btn btn-primary form-control">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -465,14 +477,19 @@
                     <div class="form-row">
                         <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#porcupine">Documentation</a>
                     </div>
+                    <div class="form-row">
+                        <div class="col text-muted">
+                            Put models in the <tt>porcupine</tt> directory in your profile
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-xs-auto">
-                            <label for="sounds-aplay-device">Keyword File:</label>
+                            <label for="wake-porcupine-keyword-file">Keyword File:</label>
                         </div>
                         <div class="col">
-                            <input id="sounds-aplay-device" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
+                            <input id="wake-porcupine-keyword-file" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
                         </div>
                     </div>
                     <div class="form-row mt-2">

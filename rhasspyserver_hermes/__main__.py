@@ -689,23 +689,23 @@ async def api_lookup() -> Response:
     result = await core.get_word_pronunciations([word], n)
 
     if output_format == "hermes":
-        pronunciation_dict = {"type": "phonemes", "value": attr.asdict(result)}
-    else:
-        # Convert to Rhasspy format
-        pronunciation_dict = {}
-        for pron_word in result.wordPhonemes:
-            if pron_word == word:
-                pronunciation_dict = {
-                    "in_dictionary": any(
-                        not word_pron.guessed
-                        for word_pron in result.wordPhonemes[pron_word]
-                    ),
-                    "pronunciations": [
-                        " ".join(word_pron.phonemes)
-                        for word_pron in result.wordPhonemes[pron_word]
-                    ],
-                    "phonemes": get_espeak_phonemes(pron_word),
-                }
+        return jsonify({"type": "phonemes", "value": attr.asdict(result)})
+
+    # Convert to Rhasspy format
+    pronunciation_dict: typing.Dict[str, typing.Any] = {}
+    for pron_word in result.wordPhonemes:
+        if pron_word == word:
+            pronunciation_dict = {
+                "in_dictionary": any(
+                    not word_pron.guessed
+                    for word_pron in result.wordPhonemes[pron_word]
+                ),
+                "pronunciations": [
+                    " ".join(word_pron.phonemes)
+                    for word_pron in result.wordPhonemes[pron_word]
+                ],
+                "phonemes": get_espeak_phonemes(pron_word),
+            }
 
     return jsonify(pronunciation_dict)
 

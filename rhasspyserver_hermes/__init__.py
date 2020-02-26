@@ -29,10 +29,10 @@ from rhasspyhermes.audioserver import (
     AudioDeviceMode,
     AudioDevices,
     AudioFrame,
-    AudioSessionFrame,
     AudioGetDevices,
     AudioPlayBytes,
     AudioPlayFinished,
+    AudioSessionFrame,
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.dialogue import DialogueSessionStarted
@@ -47,11 +47,11 @@ from rhasspyhermes.nlu import (
 )
 from rhasspyhermes.tts import TtsSay, TtsSayFinished
 from rhasspyhermes.wake import (
+    GetHotwords,
     HotwordDetected,
+    Hotwords,
     HotwordToggleOff,
     HotwordToggleOn,
-    GetHotwords,
-    Hotwords,
 )
 from rhasspyprofile import Profile
 
@@ -457,8 +457,13 @@ class RhasspyCore:
         topics = [TtsSayFinished.topic()]
 
         # Expecting only a single result
-        async for result in self.publish_wait(handle_finished(), messages, topics):
-            return result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, TtsSayFinished)
+
+        return result
 
     # -------------------------------------------------------------------------
 

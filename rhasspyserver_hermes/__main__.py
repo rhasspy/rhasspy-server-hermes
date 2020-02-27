@@ -1240,6 +1240,15 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
     return sentence
 
 
+@app.route("/api/tts-voices", methods=["GET"])
+async def api_tts_voices() -> Response:
+    """Get available voices for text to speech system."""
+    assert core is not None
+    voices = await core.get_voices()
+
+    return jsonify(attr.asdict(voices)["voices"])
+
+
 # -----------------------------------------------------------------------------
 
 

@@ -23,7 +23,7 @@
 <div class="card" id="mqtt">
     <div class="card-header bg-dark" id="headingMqtt">
         <i class="fas fa-inverse fa-network-wired"></i>
-        <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#collapseMqtt" aria-expanded="true" aria-controls="collapseMqtt" :disabled="!profile.mqtt.enabled">
+        <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
             <i class="fas fa-sort-down"></i>MQTT
         </button>
 
@@ -32,7 +32,7 @@
             <option value="true">External</option>
         </select>
     </div>
-    <div id="collapseMqtt" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
+    <div id="mqtt-collapse" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
         <div class="card-body">
             <div class="form-group">
                 <div class="form-row">
@@ -76,7 +76,7 @@
     <div class="card-header bg-dark" id="headingMicrophone">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-microphone"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#collapseMicrophone" aria-expanded="true" aria-controls="collapseMicrophone" :disabled="profile.microphone.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#microphone-collapse" aria-expanded="true" aria-controls="microphone-collapse" :disabled="profile.microphone.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Audio Recording
             </button>
             <select class="ml-2" x-model="profile.microphone.system">
@@ -88,14 +88,14 @@
             </select>
         </h5>
     </div>
-    <div id="collapseMicrophone" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
+    <div id="microphone-collapse" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
         <div class="card-body">
 
             <!-- PyAudio -->
             <div x-show="profile.microphone.system == 'pyaudio'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#pyaudio">Documentation</a>
+                        <a target="_blank" href="docs/audio-input/#pyaudio">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -128,7 +128,7 @@
             <div x-show="profile.microphone.system == 'arecord'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#alsa">Documentation</a>
+                        <a target="_blank" href="docs/audio-input/#alsa">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -161,7 +161,7 @@
             <div x-show="profile.microphone.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-input/#command">Documentation</a>
+                        <a target="_blank" href="docs/audio-input/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -179,7 +179,7 @@
             <div x-show="profile.microphone.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#audio-input">Documentation</a>
+                        <a target="_blank" href="docs/services/#audio-input">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -200,7 +200,7 @@
     <div class="card-header bg-dark" id="headingHandle">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-home"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#collapseHandle" aria-expanded="true" aria-controls="collapseHandle" :disabled="profile.handle.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#handle-collapse" aria-expanded="true" aria-controls="handle-collapse" :disabled="profile.handle.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Intent Handling
             </button>
             <select class="ml-2" x-model="profile.handle.system">
@@ -211,13 +211,13 @@
             </select>
         </h5>
     </div>
-    <div id="collapseHandle" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
+    <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
         <div class="card-body">
             <!-- Home Assistant -->
             <div x-show="profile.handle.system == 'hass'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#home-assistant">Documentation</a>
+                        <a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -326,7 +326,7 @@
             <div x-show="profile.handle.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#remote-server">Documentation</a>
+                        <a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -344,7 +344,7 @@
             <div x-show="profile.handle.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-handling/#command">Documentation</a>
+                        <a target="_blank" href="docs/intent-handling/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -368,7 +368,7 @@
     <div class="card-header bg-dark" id="headingWake">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-exclamation-circle"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#collapseWake" aria-expanded="true" aria-controls="collapseWake" :disabled="profile.wake.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#wake-collapse" aria-expanded="true" aria-controls="wake-collapse" :disabled="profile.wake.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Wake Word
             </button>
             <select class="ml-2" x-model="profile.wake.system">
@@ -385,14 +385,14 @@
             </span>
         </h5>
     </div>
-    <div id="collapseWake" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
+    <div id="wake-collapse" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
         <div class="card-body">
 
             <!-- Pocketsphinx -->
             <div x-show="profile.wake.system == 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#pocketsphinx">Documentation</a>
+                        <a target="_blank" href="docs/wake-word/#pocketsphinx">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -421,7 +421,7 @@
             <div x-show="profile.wake.system == 'snowboy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#snowboy">Documentation</a>
+                        <a target="_blank" href="docs/wake-word/#snowboy">Documentation</a>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -465,7 +465,7 @@
                 </div>
                 <div class="form-group">
                     <p>
-                        See <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
+                        See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
                     </p>
                 </div>
             </div>
@@ -475,7 +475,7 @@
             <div x-show="profile.wake.system == 'porcupine'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#porcupine">Documentation</a>
+                        <a target="_blank" href="docs/wake-word/#porcupine">Documentation</a>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -518,7 +518,7 @@
             <div x-show="profile.wake.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/wake-word/#command">Documentation</a>
+                        <a target="_blank" href="docs/wake-word/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -536,7 +536,7 @@
             <div x-show="profile.wake.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#wake-word">Documentation</a>
+                        <a target="_blank" href="docs/services/#wake-word">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -557,7 +557,7 @@
     <div class="card-header bg-dark" id="headingSpeech">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-phone-volume"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#collapseSpeech" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#speech-collapse" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Speech to Text
             </button>
             <select class="ml-2" x-model="profile.speech_to_text.system">
@@ -574,14 +574,14 @@
             </span>
         </h5>
     </div>
-    <div id="collapseSpeech" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
+    <div id="speech-collapse" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
         <div class="card-body">
 
             <!-- Pocketsphinx -->
             <div x-show="profile.speech_to_text.system == 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#pocketsphinx">Documentation</a>
+                        <a target="_blank" href="docs/speech-to-text/#pocketsphinx">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -614,7 +614,7 @@
             <div x-show="profile.speech_to_text.system == 'kaldi'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#kaldi">Documentation</a>
+                        <a target="_blank" href="docs/speech-to-text/#kaldi">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -647,7 +647,7 @@
             <div x-show="profile.speech_to_text.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#remote">Documentation</a>
+                        <a target="_blank" href="docs/speech-to-text/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -672,7 +672,7 @@
             <div x-show="profile.speech_to_text.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/speech-to-text/#command">Documentation</a>
+                        <a target="_blank" href="docs/speech-to-text/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -690,7 +690,7 @@
             <div x-show="profile.speech_to_text.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#speech-to-text">Documentation</a>
+                        <a target="_blank" href="docs/services/#speech-to-text">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -711,7 +711,7 @@
     <div class="card-header bg-dark" id="headingIntent">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-comment"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#collapseIntent" aria-expanded="true" aria-controls="collapseIntent" :disabled="profile.intent.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#collapseIntent" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Intent Recognition
             </button>
             <select class="ml-2" x-model="profile.intent.system">
@@ -724,14 +724,14 @@
             </select>
         </h5>
     </div>
-    <div id="collapseIntent" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
+    <div id="intent-collapse" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
         <div class="card-body">
 
             <!-- Fsticuffs -->
             <div x-show="profile.intent.system == 'fsticuffs'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#fsticuffs">Documentation</a>
+                        <a target="_blank" href="docs/intent-recognition/#fsticuffs">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -756,7 +756,7 @@
             <div x-show="profile.intent.system == 'fuzzywuzzy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#fuzzywuzzy">Documentation</a>
+                        <a target="_blank" href="docs/intent-recognition/#fuzzywuzzy">Documentation</a>
                     </div>
                 </div>
             </div>
@@ -766,7 +766,7 @@
             <div x-show="profile.intent.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#remote">Documentation</a>
+                        <a target="_blank" href="docs/intent-recognition/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -791,7 +791,7 @@
             <div x-show="profile.intent.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/intent-recognition/#command">Documentation</a>
+                        <a target="_blank" href="docs/intent-recognition/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -809,7 +809,7 @@
             <div x-show="profile.intent.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#intent-recognition">Documentation</a>
+                        <a target="_blank" href="docs/services/#intent-recognition">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -830,7 +830,7 @@
     <div class="card-header bg-dark" id="headingTTS">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-paper-plane"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#collapseTTS" aria-expanded="true" aria-controls="collapseTTS" :disabled="profile.text_to_speech.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#tts-collapse" aria-expanded="true" aria-controls="tts-collapse" :disabled="profile.text_to_speech.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Text to Speech
             </button>
             <select class="ml-2" x-model="profile.text_to_speech.system">
@@ -845,21 +845,33 @@
             </select>
         </h5>
     </div>
-    <div id="collapseTTS" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
+    <div id="tts-collapse" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
         <div class="card-body">
 
             <!-- Espeak -->
             <div x-show="profile.text_to_speech.system == 'espeak'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#espeak">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#espeak">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-voice" class="col-form-label">eSpeak Voice</label>
+                        <div class="col-xs-auto">
+                            <label for="tts-espeak-voice">Voice:</label>
+                        </div>
                         <div class="col">
-                            <input id="espeak-voice" type="text" class="form-control" x-model="profile.text_to_speech.espeak.voice" :disabled="profile.text_to_speech.system != 'espeak'" placeholder="default">
+                            <input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="tts-espeak-voices" x-model="profile.text_to_speech.espeak.voice" class="form-control">
+                                <option value="" selected>Default Voice</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('espeak')" class="btn btn-primary form-control">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -870,7 +882,7 @@
             <div x-show="profile.text_to_speech.system == 'picotts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#picotts">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#picotts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -888,14 +900,26 @@
             <div x-show="profile.text_to_speech.system == 'flite'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#flite">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#flite">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="flite-voice" class="col-form-label">flite Voice</label>
+                        <div class="col-xs-auto">
+                            <label for="tts-flite-voice">Voice:</label>
+                        </div>
                         <div class="col">
-                            <input id="flite-voice" type="text" class="form-control" x-model="profile.text_to_speech.flite.voice" :disabled="profile.text_to_speech.system != 'flite'" placeholder="kal16">
+                            <input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col">
+                            <select id="tts-flite-voices" x-model="profile.text_to_speech.flite.voice" class="form-control">
+                                <option value="" selected>Default Voice</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('flite')" class="btn btn-primary form-control">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -906,7 +930,7 @@
             <div x-show="profile.text_to_speech.system == 'marytts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#marytts">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#marytts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -949,7 +973,7 @@
             <div x-show="profile.text_to_speech.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#remote">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -974,7 +998,7 @@
             <div x-show="profile.text_to_speech.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/text-to-speech/#command">Documentation</a>
+                        <a target="_blank" href="docs/text-to-speech/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -992,7 +1016,7 @@
             <div x-show="profile.text_to_speech.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#text-to-speech">Documentation</a>
+                        <a target="_blank" href="docs/services/#text-to-speech">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1013,7 +1037,7 @@
     <div class="card-header bg-dark" id="headingSounds">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-volume-up"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#collapseSounds" aria-expanded="true" aria-controls="collapseSounds" :disabled="profile.sounds.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#sounds-collapse" aria-expanded="true" aria-controls="sounds-collapse" :disabled="profile.sounds.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Audio Playing
             </button>
             <select class="ml-2" x-model="profile.sounds.system">
@@ -1025,14 +1049,14 @@
             </select>
         </h5>
     </div>
-    <div id="collapseSounds" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
+    <div id="sounds-collapse" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
         <div class="card-body">
 
             <!-- aplay -->
             <div x-show="profile.sounds.system == 'aplay'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#alsa">Documentation</a>
+                        <a target="_blank" href="docs/audio-output/#alsa">Documentation</a>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1060,7 +1084,7 @@
             <div x-show="profile.sounds.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#remote">Documentation</a>
+                        <a target="_blank" href="docs/audio-output/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1078,7 +1102,7 @@
             <div x-show="profile.sounds.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/audio-output/#command">Documentation</a>
+                        <a target="_blank" href="docs/audio-output/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1096,7 +1120,7 @@
             <div x-show="profile.sounds.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#audio-output">Documentation</a>
+                        <a target="_blank" href="docs/services/#audio-output">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1117,7 +1141,7 @@
     <div class="card-header bg-dark" id="headingDialogue">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-tasks"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.dialogue.system == 'dummy', 'btn-success': profile.dialogue.system != 'dummy' }" data-toggle="collapse" data-target="#collapseDialogue" aria-expanded="true" aria-controls="collapseDialogue" :disabled="profile.dialogue.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.dialogue.system == 'dummy', 'btn-success': profile.dialogue.system != 'dummy' }" data-toggle="collapse" data-target="#dialogue-collapse" aria-expanded="true" aria-controls="dialogue-collapse" :disabled="profile.dialogue.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Dialogue Management
             </button>
             <select class="ml-2" x-model="profile.dialogue.system">
@@ -1127,14 +1151,14 @@
             </select>
         </h5>
     </div>
-    <div id="collapseDialogue" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
+    <div id="dialogue-collapse" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
         <div class="card-body">
 
             <!-- Rhasspy -->
             <div x-show="profile.dialogue.system == 'rhasspy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#dialogue-manager">Documentation</a>
+                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1149,7 +1173,7 @@
             <div x-show="profile.dialogue.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a href="https://rhasspy.readthedocs.io/en/latest/services/#dialogue-manager">Documentation</a>
+                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1248,6 +1272,28 @@
      });
  }
 
+ // Load available TTS voices
+ function refreshVoices(ttsSystem) {
+     var selectId = '#tts-' + ttsSystem + '-voices';
+     $(selectId + ' option:not(:first)').remove();
+
+     $.get({
+         url:'/api/tts-voices',
+         dataType: 'json',
+         success: (r) => {
+             Object.entries(r).forEach((kv) => {
+                 var description = kv[0];
+                 if (kv[1].description.length > 0) {
+                     description += ' (' + kv[1].description + ')';
+                 }
+
+                 $(selectId)
+                     .append('<option value="' + kv[0] + '">' + description + '</option>');
+             });
+         }
+     });
+ }
+
  function isSpeechCompatible() {
      var speechSystem = rhasspy.profile.speech_to_text.system;
      return rhasspy.profile.speech_to_text[speechSystem].compatible;
@@ -1276,12 +1322,21 @@
          refreshHotwords(wakeSystem);
      }
 
+     // Refresh TTS voices on start up
+     var ttsSystem = rhasspy.profile.text_to_speech.system;
+     if ((ttsSystem == 'espeak') || (ttsSystem == 'flite')) {
+         refreshVoices(ttsSystem);
+     }
+
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
      if (hash.length > 0) {
          var header = hash + ' .card-header';
          $(header).addClass('bg-primary');
          $(header).removeClass('bg-dark');
+
+         // Expand section
+         $(hash + '-collapse').addClass('show');
      }
  })
 

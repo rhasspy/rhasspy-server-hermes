@@ -45,7 +45,7 @@ from rhasspyhermes.nlu import (
     NluTrain,
     NluTrainSuccess,
 )
-from rhasspyhermes.tts import TtsSay, TtsSayFinished
+from rhasspyhermes.tts import TtsSay, TtsSayFinished, GetVoices, Voices
 from rhasspyhermes.wake import (
     GetHotwords,
     HotwordDetected,
@@ -698,6 +698,32 @@ class RhasspyCore:
         assert isinstance(result, Hotwords)
         return result
 
+    async def get_voices(self) -> Voices:
+        """Get available voices for text to speech system."""
+        if self.profile.get("text_to_speech.system", "dummy") == "dummy":
+            _LOGGER.warning("Text to speech disabled. Cannot get available voices.")
+            return Voices()
+
+        requestId = str(uuid4())
+
+        def handle_finished():
+            while True:
+                _, message = yield
+
+                if isinstance(message, Voices) and (message.id == requestId):
+                    return message
+
+        messages = [GetVoices(id=requestId, siteId=self.siteId)]
+        topics = [Voices.topic()]
+
+        # Expecting only a single result
+        result = None
+        async for response in self.publish_wait(handle_finished(), messages, topics):
+            result = response
+
+        assert isinstance(result, Voices)
+        return result
+
     # -------------------------------------------------------------------------
 
     async def maybe_play_sound(self, sound_name: str):
@@ -930,6 +956,13 @@ class RhasspyCore:
                     return
 
                 self.handle_message(msg.topic, Hotwords.from_dict(json_payload))
+            elif msg.topic == Voices.topic():
+                # TTS voices
+                json_payload = json.loads(msg.payload)
+                if not self._check_siteId(json_payload):
+                    return
+
+                self.handle_message(msg.topic, Voices.from_dict(json_payload))
             elif AsrTrainSuccess.is_topic(msg.topic):
                 # NLU training success
                 siteId = AsrTrainSuccess.get_siteId(msg.topic)

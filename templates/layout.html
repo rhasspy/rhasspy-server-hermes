@@ -104,7 +104,7 @@
             <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
                 <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
                 <span class="ml-2">
-                    Rhasspy needs to download some files for your profile <a href="#" onclick="showFilesToDownload()">(<span x-text="Object.keys(missingFiles).length"></span> missing)</a>
+                    Rhasspy needs to download some files for your profile <a href="#" onclick="showFilesToDownload()">(<span x-text="Object.keys(missingFiles).length"></span> missing, <span x-text="missingSize"></span>)</a>
                 </span>
                 <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -159,7 +159,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <template x-for="fileKey in Object.keys(missingFiles)" :key="fileKey">
+                        <template x-for="fileKey in sortMissingFiles()" :key="fileKey">
                             <div class="row mt-2">
                                 <div class="col" x-text="fileKey"></div>
                                 <div class="col">
@@ -253,6 +253,7 @@
 
              // Files that need to be downloaded
              missingFiles: {},
+             missingSize: '',
 
              // Do API calls for generally needed bits of data
              init: () => {
@@ -269,7 +270,14 @@
 
                  // Load missing files
                  $.get('/api/profiles', (r) => {
-                     rhasspy.missingFiles = r.missing_files;
+                     rhasspy.missingSize = r.missing_size;
+                     var missingFiles = r.missing_files;
+
+                     Object.keys(missingFiles).forEach((k, i) => {
+                         missingFiles[k]["index"] = i;
+                     })
+
+                    rhasspy.missingFiles = missingFiles;
                  })
 
                  // Load unknown words
@@ -436,6 +444,15 @@
                      setTimeout(() => {
                          rhasspy.updateDownloadStatus();
                      }, 1000);
+                 })
+             },
+
+             // Return missing file keys sorted by file size (descending)
+             sortMissingFiles: () => {
+                 return Object.keys(rhasspy.missingFiles).sort((a, b) => {
+                     var aSize = rhasspy.missingFiles[a].bytes_expected || 0;
+                     var bSize = rhasspy.missingFiles[b].bytes_expected || 0;
+                     return bSize - aSize;
                  })
              },
 

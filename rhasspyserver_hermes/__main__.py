@@ -34,7 +34,7 @@ from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptur
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
-from rhasspyprofile import Profile
+from rhasspyprofile import Profile, human_size
 from swagger_ui import quart_api_doc
 
 from . import RhasspyCore
@@ -435,19 +435,25 @@ async def api_profiles() -> Response:
         for name in profiles_dir.glob("*"):
             profile_dir = profiles_dir / name
             if profile_dir.is_dir():
-                profile_names.add(str(name))
+                profile_names.add(str(profile_dir.name))
 
     missing_files = rhasspyprofile.get_missing_files(core.profile)
+    missing_bytes = sum(
+        mf.bytes_expected if mf.bytes_expected is not None else 0
+        for mf in missing_files
+    )
+
     downloaded = len(missing_files) == 0
+
     return jsonify(
         {
             "default_profile": core.profile.name,
             "profiles": sorted(profile_names),
             "downloaded": downloaded,
             "missing_files": {
-                str(missing.file_path): (missing.setting_name, missing.setting_value)
-                for missing in missing_files
+                missing.file_key: missing.to_dict() for missing in missing_files
             },
+            "missing_size": human_size(missing_bytes),
         }
     )
 
@@ -473,6 +479,8 @@ async def api_download_profile() -> str:
         download_status[file_key] = {"done": done, "bytes_percent": bytes_percent}
 
     await rhasspyprofile.download_files(core.profile, status_fun=update_status)
+
+    download_status = {}
 
     return "OK"
 

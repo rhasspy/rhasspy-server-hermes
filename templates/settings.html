@@ -104,7 +104,7 @@
                             <label for="microphone-pyaudio-device">Device:</label>
                         </div>
                         <div class="col">
-                            <input id="microphone-pyaudio-device" x-model="profile.microphone.pyaudio.device" type="text" class="form-control">
+                            <input id="microphone-pyaudio-device" x-model="profile.microphone.pyaudio.device" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
                     <div class="form-row mt-2">
@@ -137,7 +137,7 @@
                             <label for="microphone-arecord-device">Device:</label>
                         </div>
                         <div class="col">
-                            <input id="microphone-arecord-device" x-model="profile.microphone.arecord.device" type="text" class="form-control">
+                            <input id="microphone-arecord-device" x-model="profile.microphone.arecord.device" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
                     <div class="form-row mt-2">
@@ -300,14 +300,8 @@
                             <label for="pemPath" class="col-form-label col">PEM path</label>
                         </div>
                         <div class="col">
-                            <input id="pemPath" ref="pemPath" type="text" class="form-control" x-model="profile.home_assistant.pem_file"
+                            <input id="pemPath" type="text" class="form-control" x-model="profile.home_assistant.pem_file"
                                    :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-danger"
-                                    @click="pemPath = ''"
-                                    title="Clear the PEM path (no self-signed certificate)"
-                                    :disabled="profile.handle.system != 'hass'">Clear</button>
                         </div>
                     </div>
                 </div>
@@ -439,13 +433,16 @@
                         </div>
                     </div>
                     <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="wake-snowboy-hotwords">Available Models:</label>
+                        </div>
                         <div class="col">
                             <select id="wake-snowboy-hotwords" x-model="profile.wake.snowboy.model" class="form-control">
                                 <option value="" disabled>Select model</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('snowboy')" class="btn btn-primary form-control">Refresh</button>
+                            <button onclick="refreshHotwords('snowboy')" class="btn btn-primary form-control" title="Refresh snowboy models">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -493,13 +490,16 @@
                         </div>
                     </div>
                     <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="wake-porcupine-hotwords">Availabled Keywords:</label>
+                        </div>
                         <div class="col">
                             <select id="wake-porcupine-hotwords" x-model="profile.wake.porcupine.keyword_path" class="form-control">
                                 <option value="" disabled>Select keyword</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('porcupine')" class="btn btn-primary form-control">Refresh</button>
+                            <button onclick="refreshHotwords('porcupine')" class="btn btn-primary form-control" title="Refresh porcupine keywords">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -711,7 +711,7 @@
     <div class="card-header bg-dark" id="headingIntent">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-comment"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#collapseIntent" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#intent-collapse" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Intent Recognition
             </button>
             <select class="ml-2" x-model="profile.intent.system">
@@ -861,17 +861,20 @@
                             <label for="tts-espeak-voice">Voice:</label>
                         </div>
                         <div class="col">
-                            <input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control">
+                            <input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
                     <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="tts-espeak-voices">Available Voices:</label>
+                        </div>
                         <div class="col">
                             <select id="tts-espeak-voices" x-model="profile.text_to_speech.espeak.voice" class="form-control">
                                 <option value="" selected>Default Voice</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
-                            <button onclick="refreshVoices('espeak')" class="btn btn-primary form-control">Refresh</button>
+                            <button onclick="refreshVoices('espeak')" class="btn btn-primary form-control" title="Refresh espeak voices">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -887,7 +890,7 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="picotts-language" class="col-form-label">pico-tts Language</label>
+                        <label for="picotts-language" class="col-form-label">Language:</label>
                         <div class="col">
                             <input id="picotts-language" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
                         </div>
@@ -909,17 +912,20 @@
                             <label for="tts-flite-voice">Voice:</label>
                         </div>
                         <div class="col">
-                            <input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control">
+                            <input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
                     <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="tts-flite-voices">Available Voices:</label>
+                        </div>
                         <div class="col">
                             <select id="tts-flite-voices" x-model="profile.text_to_speech.flite.voice" class="form-control">
                                 <option value="" selected>Default Voice</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
-                            <button onclick="refreshVoices('flite')" class="btn btn-primary form-control">Refresh</button>
+                            <button onclick="refreshVoices('flite')" class="btn btn-primary form-control" title="Refresh flite voices">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -945,7 +951,7 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-url" class="col-form-label">MaryTTS Server URL</label>
+                        <label for="marytts-url" class="col-form-label">URL:</label>
                         <div class="col">
                             <input id="marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
                         </div>
@@ -954,15 +960,36 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col text-muted">
-                            Example: http://localhost:59125
+                            Example: http://localhost:59125/process
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-voice" class="col-form-label">MaryTTS Voice</label>
+                        <label for="marytts-locale" class="col-form-label">Locale:</label>
+                        <div class="col">
+                            <input id="marytts-locale" type="text" class="form-control" x-model="profile.text_to_speech.marytts.locale" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="marytts-voice" class="col-form-label">Voice:</label>
                         <div class="col">
                             <input id="marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="tts-marytts-voices">Available Voices:</label>
+                        </div>
+                        <div class="col">
+                            <select id="tts-marytts-voices" x-model="profile.text_to_speech.marytts.voice" class="form-control">
+                                <option value="" selected>Default Voice</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('marytts')" class="btn btn-primary form-control" title="Refresh marytts voices">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -1068,13 +1095,16 @@
                     </div>
                 </div>
                 <div class="form-row mt-2">
+                    <div class="col-xs-auto">
+                        <label for="sounds-aplay-devices">Availble Devices:</label>
+                    </div>
                     <div class="col">
                         <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
                             <option value="" selected>Default Output Device</option>
                         </select>
                     </div>
                     <div class="col-xs-auto">
-                        <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control">Refresh</button>
+                        <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control" placeholder="Refresh aplay devices">Refresh</button>
                     </div>
                 </div>
             </div>
@@ -1324,7 +1354,7 @@
 
      // Refresh TTS voices on start up
      var ttsSystem = rhasspy.profile.text_to_speech.system;
-     if ((ttsSystem == 'espeak') || (ttsSystem == 'flite')) {
+     if ((ttsSystem == 'espeak') || (ttsSystem == 'flite') || (ttsSystem == 'marytts')) {
          refreshVoices(ttsSystem);
      }
 

@@ -45,7 +45,7 @@ from rhasspyhermes.nlu import (
     NluTrain,
     NluTrainSuccess,
 )
-from rhasspyhermes.tts import TtsSay, TtsSayFinished, GetVoices, Voices
+from rhasspyhermes.tts import GetVoices, TtsSay, TtsSayFinished, Voices
 from rhasspyhermes.wake import (
     GetHotwords,
     HotwordDetected,

@@ -492,7 +492,7 @@ async def api_download_profile() -> str:
     await rhasspyprofile.download_files(
         core.profile,
         status_fun=update_status,
-        session=core.session,
+        session=core.http_session,
         ssl_context=core.ssl_context,
     )
 

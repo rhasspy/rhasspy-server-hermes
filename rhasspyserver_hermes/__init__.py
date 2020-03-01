@@ -4,6 +4,7 @@ import io
 import json
 import logging
 import os
+import ssl
 import typing
 import wave
 from pathlib import Path
@@ -93,6 +94,8 @@ class RhasspyCore:
         retry_seconds: float = 1,
         message_timeout_seconds: float = 30,
         training_timeout_seconds: float = 600,
+        certfile: typing.Optional[str] = None,
+        keyfile: typing.Optional[str] = None,
     ):
         self.profile_name = profile_name
 
@@ -165,7 +168,11 @@ class RhasspyCore:
         # External message queues
         self.message_queues: typing.Set[asyncio.Queue] = set()
 
-        # Shared aiohttp client session
+        # Shared aiohttp client session (enable SSL)
+        self.ssl_context = ssl.SSLContext()
+        if certfile:
+            self.ssl_context.load_cert_chain(certfile, keyfile)
+
         self._http_session: typing.Optional[
             aiohttp.ClientSession
         ] = aiohttp.ClientSession()

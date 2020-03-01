@@ -125,6 +125,15 @@ app = Quart("rhasspy", template_folder=template_dir)
 app.secret_key = str(uuid4())
 app = cors(app)
 
+# SSL settings
+certfile: typing.Optional[str] = None
+keyfile: typing.Optional[str] = None
+
+if args.ssl is not None:
+    _LOGGER.debug("Using SSL with certfile, keyfile = %s", args.ssl)
+    certfile = args.ssl[0]
+    keyfile = args.ssl[1]
+
 # -----------------------------------------------------------------------------
 # Template Functions
 # -----------------------------------------------------------------------------
@@ -382,6 +391,8 @@ async def start_rhasspy() -> None:
         host=args.mqtt_host,
         port=args.mqtt_port,
         local_mqtt_port=args.local_mqtt_port,
+        certfile=certfile,
+        keyfile=keyfile,
     )
 
     # Set environment variables
@@ -478,7 +489,12 @@ async def api_download_profile() -> str:
 
         download_status[file_key] = {"done": done, "bytes_percent": bytes_percent}
 
-    await rhasspyprofile.download_files(core.profile, status_fun=update_status)
+    await rhasspyprofile.download_files(
+        core.profile,
+        status_fun=update_status,
+        session=core.session,
+        ssl_context=core.ssl_context,
+    )
 
     download_status = {}
 
@@ -793,7 +809,7 @@ async def api_play_wav() -> str:
         url = data.decode()
         _LOGGER.debug("Loading WAV data from %s", url)
 
-        async with core.http_session.get(url) as response:
+        async with core.http_session.get(url, ssl=core.ssl_context) as response:
             wav_bytes = await response.read()
 
     # Play through speakers
@@ -1824,13 +1840,8 @@ logging.getLogger("wsproto").setLevel(logging.CRITICAL)
 
 # Start web server
 if args.ssl is not None:
-    _LOGGER.debug("Using SSL with certfile, keyfile = %s", args.ssl)
-    certfile = args.ssl[0]
-    keyfile = args.ssl[1]
     protocol = "https"
 else:
-    certfile = None
-    keyfile = None
     protocol = "http"
 
 _LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)

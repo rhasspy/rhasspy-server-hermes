@@ -8,3 +8,4 @@ dist/
 pyinstaller/
 .vscode/
 download/
+web/docs

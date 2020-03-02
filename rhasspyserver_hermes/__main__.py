@@ -750,7 +750,6 @@ async def api_pronounce() -> typing.Union[Response, str]:
     # phonemes or word
     pronounce_type = request.args.get("type", "phonemes")
 
-    # TODO: Get phonemes
     if pronounce_type == "phonemes":
         # Convert from Sphinx to espeak phonemes
         speech_system = core.profile.get("speech_to_text.system", "pocketsphinx")

@@ -1406,11 +1406,37 @@ def api_intents():
 # -----------------------------------------------------------------------------
 
 
-@app.route("/api/mqtt/<path:topic>", methods=["POST"])
+@app.route("/api/mqtt/<path:topic>", methods=["GET", "POST"])
 async def api_mqtt(topic: str):
     """POST an MQTT message to a topic."""
     assert core is not None
     assert core.client is not None
+
+    if request.method == "GET":
+        assert topic, "Topic is required"
+        topic_matcher = MQTTMatcher()
+        core.client.subscribe(topic)
+        _LOGGER.debug("Subscribed to %s for http", topic)
+        topic_matcher[topic] = True
+
+        # Create message queue for this request
+        queue = asyncio.Queue()
+        core.message_queues.add(queue)
+
+        try:
+            while True:
+                message = await queue.get()
+                if message[0] == "mqtt":
+                    topic, payload = message[1], message[2]
+                    for _ in topic_matcher.iter_match(topic):
+                        return jsonify({"topic": topic, "payload": json.loads(payload)})
+        finally:
+            core.message_queues.remove(queue)
+
+        # Empty response
+        return jsonify({})
+
+    # POST
     payload = await request.data
 
     # Publish directly to MQTT broker
@@ -1485,7 +1511,7 @@ def mqtt_websocket(func):
         queue = asyncio.Queue()
         mqtt_websockets.add(queue)
 
-        assert core
+        assert core is not None
         core.message_queues.add(queue)
 
         try:
@@ -1505,8 +1531,8 @@ async def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
 
 def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
     """Handle subscribe/publish MQTT requests from a websocket."""
-    assert core
-    assert core.client
+    assert core is not None
+    assert core.client is not None
 
     message_dict = json.loads(message)
     message_type = message_dict["type"]
@@ -1576,6 +1602,35 @@ async def api_ws_mqtt(queue) -> None:
                 # Schedule another send
                 send_task = loop.create_task(queue.get())
                 pending.add(send_task)
+
+
+@app.websocket("/api/mqtt/<path:topic>")
+@mqtt_websocket
+async def api_ws_mqtt_topic(queue, topic: str) -> None:
+    """Websocket endpoint to receive MQTT messages from a specific topic."""
+    topic_matcher = MQTTMatcher()
+
+    core.client.subscribe(topic)
+    topic_matcher[topic] = True
+    _LOGGER.debug("Subscribed to %s for websocket", topic)
+
+    while True:
+        try:
+            # Send out queued message (if matches topic)
+            message = await queue.get()
+            if message[0] == "mqtt":
+                topic, payload = message[1], message[2]
+                mqtt_message = json.dumps(
+                    {"topic": topic, "payload": json.loads(payload)}
+                )
+
+                for _ in topic_matcher.iter_match(topic):
+                    await websocket.send(mqtt_message)
+                    _LOGGER.debug("Sent %s char(s) to websocket", len(mqtt_message))
+                    break
+        except Exception:
+            _LOGGER.debug(topic)
+            _LOGGER.exception("api_ws_mqtt (send)")
 
 
 @app.websocket("/api/events/intent")

@@ -989,13 +989,13 @@ async def api_train() -> str:
     """Generate speech/intent artifacts for profile."""
     assert core is not None
 
-    start_time = time.time()
+    start_time = time.perf_counter()
     _LOGGER.info("Starting training")
 
     result = await core.train()
     _LOGGER.debug(result)
 
-    end_time = time.time()
+    end_time = time.perf_counter()
 
     return "Training completed in %0.2f second(s)" % (end_time - start_time)
 
@@ -1822,7 +1822,7 @@ async def text_to_intent_dict(text, output_format="rhasspy"):
         intent_dict["raw_text"] = text
         intent_dict["speech_confidence"] = 1
 
-        intent_sec = time.time() - start_time
+        intent_sec = time.perf_counter() - start_time
         intent_dict["time_sec"] = intent_sec
 
     return intent_dict

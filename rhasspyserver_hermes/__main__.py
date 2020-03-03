@@ -30,9 +30,14 @@ from quart import (
     websocket,
 )
 from quart_cors import cors
-from rhasspyhermes.asr import AsrStartListening, AsrStopListening, AsrTextCaptured
+from rhasspyhermes.asr import (
+    AsrError,
+    AsrStartListening,
+    AsrStopListening,
+    AsrTextCaptured,
+)
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
-from rhasspyhermes.nlu import NluIntent, NluIntentNotRecognized
+from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile, human_size
 from swagger_ui import quart_api_doc
@@ -588,11 +593,11 @@ async def api_listen_for_wake() -> str:
 
     if toggle_off:
         # Disable
-        core.publish(HotwordToggleOff(siteId=core.siteId))
+        core.publish(HotwordToggleOff(siteId=core.wake_siteId))
         return "off"
 
     # Enable
-    core.publish(HotwordToggleOn(siteId=core.siteId))
+    core.publish(HotwordToggleOn(siteId=core.wake_siteId))
     return "on"
 
 
@@ -605,63 +610,93 @@ async def api_listen_for_command() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
-    wakewordId = request.args.get("wakewordId", "default")
     sessionId = str(uuid4())
+
+    topics: typing.List[str] = []
+    messages: typing.List[typing.Any] = []
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(siteId=core.handle_siteId))
 
     try:
-        # Fake a hotword detected event and wait for intent/notRecognized
-        def handle_intent():
+        # Start listening and wait for text captured
+        def handle_captured():
             while True:
                 _, message = yield
 
-                if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                if isinstance(message, (AsrTextCaptured, AsrError)) and (
                     message.sessionId == sessionId
                 ):
                     return message
 
-        topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
+        topics = [AsrTextCaptured.topic(), AsrError.topic()]
         messages = [
-            (
-                HotwordDetected(
-                    modelId=wakewordId,
-                    modelVersion="",
-                    modelType="personal",
-                    currentSensitivity=1,
-                    siteId=core.siteId,
-                    sessionId=sessionId,
-                    sendAudioCaptured=True,
-                ),
-                {"wakewordId": wakewordId},
+            AsrStartListening(
+                siteId=core.asr_siteId,
+                sessionId=sessionId,
+                stopOnSilence=True,
+                sendAudioCaptured=True,
             )
         ]
 
         # Expecting only a single result
-        _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
-        result = None
-        async for response in core.publish_wait(handle_intent(), messages, topics):
-            result = response
+        _LOGGER.debug("Waiting for transcription (sessionId=%s)", sessionId)
+        text_captured = None
+        async for response in core.publish_wait(handle_captured(), messages, topics):
+            text_captured = response
 
-        assert isinstance(result, (NluIntent, NluIntentNotRecognized))
+        if isinstance(text_captured, AsrError):
+            raise RuntimeError(text_captured.error)
+
+        assert isinstance(text_captured, AsrTextCaptured)
+
+        # Send query to NLU system
+        def handle_intent():
+            while True:
+                _, message = yield
+
+                if isinstance(
+                    message, (NluIntent, NluIntentNotRecognized, NluError)
+                ) and (message.id == sessionId):
+                    return message
+
+        topics = [
+            NluIntent.topic(intentName="#"),
+            NluIntentNotRecognized.topic(),
+            NluError.topic(),
+        ]
+        messages = [
+            AsrStopListening(siteId=core.asr_siteId, sessionId=sessionId),
+            NluQuery(id=sessionId, input=text_captured.text, siteId=core.nlu_siteId),
+        ]
+
+        # Expecting only a single result
+        _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
+        nlu_intent = None
+        async for response in core.publish_wait(handle_intent(), messages, topics):
+            nlu_intent = response
+
+        if isinstance(nlu_intent, NluError):
+            raise RuntimeError(nlu_intent.error)
+
+        assert isinstance(nlu_intent, (NluIntent, NluIntentNotRecognized))
         if output_format == "hermes":
-            if isinstance(result, NluIntent):
-                intent_dict = {"type": "intent", "value": attr.asdict(result)}
+            if isinstance(nlu_intent, NluIntent):
+                intent_dict = {"type": "intent", "value": attr.asdict(nlu_intent)}
             else:
                 intent_dict = {
                     "type": "intentNotRecognized",
-                    "value": attr.asdict(result),
+                    "value": attr.asdict(nlu_intent),
                 }
         else:
             # Rhasspy format
-            intent_dict = result.to_rhasspy_dict()
+            intent_dict = nlu_intent.to_rhasspy_dict()
 
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        core.publish(HandleToggleOn(siteId=core.handle_siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1092,7 +1127,7 @@ async def api_text_to_intent():
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(siteId=core.handle_siteId))
 
     try:
         # Convert text to intent
@@ -1100,7 +1135,7 @@ async def api_text_to_intent():
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        core.publish(HandleToggleOn(siteId=core.handle_siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1115,7 +1150,7 @@ async def api_speech_to_intent() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(siteId=core.handle_siteId))
 
     try:
         # Prefer 16-bit 16Khz mono, but will convert with sox if needed
@@ -1135,7 +1170,7 @@ async def api_speech_to_intent() -> Response:
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        core.publish(HandleToggleOn(siteId=core.handle_siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1153,7 +1188,7 @@ async def api_start_recording() -> str:
     sessionId = str(uuid4())
     core.publish(
         AsrStartListening(
-            siteId=core.siteId,
+            siteId=core.asr_siteId,
             sessionId=sessionId,
             stopOnSilence=False,
             sendAudioCaptured=True,
@@ -1175,11 +1210,10 @@ async def api_stop_recording() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(siteId=core.handle_siteId))
 
     try:
         # End session
-        # TODO: Handle AsrAudioCaptured
         name = request.args.get("name", "")
         assert name in session_names, f"No session for name: {name}"
         sessionId = session_names.pop(name)
@@ -1194,7 +1228,7 @@ async def api_stop_recording() -> Response:
                     return message
 
         topics = [AsrTextCaptured.topic()]
-        messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
+        messages = [AsrStopListening(siteId=core.asr_siteId, sessionId=sessionId)]
 
         # Expecting only a single result
         _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
@@ -1208,7 +1242,7 @@ async def api_stop_recording() -> Response:
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        core.publish(HandleToggleOn(siteId=core.handle_siteId))
 
 
 @app.route("/api/play-recording", methods=["POST"])
@@ -1418,7 +1452,7 @@ async def api_mqtt(topic: str):
         topic_matcher[topic] = True
 
         # Create message queue for this request
-        queue = asyncio.Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         core.message_queues.add(queue)
 
         try:
@@ -1607,6 +1641,9 @@ async def api_ws_mqtt(queue) -> None:
 async def api_ws_mqtt_topic(queue, topic: str) -> None:
     """Websocket endpoint to receive MQTT messages from a specific topic."""
     topic_matcher = MQTTMatcher()
+
+    assert core
+    assert core.client
 
     core.client.subscribe(topic)
     topic_matcher[topic] = True

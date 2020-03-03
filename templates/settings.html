@@ -84,7 +84,7 @@
                 <option value="pyaudio">PyAudio</option>
                 <option value="arecord">arecord</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
         </h5>
     </div>
@@ -121,6 +121,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-pyaudio-siteid" class="col-form-label">Output siteId</label>
+                        <div class="col">
+                            <input id="microphone-pyaudio-siteid" type="text" class="form-control" x-model="profile.microphone.pyaudio.siteId" :disabled="profile.microphone.system != 'pyaudio'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End PyAudio -->
 
@@ -151,6 +159,14 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="testInputDevices('arecord')" class="btn btn-secondary form-control">Test</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-arecord-siteid" class="col-form-label">Output siteId</label>
+                        <div class="col">
+                            <input id="microphone-arecord-siteid" type="text" class="form-control" x-model="profile.microphone.arecord.siteId" :disabled="profile.microphone.system != 'arecord'">
                         </div>
                     </div>
                 </div>
@@ -185,6 +201,14 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="microphone-siteid" class="col-form-label">siteId</label>
+                            <div class="col">
+                                <input id="microphone-siteid" type="text" class="form-control" x-model="profile.microphone.hermes.siteId" :disabled="profile.microphone.system != 'hermes'">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -346,7 +370,7 @@
                 <option value="snowboy">Snowboy</option>
                 <option value="pocketsphinx">Pocketsphinx</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
 
             <span title="Wake system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
@@ -519,6 +543,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="wake-siteid" type="text" class="form-control" x-model="profile.wake.hermes.siteId" :disabled="profile.wake.system != 'hermes'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Hermes -->
 
@@ -541,7 +573,7 @@
                 <option value="kaldi">Kaldi</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
 
             <span title="Speech system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
@@ -673,6 +705,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="stt-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="stt-siteid" type="text" class="form-control" x-model="profile.speech_to_text.hermes.siteId" :disabled="profile.speech_to_text.system != 'hermes'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Hermes -->
 
@@ -695,7 +735,7 @@
                 <option value="fuzzywuzzy">Fuzzywuzzy</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
         </h5>
     </div>
@@ -792,6 +832,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="intent-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="intent-siteid" type="text" class="form-control" x-model="profile.intent.hermes.siteId" :disabled="profile.intent.system != 'hermes'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Hermes -->
 
@@ -816,7 +864,7 @@
                 <option value="marytts">MaryTTS</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
         </h5>
     </div>
@@ -1026,6 +1074,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="tts-siteid" type="text" class="form-control" x-model="profile.text_to_speech.hermes.siteId" :disabled="profile.text_to_speech.system != 'hermes'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Hermes -->
 
@@ -1047,7 +1103,7 @@
                 <option value="aplay">aplay</option>
                 <option value="remote">Remote</option>
                 <option value="command">Local Command</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
         </h5>
     </div>
@@ -1133,6 +1189,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="sounds-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="sounds-siteid" type="text" class="form-control" x-model="profile.sounds.hermes.siteId" :disabled="profile.sounds.system != 'hermes'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Hermes -->
 
@@ -1152,7 +1216,7 @@
             <select class="ml-2" x-model="profile.dialogue.system">
                 <option value="dummy">Disabled</option>
                 <option value="rhasspy">Rhasspy</option>
-                <option value="hermes">Hermes</option>
+                <option value="hermes">Hermes MQTT</option>
             </select>
         </h5>
     </div>
@@ -1184,6 +1248,14 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="dialogue-siteid" class="col-form-label">siteId</label>
+                        <div class="col">
+                            <input id="dialogue-siteid" type="text" class="form-control" x-model="profile.dialogue.hermes.siteId" :disabled="profile.dialogue.system != 'hermes'">
+                        </div>
                     </div>
                 </div>
             </div>

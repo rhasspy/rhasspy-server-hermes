@@ -86,9 +86,8 @@ parser.add_argument(
     help="Set a profile setting value",
     default=[],
 )
-parser.add_argument(
-    "--ssl", nargs=2, help="Use SSL with <CERT_FILE <KEY_FILE>", default=None
-)
+parser.add_argument("--certfile", help="SSL certificate file")
+parser.add_argument("--keyfile", help="SSL private key file (optional)")
 parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
 parser.add_argument(
     "--web-dir", default="web", help="Directory with compiled Vue site (default: web)"
@@ -126,13 +125,11 @@ app.secret_key = str(uuid4())
 app = cors(app)
 
 # SSL settings
-certfile: typing.Optional[str] = None
-keyfile: typing.Optional[str] = None
+certfile: typing.Optional[str] = args.certfile
+keyfile: typing.Optional[str] = args.keyfile
 
-if args.ssl is not None:
-    _LOGGER.debug("Using SSL with certfile, keyfile = %s", args.ssl)
-    certfile = args.ssl[0]
-    keyfile = args.ssl[1]
+if certfile:
+    _LOGGER.debug("Using SSL with certfile=%s, keyfile=%s", certfile, keyfile)
 
 # -----------------------------------------------------------------------------
 # Template Functions
@@ -155,6 +152,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "sorted": sorted,
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
+        "profile_dir": core.profile.write_path(""),
     }
 
 
@@ -1890,10 +1888,11 @@ loop.run_until_complete(start_rhasspy())
 # -----------------------------------------------------------------------------
 
 # Disable useless logging messages
-logging.getLogger("wsproto").setLevel(logging.CRITICAL)
+for logger_name in ["wsproto", "hpack"]:
+    logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 
 # Start web server
-if args.ssl is not None:
+if certfile:
     protocol = "https"
 else:
     protocol = "http"

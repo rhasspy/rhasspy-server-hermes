@@ -364,7 +364,7 @@
                      },
                      error: (r) => {
                          // Show error alert
-                         rhasspy.alert(r.responseText || r, 'danger');
+                         rhasspy.alert(r.responseText || r.statusText || JSON.stringify(r), 'danger');
                      }
                  })
              },
@@ -415,7 +415,7 @@
                          rhasspy.downloading = false;
 
                          // Show error alert
-                         rhasspy.alert(error.responseText || error, 'danger');
+                         rhasspy.alert(error.responseText || error.statusText || error, 'danger');
                      }
                  })
 
@@ -491,8 +491,6 @@
              // Creates a new websocket and the calls afterFunc with it.
              // Websocket will automatically reconnect after 5 seconds.
              makeWebSocket: (urlFragment, afterFunc) => {
-                 var rhasspy = rhasspy;
-
                  // Use URL to decide websocket protocol
                  var wsProtocol = 'ws://';
                  if (window.location.protocol == 'https:') {

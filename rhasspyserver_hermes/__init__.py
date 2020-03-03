@@ -421,18 +421,26 @@ class RhasspyCore:
             while True:
                 _, message = yield
 
-                if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
-                    message.id == nlu_id
-                ):
+                if isinstance(
+                    message, (NluIntent, NluIntentNotRecognized, NluError)
+                ) and (message.id == nlu_id):
                     return message
 
         messages = [query]
-        topics = [NluIntent.topic(intentName="#"), NluIntentNotRecognized.topic()]
+        topics = [
+            NluIntent.topic(intentName="#"),
+            NluIntentNotRecognized.topic(),
+            NluError.topic(),
+        ]
 
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(handle_intent(), messages, topics):
             result = response
+
+        if isinstance(result, NluError):
+            _LOGGER.debug(result)
+            raise RuntimeError(result.error)
 
         assert isinstance(result, (NluIntent, NluIntentNotRecognized))
         return result
@@ -488,7 +496,7 @@ class RhasspyCore:
             while True:
                 _, message = yield
 
-                if isinstance(message, AsrTextCaptured) and (
+                if isinstance(message, (AsrTextCaptured, AsrError)) and (
                     message.sessionId == sessionId
                 ):
                     return message
@@ -525,12 +533,16 @@ class RhasspyCore:
 
             yield AsrStopListening(siteId=self.siteId, sessionId=sessionId)
 
-        topics = [AsrTextCaptured.topic()]
+        topics = [AsrTextCaptured.topic(), AsrError.topic()]
 
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(handle_captured(), messages(), topics):
             result = response
+
+        if isinstance(result, AsrError):
+            _LOGGER.debug(result)
+            raise RuntimeError(result.error)
 
         assert isinstance(result, AsrTextCaptured)
         return result
@@ -1073,12 +1085,6 @@ class RhasspyCore:
 
             if isinstance(message, (AudioFrame, AudioSessionFrame, AudioPlayBytes)):
                 # Handle binary payloads specially
-                _LOGGER.debug(
-                    "-> %s(%s byte(s)) on %s",
-                    message.__class__.__name__,
-                    len(message.wav_bytes),
-                    topic,
-                )
                 payload = message.wav_bytes
             elif isinstance(message, (AsrTrain, NluTrain)):
                 # Don't print entire intent graph to console
@@ -1088,7 +1094,6 @@ class RhasspyCore:
                 _LOGGER.debug("-> %s", message)
                 payload = json.dumps(attr.asdict(message))
 
-            _LOGGER.debug("Publishing %s char(s) to %s", len(payload), topic)
             self.client.publish(topic, payload)
         except Exception:
             _LOGGER.exception("on_message")

@@ -125,6 +125,7 @@
                     Recognize
                 </button>
                 <input type="text" id="intent-text" class="form-control ml-1" placeholder="Text to recognize">
+                <i id="intent-websocket" class="fas fa-circle text-success ml-2 pt-2" style="display: none;" title="Connected to intent websocket"></i>
             </div>
             <div id="intent-error" class="alert alert-danger mt-3 mb-0" style="display: none;">
                 No intent recognized
@@ -137,7 +138,7 @@
                     <ul id="intent-slots" title="Intent slots" class="mt-1"></ul>
                 </div>
                 <div class="form-row">
-                    <button title="Show intent JSON" onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
+                    <button type="button" title="Show intent JSON" onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
                 </div>
             </div>
         </form>
@@ -306,6 +307,18 @@
 
      return false;
  }
+
+ $(() => {
+     rhasspy.makeWebSocket(
+         '/api/events/intent',
+         (socket) => {
+             $('#intent-websocket').show();
+
+             socket.onmessage = (e) => {
+                 setIntent(JSON.parse(e.data))
+             }
+     });
+ })
 
 </script>
 {% endblock %}

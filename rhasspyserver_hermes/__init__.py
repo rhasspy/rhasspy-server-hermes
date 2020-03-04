@@ -976,12 +976,18 @@ class RhasspyCore:
                 )
 
                 self.handle_message(msg.topic, text_captured)
-            elif msg.topic == AudioPlayFinished.topic():
+            elif AudioPlayFinished.is_topic(msg.topic):
                 # Audio has finished playing
-                json_payload = json.loads(msg.payload)
-                self.handle_message(
-                    msg.topic, AudioPlayFinished.from_dict(json_payload)
-                )
+                siteId = AudioPlayFinished.get_siteId(msg.topic)
+                if (
+                    (siteId == self.sounds_siteId)
+                    or (not self.siteIds)
+                    or (siteId in self.siteIds)
+                ):
+                    json_payload = json.loads(msg.payload)
+                    self.handle_message(
+                        msg.topic, AudioPlayFinished.from_dict(json_payload)
+                    )
             elif msg.topic == G2pPhonemes.topic():
                 # Grapheme to phoneme result
                 json_payload = json.loads(msg.payload)

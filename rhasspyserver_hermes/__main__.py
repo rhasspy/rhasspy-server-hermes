@@ -1287,12 +1287,14 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
     sentence = last_sentence if repeat else data.decode().strip()
 
     assert core is not None
-    await core.speak_sentence(sentence, language=(language or voice))
+    _, play_bytes = await core.speak_sentence(
+        sentence, language=(language or voice), capture_audio=True
+    )
 
     # Cache last sentence spoken
     last_sentence = sentence
 
-    return sentence
+    return Response(play_bytes.wav_bytes, mimetype="audio/wav")
 
 
 @app.route("/api/tts-voices", methods=["GET"])

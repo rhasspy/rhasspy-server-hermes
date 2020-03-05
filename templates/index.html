@@ -315,7 +315,7 @@
              $('#intent-websocket').show();
 
              socket.onmessage = (e) => {
-                 setIntent(JSON.parse(e.data))
+                 setIntent(JSON.parse(e.data));
              }
      });
  })

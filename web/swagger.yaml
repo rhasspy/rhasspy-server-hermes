@@ -520,9 +520,10 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
+            audio/wav:
               schema:
                 type: string
+                format: binary
   /api/train:
     post:
       summary: 'Re-train speech/intent recognizers for profile'

@@ -470,8 +470,11 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def speak_sentence(
-        self, sentence: str, language: typing.Optional[str] = None
-    ) -> TtsSayFinished:
+        self,
+        sentence: str,
+        language: typing.Optional[str] = None,
+        capture_audio: bool = False,
+    ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
             _LOGGER.debug("No text to speech system configured")
@@ -480,25 +483,45 @@ class RhasspyCore:
         tts_id = str(uuid4())
 
         def handle_finished():
+            say_finished: typing.Optional[TtsSayFinished] = None
+            play_bytes: typing.Optional[
+                AudioPlayBytes
+            ] = None if capture_audio else True
+
             while True:
-                _, message = yield
+                topic, message = yield
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
-                    return message
+                    say_finished = message
+                elif isinstance(message, AudioPlayBytes):
+                    requestId = AudioPlayBytes.get_requestId(topic)
+                    if requestId == tts_id:
+                        play_bytes = message
+
+                if say_finished and play_bytes:
+                    return [say_finished, play_bytes]
 
         say = TtsSay(id=tts_id, text=sentence, siteId=self.tts_siteId)
         if language:
             say.lang = language
 
         messages = [say]
-        topics = [TtsSayFinished.topic()]
+        topics = [
+            TtsSayFinished.topic(),
+            AudioPlayBytes.topic(siteId=self.sounds_siteId, requestId="+"),
+        ]
 
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(handle_finished(), messages, topics):
             result = response
 
-        assert isinstance(result, TtsSayFinished)
+        assert isinstance(result, list), f"Expected list, got {result}"
+        say_response, play_response = result
+        assert isinstance(say_response, TtsSayFinished)
+
+        if capture_audio:
+            assert isinstance(play_response, AudioPlayBytes)
 
         return result
 
@@ -856,7 +879,9 @@ class RhasspyCore:
 
     def handle_message(self, topic: str, message: Message):
         """Send matching messages to waiting handlers."""
-        if isinstance(message, AsrAudioCaptured):
+        if isinstance(
+            message, (AsrAudioCaptured, AudioPlayBytes, AudioFrame, AudioSessionFrame)
+        ):
             _LOGGER.debug(
                 "<- %s(%s byte(s))", message.__class__.__name__, len(message.wav_bytes)
             )
@@ -976,6 +1001,17 @@ class RhasspyCore:
                 )
 
                 self.handle_message(msg.topic, text_captured)
+            elif AudioPlayBytes.is_topic(msg.topic):
+                # Request to play audio
+                siteId = AudioPlayBytes.get_siteId(msg.topic)
+                if (
+                    (siteId == self.sounds_siteId)
+                    or (not self.siteIds)
+                    or (siteId in self.siteIds)
+                ):
+                    self.handle_message(
+                        msg.topic, AudioPlayBytes(wav_bytes=msg.payload)
+                    )
             elif AudioPlayFinished.is_topic(msg.topic):
                 # Audio has finished playing
                 siteId = AudioPlayFinished.get_siteId(msg.topic)

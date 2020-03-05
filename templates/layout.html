@@ -88,7 +88,7 @@
         </nav>
 
         <!-- Main -->
-        <div class="main-container">
+        <div>
             <!-- New Alert -->
             <div id="new-alert" class="alert alert-success alert-dismissable" role="alert" x-show="allDummy()" x-cloak>
                 <span class="ml-2">
@@ -124,7 +124,40 @@
             </div>
             <!-- End Unknown Words Alert -->
 
-            {% block body %}{% endblock %}
+            <div class="row">
+                <div class="col-xs-auto bg-dark p-0">
+                    <a href="/" title="Test" class="btn w-100  {{ "btn-light rounded-0" if page == "Test" else "btn-dark" }}">
+                        <i class="fas fa-hammer fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/sentences" title="Sentences" class="btn w-100 {{ "btn-light rounded-0" if page == "Sentences" else "btn-dark" }}">
+                        <i class="fas fa-align-left fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/slots" title="Slots" class="btn w-100 {{ "btn-light rounded-0" if page == "Slots" else "btn-dark" }}">
+                        <i class="fas fa-dot-circle fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/words" title="Words" class="btn w-100 {{ "btn-light rounded-0" if page == "Words" else "btn-dark" }}">
+                        <i class="fas fa-quote-right fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/settings" title="Settings" class="btn w-100 {{ "btn-light rounded-0" if page == "Settings" else "btn-dark" }}">
+                        <i class="fas fa-toolbox fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/advanced" title="Advanced" class="btn w-100 {{ "btn-light rounded-0" if page == "Advanced" else "btn-dark" }}">
+                        <i class="fas fa-hat-wizard fa-lg ml-2"></i>
+                    </a>
+                    <br>
+                    <a href="/docs/" target="_blank" title="Documentation" class="btn btn-info w-100 rounded-0">
+                        <i class="fas fa-book fa-lg ml-2"></i>
+                    </a>
+                </div>
+                <div class="col main-container">
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
         </div>
         <!-- End Main -->
 

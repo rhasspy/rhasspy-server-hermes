@@ -143,24 +143,6 @@ class RhasspyCore:
         else:
             self.siteId = "default"
 
-        # System-specific siteIds
-        self.asr_siteId = (
-            self.profile.get("speech_to_text.hermes.siteId", "") or self.siteId
-        )
-        self.nlu_siteId = self.profile.get("intent.hermes.siteId", "") or self.siteId
-        self.tts_siteId = (
-            self.profile.get("text_to_speech.hermes.siteId", "") or self.siteId
-        )
-        self.sounds_siteId = self.profile.get("sounds.hermes.siteId", "") or self.siteId
-        self.wake_siteId = self.profile.get("wake.hermes.siteId", "") or self.siteId
-        self.microphone_siteId = (
-            self.profile.get("microphone.hermes.siteId", "") or self.siteId
-        )
-        self.dialogue_siteId = (
-            self.profile.get("dialogue.hermes.siteId", "") or self.siteId
-        )
-        self.handle_siteId = self.profile.get("handle.hermes.siteId", "") or self.siteId
-
         # Default subscription topics
         self.topics: typing.Set[str] = set(
             [
@@ -174,7 +156,7 @@ class RhasspyCore:
         if self.siteIds:
             # Specific site ids
             self.topics.update(
-                AsrAudioCaptured.topic(siteId=self.asr_siteId, sessionId="+")
+                AsrAudioCaptured.topic(siteId=siteId, sessionId="+")
                 for siteId in self.siteIds
             )
         else:
@@ -381,11 +363,11 @@ class RhasspyCore:
                 messages.append(
                     (
                         AsrTrain(id=request_id, graph_dict=graph_dict),
-                        {"siteId": self.asr_siteId},
+                        {"siteId": self.siteId},
                     )
                 )
                 topics.extend(
-                    [AsrTrainSuccess.topic(siteId=self.asr_siteId), AsrError.topic()]
+                    [AsrTrainSuccess.topic(siteId=self.siteId), AsrError.topic()]
                 )
 
             if has_intent:
@@ -393,11 +375,11 @@ class RhasspyCore:
                 messages.append(
                     (
                         NluTrain(id=request_id, graph_dict=graph_dict),
-                        {"siteId": self.nlu_siteId},
+                        {"siteId": self.siteId},
                     )
                 )
                 topics.extend(
-                    [NluTrainSuccess.topic(siteId=self.nlu_siteId), NluError.topic()]
+                    [NluTrainSuccess.topic(siteId=self.siteId), NluError.topic()]
                 )
 
             # Expecting only a single result
@@ -437,7 +419,7 @@ class RhasspyCore:
             return NluIntentNotRecognized(input="")
 
         nlu_id = str(uuid4())
-        query = NluQuery(id=nlu_id, input=text, siteId=self.nlu_siteId)
+        query = NluQuery(id=nlu_id, input=text, siteId=self.siteId)
 
         def handle_intent():
             while True:
@@ -478,7 +460,7 @@ class RhasspyCore:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
             _LOGGER.debug("No text to speech system configured")
-            return TtsSayFinished()
+            return (TtsSayFinished(), None)
 
         tts_id = str(uuid4())
 
@@ -499,16 +481,16 @@ class RhasspyCore:
                         play_bytes = message
 
                 if say_finished and play_bytes:
-                    return [say_finished, play_bytes]
+                    return (say_finished, play_bytes)
 
-        say = TtsSay(id=tts_id, text=sentence, siteId=self.tts_siteId)
+        say = TtsSay(id=tts_id, text=sentence, siteId=self.siteId)
         if language:
             say.lang = language
 
         messages = [say]
         topics = [
             TtsSayFinished.topic(),
-            AudioPlayBytes.topic(siteId=self.sounds_siteId, requestId="+"),
+            AudioPlayBytes.topic(siteId=self.siteId, requestId="+"),
         ]
 
         # Expecting only a single result
@@ -516,14 +498,16 @@ class RhasspyCore:
         async for response in self.publish_wait(handle_finished(), messages, topics):
             result = response
 
-        assert isinstance(result, list), f"Expected list, got {result}"
+        assert isinstance(result, tuple), f"Expected tuple, got {result}"
         say_response, play_response = result
         assert isinstance(say_response, TtsSayFinished)
 
         if capture_audio:
             assert isinstance(play_response, AudioPlayBytes)
 
-        return result
+        return typing.cast(
+            typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]], result
+        )
 
     # -------------------------------------------------------------------------
 
@@ -548,7 +532,7 @@ class RhasspyCore:
 
         def messages():
             yield AsrStartListening(
-                siteId=self.asr_siteId,
+                siteId=self.siteId,
                 sessionId=sessionId,
                 stopOnSilence=False,
                 sendAudioCaptured=True,
@@ -571,12 +555,12 @@ class RhasspyCore:
 
                             yield (
                                 AudioSessionFrame(wav_bytes=chunk_buffer.getvalue()),
-                                {"siteId": self.asr_siteId, "sessionId": sessionId},
+                                {"siteId": self.siteId, "sessionId": sessionId},
                             )
 
                         frames_left -= frames_per_chunk
 
-            yield AsrStopListening(siteId=self.asr_siteId, sessionId=sessionId)
+            yield AsrStopListening(siteId=self.siteId, sessionId=sessionId)
 
         topics = [AsrTextCaptured.topic(), AsrError.topic()]
 
@@ -612,17 +596,14 @@ class RhasspyCore:
         def messages():
             yield (
                 AudioPlayBytes(wav_bytes=wav_bytes),
-                {"siteId": self.sounds_siteId, "requestId": requestId},
+                {"siteId": self.siteId, "requestId": requestId},
             )
 
-        topics = [AudioPlayFinished.topic(siteId=self.sounds_siteId)]
+        topics = [AudioPlayFinished.topic(siteId=self.siteId)]
 
-        # Disable hotword/ASR (local site only)
-        if self.wake_siteId == self.siteId:
-            self.publish(HotwordToggleOff(siteId=self.wake_siteId))
-
-        if self.asr_siteId == self.siteId:
-            self.publish(AsrToggleOff(siteId=self.asr_siteId))
+        # Disable hotword/ASR
+        self.publish(HotwordToggleOff(siteId=self.siteId))
+        self.publish(AsrToggleOff(siteId=self.siteId))
 
         try:
             # Expecting only a single result
@@ -635,12 +616,9 @@ class RhasspyCore:
             assert isinstance(result, AudioPlayFinished)
             return result
         finally:
-            # Enable hotword/ASR (local site only)
-            if self.wake_siteId == self.siteId:
-                self.publish(HotwordToggleOn(siteId=self.wake_siteId))
-
-            if self.asr_siteId == self.siteId:
-                self.publish(AsrToggleOn(siteId=self.asr_siteId))
+            # Enable hotword/ASR
+            self.publish(HotwordToggleOn(siteId=self.siteId))
+            self.publish(AsrToggleOn(siteId=self.siteId))
 
     # -------------------------------------------------------------------------
 
@@ -662,7 +640,7 @@ class RhasspyCore:
                 words=list(words),
                 numGuesses=num_guesses,
                 id=requestId,
-                siteId=self.asr_siteId,
+                siteId=self.siteId,
             )
         ]
         topics = [G2pPhonemes.topic()]
@@ -695,7 +673,7 @@ class RhasspyCore:
         messages = [
             AudioGetDevices(
                 id=requestId,
-                siteId=self.microphone_siteId,
+                siteId=self.siteId,
                 modes=[AudioDeviceMode.INPUT],
                 test=test,
             )
@@ -727,7 +705,7 @@ class RhasspyCore:
 
         messages = [
             AudioGetDevices(
-                id=requestId, siteId=self.sounds_siteId, modes=[AudioDeviceMode.OUTPUT]
+                id=requestId, siteId=self.siteId, modes=[AudioDeviceMode.OUTPUT]
             )
         ]
         topics = [AudioDevices.topic()]
@@ -757,7 +735,7 @@ class RhasspyCore:
                 if isinstance(message, Hotwords) and (message.id == requestId):
                     return message
 
-        messages = [GetHotwords(id=requestId, siteId=self.wake_siteId)]
+        messages = [GetHotwords(id=requestId, siteId=self.siteId)]
         topics = [Hotwords.topic()]
 
         # Expecting only a single result
@@ -783,7 +761,7 @@ class RhasspyCore:
                 if isinstance(message, Voices) and (message.id == requestId):
                     return message
 
-        messages = [GetVoices(id=requestId, siteId=self.tts_siteId)]
+        messages = [GetVoices(id=requestId, siteId=self.siteId)]
         topics = [Voices.topic()]
 
         # Expecting only a single result
@@ -942,7 +920,7 @@ class RhasspyCore:
             if NluIntent.is_topic(msg.topic):
                 # Intent from query
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.nlu_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 intent = NluIntent.from_dict(json_payload)
@@ -955,7 +933,7 @@ class RhasspyCore:
             elif msg.topic == NluIntentNotRecognized.topic():
                 # Intent not recognized
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.nlu_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 not_recognized = NluIntentNotRecognized.from_dict(json_payload)
@@ -979,7 +957,7 @@ class RhasspyCore:
             elif msg.topic == AsrTextCaptured.topic():
                 # Speech to text result
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.asr_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 text_captured = AsrTextCaptured.from_dict(json_payload)
@@ -1004,22 +982,14 @@ class RhasspyCore:
             elif AudioPlayBytes.is_topic(msg.topic):
                 # Request to play audio
                 siteId = AudioPlayBytes.get_siteId(msg.topic)
-                if (
-                    (siteId == self.sounds_siteId)
-                    or (not self.siteIds)
-                    or (siteId in self.siteIds)
-                ):
+                if (not self.siteIds) or (siteId in self.siteIds):
                     self.handle_message(
                         msg.topic, AudioPlayBytes(wav_bytes=msg.payload)
                     )
             elif AudioPlayFinished.is_topic(msg.topic):
                 # Audio has finished playing
                 siteId = AudioPlayFinished.get_siteId(msg.topic)
-                if (
-                    (siteId == self.sounds_siteId)
-                    or (not self.siteIds)
-                    or (siteId in self.siteIds)
-                ):
+                if (not self.siteIds) or (siteId in self.siteIds):
                     json_payload = json.loads(msg.payload)
                     self.handle_message(
                         msg.topic, AudioPlayFinished.from_dict(json_payload)
@@ -1027,41 +997,35 @@ class RhasspyCore:
             elif msg.topic == G2pPhonemes.topic():
                 # Grapheme to phoneme result
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.asr_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, G2pPhonemes.from_dict(json_payload))
             elif msg.topic == AudioDevices.topic():
                 # Audio device list
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(
-                    json_payload, self.microphone_siteId, self.sounds_siteId
-                ):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, AudioDevices.from_dict(json_payload))
             elif msg.topic == Hotwords.topic():
                 # Hotword list
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.wake_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, Hotwords.from_dict(json_payload))
             elif msg.topic == Voices.topic():
                 # TTS voices
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.tts_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, Voices.from_dict(json_payload))
             elif AsrTrainSuccess.is_topic(msg.topic):
                 # ASR training success
                 siteId = AsrTrainSuccess.get_siteId(msg.topic)
-                if (
-                    (siteId == self.asr_siteId)
-                    or (not self.siteIds)
-                    or (siteId in self.siteIds)
-                ):
+                if (not self.siteIds) or (siteId in self.siteIds):
                     json_payload = json.loads(msg.payload)
                     self.handle_message(
                         msg.topic, AsrTrainSuccess.from_dict(json_payload)
@@ -1069,21 +1033,13 @@ class RhasspyCore:
             elif AsrAudioCaptured.is_topic(msg.topic):
                 # Audio data from ASR session
                 siteId = AsrAudioCaptured.get_siteId(msg.topic)
-                if (
-                    (siteId == self.asr_siteId)
-                    or (not self.siteIds)
-                    or (siteId in self.siteIds)
-                ):
+                if (not self.siteIds) or (siteId in self.siteIds):
                     self.last_audio_captured = AsrAudioCaptured(wav_bytes=msg.payload)
                     self.handle_message(msg.topic, self.last_audio_captured)
             elif NluTrainSuccess.is_topic(msg.topic):
                 # NLU training success
                 siteId = NluTrainSuccess.get_siteId(msg.topic)
-                if (
-                    (siteId == self.nlu_siteId)
-                    or (not self.siteIds)
-                    or (siteId in self.siteIds)
-                ):
+                if (not self.siteIds) or (siteId in self.siteIds):
                     json_payload = json.loads(msg.payload)
                     self.handle_message(
                         msg.topic, NluTrainSuccess.from_dict(json_payload)
@@ -1091,7 +1047,7 @@ class RhasspyCore:
             elif HotwordDetected.is_topic(msg.topic):
                 # Hotword detected
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.wake_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 hotword_detected = HotwordDetected.from_dict(json_payload)
@@ -1117,7 +1073,7 @@ class RhasspyCore:
             elif msg.topic == DialogueSessionStarted.topic():
                 # Dialogue session started
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.dialogue_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(
@@ -1126,14 +1082,14 @@ class RhasspyCore:
             elif msg.topic == AsrError.topic():
                 # ASR service error
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.asr_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, AsrError.from_dict(json_payload))
             elif msg.topic == NluError.topic():
                 # NLU service error
                 json_payload = json.loads(msg.payload)
-                if not self._check_siteId(json_payload, self.nlu_siteId):
+                if not self._check_siteId(json_payload):
                     return
 
                 self.handle_message(msg.topic, NluError.from_dict(json_payload))
@@ -1182,13 +1138,10 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    def _check_siteId(
-        self, json_payload: typing.Dict[str, typing.Any], *otherIds
-    ) -> bool:
+    def _check_siteId(self, json_payload: typing.Dict[str, typing.Any]) -> bool:
         if self.siteIds:
             payload_siteId = json_payload.get("siteId", "default")
-
-            return (payload_siteId in self.siteIds) or (payload_siteId in otherIds)
+            return payload_siteId in self.siteIds
 
         # All sites
         return True

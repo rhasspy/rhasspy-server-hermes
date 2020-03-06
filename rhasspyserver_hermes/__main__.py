@@ -660,11 +660,11 @@ async def api_listen_for_wake() -> str:
 
     if toggle_off:
         # Disable
-        core.publish(HotwordToggleOff(siteId=core.wake_siteId))
+        core.publish(HotwordToggleOff(siteId=core.siteId))
         return "off"
 
     # Enable
-    core.publish(HotwordToggleOn(siteId=core.wake_siteId))
+    core.publish(HotwordToggleOn(siteId=core.siteId))
     return "on"
 
 
@@ -684,7 +684,7 @@ async def api_listen_for_command() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.handle_siteId))
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
     try:
         # Start listening and wait for text captured
@@ -700,7 +700,7 @@ async def api_listen_for_command() -> Response:
         topics = [AsrTextCaptured.topic(), AsrError.topic()]
         messages = [
             AsrStartListening(
-                siteId=core.asr_siteId,
+                siteId=core.siteId,
                 sessionId=sessionId,
                 stopOnSilence=True,
                 sendAudioCaptured=True,
@@ -734,8 +734,8 @@ async def api_listen_for_command() -> Response:
             NluError.topic(),
         ]
         messages = [
-            AsrStopListening(siteId=core.asr_siteId, sessionId=sessionId),
-            NluQuery(id=sessionId, input=text_captured.text, siteId=core.nlu_siteId),
+            AsrStopListening(siteId=core.siteId, sessionId=sessionId),
+            NluQuery(id=sessionId, input=text_captured.text, siteId=core.siteId),
         ]
 
         # Expecting only a single result
@@ -763,7 +763,7 @@ async def api_listen_for_command() -> Response:
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.handle_siteId))
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1194,7 +1194,7 @@ async def api_text_to_intent():
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.handle_siteId))
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
     try:
         # Convert text to intent
@@ -1202,7 +1202,7 @@ async def api_text_to_intent():
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.handle_siteId))
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1217,7 +1217,7 @@ async def api_speech_to_intent() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.handle_siteId))
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
     try:
         # Prefer 16-bit 16Khz mono, but will convert with sox if needed
@@ -1237,7 +1237,7 @@ async def api_speech_to_intent() -> Response:
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.handle_siteId))
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1255,7 +1255,7 @@ async def api_start_recording() -> str:
     sessionId = str(uuid4())
     core.publish(
         AsrStartListening(
-            siteId=core.asr_siteId,
+            siteId=core.siteId,
             sessionId=sessionId,
             stopOnSilence=False,
             sendAudioCaptured=True,
@@ -1277,7 +1277,7 @@ async def api_stop_recording() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.handle_siteId))
+        core.publish(HandleToggleOff(siteId=core.siteId))
 
     try:
         # End session
@@ -1295,7 +1295,7 @@ async def api_stop_recording() -> Response:
                     return message
 
         topics = [AsrTextCaptured.topic()]
-        messages = [AsrStopListening(siteId=core.asr_siteId, sessionId=sessionId)]
+        messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
 
         # Expecting only a single result
         _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
@@ -1309,7 +1309,7 @@ async def api_stop_recording() -> Response:
         return jsonify(intent_dict)
     finally:
         # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.handle_siteId))
+        core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 @app.route("/api/play-recording", methods=["POST"])
@@ -1361,7 +1361,10 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
     # Cache last sentence spoken
     last_sentence = sentence
 
-    return Response(play_bytes.wav_bytes, mimetype="audio/wav")
+    if play_bytes:
+        return Response(play_bytes.wav_bytes, mimetype="audio/wav")
+
+    return sentence
 
 
 @app.route("/api/tts-voices", methods=["GET"])

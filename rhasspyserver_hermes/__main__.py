@@ -1697,8 +1697,7 @@ async def api_ws_mqtt(queue) -> None:
                             )
                             break
                 except Exception:
-                    _LOGGER.debug(topic)
-                    _LOGGER.exception("api_ws_mqtt (send)")
+                    pass
 
                 # Schedule another send
                 send_task = loop.create_task(queue.get())
@@ -1734,7 +1733,6 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
                     break
         except Exception:
             _LOGGER.debug(topic)
-            _LOGGER.exception("api_ws_mqtt (send)")
 
 
 @app.websocket("/api/events/intent")
@@ -1754,7 +1752,7 @@ async def api_ws_intent(queue) -> None:
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
             except Exception:
-                _LOGGER.exception("api_ws_intent")
+                pass
 
 
 @app.websocket("/api/events/wake")
@@ -1774,7 +1772,7 @@ async def api_ws_wake(queue) -> None:
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
             except Exception:
-                _LOGGER.exception("api_ws_wake")
+                pass
 
 
 @app.websocket("/api/events/text")
@@ -1798,7 +1796,7 @@ async def api_ws_text(queue) -> None:
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
             except Exception:
-                _LOGGER.exception("api_ws_wake")
+                pass
 
 
 # -----------------------------------------------------------------------------

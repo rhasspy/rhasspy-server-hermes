@@ -2006,7 +2006,11 @@ else:
 
 _LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)
 
+from wsproto.utilities import LocalProtocolError
+
 try:
     app.run(host=args.host, port=args.port, certfile=certfile, keyfile=keyfile)
 except KeyboardInterrupt:
+    pass
+except LocalProtocolError:
     pass

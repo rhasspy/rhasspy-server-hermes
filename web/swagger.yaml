@@ -6,6 +6,17 @@ info:
 schemes:
   - http
 paths:
+  /api/backup-profile:
+    get:
+      summary: 'Get user profile files in a zip file'
+      produces:
+        - application/zip
+      responses:
+        '200':
+          description: zip file
+          schema:
+            type: string
+            format: binary
   /api/custom-words:
     get:
       summary: 'Get custom words for profile'

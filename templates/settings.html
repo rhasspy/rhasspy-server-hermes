@@ -3,14 +3,35 @@
 <!-- Simplified view of Rhasspy profile -->
 
 {% block body %}
-<button onclick="saveProfile()" class="btn btn-primary mb-3">Save Settings</button>
+<div class="form-group mb-3">
+    <div class="form-row">
+        <div class="col-auto">
+            <button onclick="saveProfile()" class="btn btn-primary" title="Save all settings and restart Rhasspy">Save Settings</button>
+        </div>
+        <div class="col-auto">
+            <a href="api/backup-profile" class="btn btn-success" title="Download zip file with profile files">Backup Profile</a>
+        </div>
+    </div>
+</div>
 
 <!-- siteId -->
 <div class="form-group">
     <div class="form-row">
-        <label for="mqtt-siteid" class="col-form-label">siteId:</label>
+        <div class="col-auto">
+            <label for="mqtt-siteid" class="col-form-label">siteId:</label>
+        </div>
         <div class="col-sm-auto">
             <input id="mqtt-siteid" type="text" class="form-control" x-model="profile.mqtt.site_id" placeholder="default">
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="form-row">
+        <div class="col-auto">
+            <label for="mqtt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+        </div>
+        <div class="col-sm-auto">
+            <input id="mqtt-satellite-siteids" type="text" class="form-control" x-model="profile.mqtt.satellite_site_ids" placeholder="satellite1,satellite2">
         </div>
         <div class="col text-muted">
             (comma-separated)
@@ -1266,7 +1287,7 @@
 </div>
 <!-- End Audio Playing -->
 
-<button onclick="saveProfile()" class="btn btn-primary mt-3">Save Settings</button>
+<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
 <!-- SSL -->
 <div class="card mt-3" id="ssl">
@@ -1310,7 +1331,7 @@
 </div>
 <!-- End SSL -->
 
-<button onclick="saveProfile()" class="btn btn-primary mt-3">Save Settings</button>
+<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
 
 {% endblock %}

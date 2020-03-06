@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import atexit
+import io
 import json
 import logging
 import os
@@ -9,6 +10,7 @@ import re
 import signal
 import time
 import typing
+import zipfile
 from collections import defaultdict
 from functools import wraps
 from pathlib import Path
@@ -479,7 +481,7 @@ download_status: typing.Dict[str, typing.Dict[str, typing.Any]] = {}
 
 @app.route("/api/download-profile", methods=["POST"])
 async def api_download_profile() -> str:
-    """Downloads the current profile."""
+    """Downloads required files for the current profile."""
     global download_status
     assert core is not None
 
@@ -506,10 +508,75 @@ async def api_download_profile() -> str:
 
 @app.route("/api/download-status", methods=["GET"])
 async def api_download_status() -> str:
-    """Get status of profile download"""
+    """Get status of profile file downloads"""
     assert core is not None
 
     return jsonify(download_status)
+
+
+@app.route("/api/backup-profile", methods=["GET"])
+async def api_backup_profile() -> Response:
+    """Creates a zip file with user profile files."""
+    assert core is not None
+    profile_dir = core.profile.write_path("")
+    profile_files: typing.List[Path] = [core.profile.read_path("profile.json")]
+
+    # sentences
+    sentences_ini = core.profile.get("speech_to_text.sentences_ini")
+    if sentences_ini:
+        profile_files.append(core.profile.read_path(sentences_ini))
+
+    sentences_dir = core.profile.get("speech_to_text.sentences_dir")
+    if sentences_dir:
+        profile_files.append(core.profile.read_path(sentences_dir))
+
+    # slots
+    slots_dir = core.profile.get("speech_to_text.slots_dir")
+    if slots_dir:
+        profile_files.append(core.profile.read_path(slots_dir))
+
+    slot_programs_dir = core.profile.get("speech_to_text.slot_programs_dir")
+    if slot_programs_dir:
+        profile_files.append(core.profile.read_path(slot_programs_dir))
+
+    # converters
+    converters_dir = core.profile.get("intent.fsticuffs.converters_dir")
+    if converters_dir:
+        profile_files.append(core.profile.read_path(converters_dir))
+
+    # Custom words
+    for stt_system in ["pocketsphinx", "kaldi"]:
+        custom_words = core.profile.get(f"speech_to_text.{stt_system}.custom_words")
+        if custom_words:
+            profile_files.append(core.profile.read_path(custom_words))
+
+    # Create zip file
+    with io.BytesIO() as zip_buffer:
+        with zipfile.ZipFile(zip_buffer, mode="w") as zip_output:
+            for file_path in profile_files:
+                include_files: typing.List[Path] = []
+
+                if file_path.is_file():
+                    # Include single file
+                    include_files.append(file_path)
+                elif file_path.is_dir():
+                    # Recursively include all files in directory
+                    include_files.extend(file_path.rglob("*"))
+
+                # Add to zip using path relative to profile
+                for include_file in include_files:
+                    try:
+                        archive_name = str(include_file.relative_to(profile_dir))
+                    except ValueError:
+                        # Fall back to system profile dir
+                        system_profile_dir = (
+                            core.profile.system_profiles_dir / core.profile.name
+                        )
+                        archive_name = str(include_file.relative_to(system_profile_dir))
+
+                    zip_output.write(include_file, archive_name)
+
+        return Response(zip_buffer.getvalue(), mimetype="application/zip")
 
 
 # -----------------------------------------------------------------------------
@@ -720,7 +787,7 @@ async def api_profile() -> typing.Union[str, Response]:
 
     if layers == "profile":
         # Local settings only
-        profile_path = Path(core.profile.read_path("profile.json"))
+        profile_path = core.profile.read_path("profile.json")
         return await send_file(profile_path)
 
     return jsonify(core.profile.json)
@@ -925,7 +992,7 @@ async def api_sentences():
                 # Try user profile dir first
                 profile_dir = Path(core.profile.user_profiles_dir) / core.profile.name
                 key = str(sentences_path.relative_to(profile_dir))
-            except Exception:
+            except ValueError:
                 # Fall back to system profile dir
                 profile_dir = Path(core.profile.system_profiles_dir) / core.profile.name
                 key = str(sentences_path.relative_to(profile_dir))
@@ -1927,7 +1994,7 @@ loop.run_until_complete(start_rhasspy())
 # -----------------------------------------------------------------------------
 
 # Disable useless logging messages
-for logger_name in ["wsproto", "hpack"]:
+for logger_name in ["wsproto", "hpack", "quart.serving"]:
     logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 
 # Start web server

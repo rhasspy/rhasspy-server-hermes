@@ -117,7 +117,8 @@ class RhasspyCore:
 
         self.client: typing.Optional[mqtt.Client] = None
 
-        if self.profile.get("mqtt.enabled", False):
+        remote_mqtt = str(self.profile.get("mqtt.enabled", False)).lower() == "true"
+        if remote_mqtt:
             # External broker
             self.host = host or self.profile.get("mqtt.host", "localhost")
             self.port = port or self.profile.get("mqtt.port", 1883)

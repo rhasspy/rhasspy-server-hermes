@@ -144,9 +144,23 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <label for="microphone-pyaudio-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <div class="col">
+                            <input id="microphone-pyaudio-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.pyaudio.udp_audio_port" :disabled="profile.microphone.system != 'pyaudio'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <label for="microphone-pyaudio-siteid" class="col-form-label">Output siteId</label>
                         <div class="col">
                             <input id="microphone-pyaudio-siteid" type="text" class="form-control" x-model="profile.microphone.pyaudio.siteId" :disabled="profile.microphone.system != 'pyaudio'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (output to different siteId)
                         </div>
                     </div>
                 </div>
@@ -180,6 +194,17 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="testInputDevices('arecord')" class="btn btn-secondary form-control">Test</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-arecord-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <div class="col">
+                            <input id="microphone-arecord-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.arecord.udp_audio_port" :disabled="profile.microphone.system != 'arecord'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
                         </div>
                     </div>
                 </div>
@@ -222,14 +247,6 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-row">
-                            <label for="microphone-siteid" class="col-form-label">siteId</label>
-                            <div class="col">
-                                <input id="microphone-siteid" type="text" class="form-control" x-model="profile.microphone.hermes.siteId" :disabled="profile.microphone.system != 'hermes'">
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -428,6 +445,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-pocketsphinx-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <div class="col">
+                            <input id="wake-pocketsphinx-udp-audio-port" type="text" class="form-control" x-model="profile.wake.pocketsphinx.udp_audio_port" :disabled="profile.wake.system != 'pocketsphinx'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Pocketsphinx -->
 
@@ -485,6 +513,17 @@
                         See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
                     </p>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-snowboy-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <div class="col">
+                            <input id="wake-snowboy-udp-audio-port" type="text" class="form-control" x-model="profile.wake.snowboy.udp_audio_port" :disabled="profile.wake.system != 'snowboy'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Snowboy -->
 
@@ -531,6 +570,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-porcupine-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <div class="col">
+                            <input id="wake-porcupine-udp-audio-port" type="text" class="form-control" x-model="profile.wake.porcupine.udp_audio_port" :disabled="profile.wake.system != 'porcupine'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Porcupine -->
 
@@ -562,14 +612,6 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="wake-siteid" type="text" class="form-control" x-model="profile.wake.hermes.siteId" :disabled="profile.wake.system != 'hermes'">
-                        </div>
                     </div>
                 </div>
             </div>
@@ -726,14 +768,6 @@
                         </p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="stt-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="stt-siteid" type="text" class="form-control" x-model="profile.speech_to_text.hermes.siteId" :disabled="profile.speech_to_text.system != 'hermes'">
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Hermes -->
 
@@ -851,14 +885,6 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="intent-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="intent-siteid" type="text" class="form-control" x-model="profile.intent.hermes.siteId" :disabled="profile.intent.system != 'hermes'">
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1095,14 +1121,6 @@
                         </p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="tts-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="tts-siteid" type="text" class="form-control" x-model="profile.text_to_speech.hermes.siteId" :disabled="profile.text_to_speech.system != 'hermes'">
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Hermes -->
 
@@ -1210,14 +1228,6 @@
                         </p>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="sounds-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="sounds-siteid" type="text" class="form-control" x-model="profile.sounds.hermes.siteId" :disabled="profile.sounds.system != 'hermes'">
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Hermes -->
 
@@ -1269,14 +1279,6 @@
                         <p>
                             External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
                         </p>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="dialogue-siteid" class="col-form-label">siteId</label>
-                        <div class="col">
-                            <input id="dialogue-siteid" type="text" class="form-control" x-model="profile.dialogue.hermes.siteId" :disabled="profile.dialogue.system != 'hermes'">
-                        </div>
                     </div>
                 </div>
             </div>

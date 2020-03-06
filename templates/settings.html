@@ -1291,6 +1291,48 @@
 
 <button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
+<!-- Sounds -->
+<div class="card mt-3" id="sounds">
+    <div class="card-header">
+        <h5>Sounds</h5>
+    </div>
+    <div class="card-body">
+        <div class="form-group">
+            <div class="form-row">
+                <p class="text-muted">WAV files to play when Rhasspy wakes up and is finished recording a voice command.</p>
+            </div>
+            <div class="form-row">
+                <p class="text-muted">Use <tt>${RHASSPY_PROFILE_DIR}</tt> for your profile directory.</p>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <label for="sounds-wake" class="col-form-label">Wake WAV</label>
+                <div class="col">
+                    <input id="sounds-wake" type="text" class="form-control" x-model="profile.sounds.wake">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <label for="sounds-recorded" class="col-form-label">Recorded WAV</label>
+                <div class="col">
+                    <input id="sounds-recorded" type="text" class="form-control" x-model="profile.sounds.recorded">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <label for="sounds-error" class="col-form-label">Error WAV</label>
+                <div class="col">
+                    <input id="sounds-error" type="text" class="form-control" x-model="profile.sounds.error">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Sounds -->
+
 <!-- SSL -->
 <div class="card mt-3" id="ssl">
     <div class="card-header">

@@ -1995,7 +1995,7 @@ loop.run_until_complete(start_rhasspy())
 # -----------------------------------------------------------------------------
 
 # Disable useless logging messages
-for logger_name in ["wsproto", "hpack", "quart.serving"]:
+for logger_name in ["wsproto", "hpack", "quart.serving", "asyncio"]:
     logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 
 # Start web server

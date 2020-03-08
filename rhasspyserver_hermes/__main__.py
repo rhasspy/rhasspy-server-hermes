@@ -43,6 +43,7 @@ from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQu
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
 from rhasspyprofile import Profile, human_size
 from swagger_ui import quart_api_doc
+from wsproto.utilities import LocalProtocolError
 
 from . import RhasspyCore
 from .utils import (
@@ -2006,7 +2007,6 @@ else:
 
 _LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)
 
-from wsproto.utilities import LocalProtocolError
 
 try:
     app.run(host=args.host, port=args.port, certfile=certfile, keyfile=keyfile)

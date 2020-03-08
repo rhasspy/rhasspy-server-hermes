@@ -762,8 +762,9 @@ async def api_listen_for_command() -> Response:
 
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1201,8 +1202,9 @@ async def api_text_to_intent():
         intent_dict = await text_to_intent_dict(text, output_format=output_format)
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1236,8 +1238,9 @@ async def api_speech_to_intent() -> Response:
 
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1308,8 +1311,9 @@ async def api_stop_recording() -> Response:
         intent_dict = await text_to_intent_dict(text, output_format=output_format)
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 @app.route("/api/play-recording", methods=["POST"])

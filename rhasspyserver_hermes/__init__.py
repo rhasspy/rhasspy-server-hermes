@@ -540,27 +540,18 @@ class RhasspyCore:
             )
 
             # Break WAV into chunks
+            num_bytes_sent: int = 0
             with io.BytesIO(wav_bytes) as wav_buffer:
-                with wave.open(wav_buffer, "rb") as wav_file:
-                    frames_left = wav_file.getnframes()
-                    while frames_left > 0:
-                        with io.BytesIO() as chunk_buffer:
-                            chunk_file: wave.Wave_write = wave.open(chunk_buffer, "wb")
-                            with chunk_file:
-                                chunk_file.setframerate(wav_file.getframerate())
-                                chunk_file.setsampwidth(wav_file.getsampwidth())
-                                chunk_file.setnchannels(wav_file.getnchannels())
-                                chunk_file.writeframes(
-                                    wav_file.readframes(frames_per_chunk)
-                                )
+                for wav_chunk in AudioFrame.iter_wav_chunked(
+                    wav_buffer, frames_per_chunk
+                ):
+                    num_bytes_sent += len(wav_chunk)
+                    yield (
+                        AudioSessionFrame(wav_bytes=wav_chunk),
+                        {"siteId": self.siteId, "sessionId": sessionId},
+                    )
 
-                            yield (
-                                AudioSessionFrame(wav_bytes=chunk_buffer.getvalue()),
-                                {"siteId": self.siteId, "sessionId": sessionId},
-                            )
-
-                        frames_left -= frames_per_chunk
-
+            _LOGGER.debug("Sent %s byte(s) of WAV data", num_bytes_sent)
             yield AsrStopListening(siteId=self.siteId, sessionId=sessionId)
 
         topics = [AsrTextCaptured.topic(), AsrError.topic()]

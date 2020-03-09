@@ -62,6 +62,24 @@ paths:
             text/plain:
               schema:
                 type: string
+  /api/evaluate:
+    post:
+      summary: 'Batch testing of WAV files with expected JSON intents in an archive'
+      requestBody:
+        description: 'Archive supported by shutil.unpack_archive'
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Report as JSON
+          content:
+            application/json:
+              schema:
+                type: object
   /api/intents:
     get:
       summary: 'Get all defined intents'

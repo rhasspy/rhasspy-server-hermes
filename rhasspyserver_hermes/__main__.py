@@ -7,7 +7,9 @@ import json
 import logging
 import os
 import re
+import shutil
 import signal
+import tempfile
 import time
 import typing
 import zipfile
@@ -17,6 +19,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import rhasspynlu
 import rhasspyprofile
 import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
@@ -1552,6 +1555,84 @@ async def api_mqtt(topic: str):
     core.client.publish(topic, payload)
 
     return f"Published {len(payload)} byte(s) to {topic}"
+
+
+# -----------------------------------------------------------------------------
+
+
+@app.route("/api/evaluate", methods=["POST"])
+async def api_evaluate() -> Response:
+    """Evaluates speech/intent recognition on a set of WAV/JSON files."""
+    assert core is not None
+    files = await request.files
+    assert "archive" in files, "Missing file named 'archive'"
+
+    # Extract archive
+    archive_form_file = files["archive"]
+
+    with tempfile.TemporaryDirectory() as work_dir:
+        archive_path = os.path.join(work_dir, archive_form_file.filename)
+        with open(archive_path, "wb") as archive_file:
+            for chunk in archive_form_file.stream:
+                archive_file.write(chunk)
+
+        extract_dir = os.path.join(work_dir, "extract")
+        shutil.unpack_archive(archive_path, extract_dir)
+        _LOGGER.debug("Extracted archive to %s", extract_dir)
+
+        # Process WAV file(s)
+        expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+        actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+
+        extract_path = Path(extract_dir)
+        for wav_file in extract_path.rglob("*.wav"):
+            wav_key = str(wav_file.relative_to(extract_path))
+
+            # JSON file contains expected intent
+            json_file = wav_file.with_suffix(".json")
+            if not json_file.exists():
+                _LOGGER.warning(
+                    "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
+                )
+
+            _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
+
+            # Load expected intent
+            with open(json_file, "r") as expected_file:
+                expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
+                    json.load(expected_file)
+                )
+
+            # Get transcription
+            wav_bytes = wav_file.read_bytes()
+            wav_duration = get_wav_duration(wav_bytes)
+
+            text_captured = await core.transcribe_wav(
+                wav_bytes, sendAudioCaptured=False
+            )
+            assert isinstance(text_captured, AsrTextCaptured), text_captured
+
+            _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
+
+            # Get intent
+            nlu_intent = await core.recognize_intent(text_captured.text)
+            assert isinstance(nlu_intent, NluIntent), nlu_intent
+
+            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
+
+            # Convert to Recognition
+            actual_intent = rhasspynlu.intent.Recognition.from_dict(
+                nlu_intent.to_rhasspy_dict()
+            )
+            actual_intent.transcribe_seconds = text_captured.seconds
+            actual_intent.wav_seconds = wav_duration
+
+            actual[wav_key] = actual_intent
+
+        _LOGGER.debug("Generating report")
+        report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
+
+        return jsonify(attr.asdict(report))
 
 
 # -----------------------------------------------------------------------------

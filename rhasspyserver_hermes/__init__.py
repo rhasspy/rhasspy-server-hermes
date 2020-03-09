@@ -513,7 +513,7 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def transcribe_wav(
-        self, wav_bytes: bytes, frames_per_chunk: int = 1024
+        self, wav_bytes: bytes, frames_per_chunk: int = 1024, sendAudioCaptured=True
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
         if self.profile.get("speech_to_text.system", "dummy") == "dummy":
@@ -536,7 +536,7 @@ class RhasspyCore:
                 siteId=self.siteId,
                 sessionId=sessionId,
                 stopOnSilence=False,
-                sendAudioCaptured=True,
+                sendAudioCaptured=sendAudioCaptured,
             )
 
             # Break WAV into chunks

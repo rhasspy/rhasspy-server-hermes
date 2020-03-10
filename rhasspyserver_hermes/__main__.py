@@ -19,6 +19,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import rhasspyhermes
 import rhasspynlu
 import rhasspyprofile
 import rhasspysupervisor
@@ -1610,13 +1611,27 @@ async def api_evaluate() -> Response:
             text_captured = await core.transcribe_wav(
                 wav_bytes, sendAudioCaptured=False
             )
-            assert isinstance(text_captured, AsrTextCaptured), text_captured
+
+            if not isinstance(text_captured, AsrTextCaptured):
+                _LOGGER.warning("Transcription failed: %s", text_captured)
+
+                # Empty transcription
+                text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
 
             _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
 
             # Get intent
             nlu_intent = await core.recognize_intent(text_captured.text)
-            assert isinstance(nlu_intent, NluIntent), nlu_intent
+            if not isinstance(nlu_intent, NluIntent):
+                _LOGGER.warning("Recognition failed: %s", nlu_intent)
+
+                # Empty intent
+                nlu_intent = NluIntent(
+                    input=text_captured.text,
+                    intent=rhasspyhermes.intent.Intent(
+                        intentName="", confidenceScore=0
+                    ),
+                )
 
             _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
 
@@ -2068,7 +2083,7 @@ async def text_to_intent_dict(text, output_format="rhasspy"):
         intent_dict["speech_confidence"] = 1
 
         intent_sec = time.perf_counter() - start_time
-        intent_dict["time_sec"] = intent_sec
+        intent_dict["recognize_seconds"] = intent_sec
 
     return intent_dict
 

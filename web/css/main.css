@@ -61,10 +61,11 @@ div.card-header .fas {
 }
 
 .modal-dialog.modal-lg {
-  max-width: 90%;
+    max-width: 90%;
 }
+
 .modal-dialog.modal-lg .container {
-  padding: 5px;
-  margin : 0;
-  max-width: 100%;     
+    padding: 5px;
+    margin : 0;
+    max-width: 100%;
 }

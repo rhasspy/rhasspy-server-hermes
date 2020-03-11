@@ -7,7 +7,9 @@ import json
 import logging
 import os
 import re
+import shutil
 import signal
+import tempfile
 import time
 import typing
 import zipfile
@@ -17,6 +19,8 @@ from pathlib import Path
 from uuid import uuid4
 
 import attr
+import rhasspyhermes
+import rhasspynlu
 import rhasspyprofile
 import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
@@ -145,10 +149,15 @@ if certfile:
 
 version_path = web_dir.parent / "VERSION"
 
+if version_path.is_file():
+    version = version_path.read_text().strip()
+else:
+    version = ""
+
 
 def get_version() -> str:
     """Return Rhasspy version"""
-    return version_path.read_text().strip()
+    return version
 
 
 def get_template_args() -> typing.Dict[str, typing.Any]:
@@ -161,6 +170,8 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
         "profile_dir": core.profile.write_path(""),
+        "version": version,
+        "siteId": core.siteId,
     }
 
 
@@ -601,11 +612,17 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
-    microphones = await core.get_microphones()
 
-    return jsonify(
-        {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
-    )
+    try:
+        microphones = await core.get_microphones()
+
+        return jsonify(
+            {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
+        )
+    except Exception:
+        _LOGGER.exception("api_microphones")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -633,9 +650,16 @@ async def api_test_microphones() -> Response:
 async def api_speakers() -> Response:
     """Get a dictionary of available playback devices"""
     assert core is not None
-    speakers = await core.get_speakers()
 
-    return jsonify({speaker.name: speaker.description for speaker in speakers.devices})
+    try:
+        speakers = await core.get_speakers()
+        return jsonify(
+            {speaker.name: speaker.description for speaker in speakers.devices}
+        )
+    except Exception:
+        _LOGGER.exception("api_speakers")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -645,9 +669,13 @@ async def api_speakers() -> Response:
 async def api_wake_words() -> Response:
     """Get a dictionary of available wake words"""
     assert core is not None
-    hotwords = await core.get_hotwords()
+    try:
+        hotwords = await core.get_hotwords()
+        return jsonify(attr.asdict(hotwords)["models"])
+    except Exception:
+        _LOGGER.exception("api_wake_words")
 
-    return jsonify(attr.asdict(hotwords)["models"])
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -763,8 +791,9 @@ async def api_listen_for_command() -> Response:
 
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1202,8 +1231,9 @@ async def api_text_to_intent():
         intent_dict = await text_to_intent_dict(text, output_format=output_format)
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1237,8 +1267,9 @@ async def api_speech_to_intent() -> Response:
 
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 # -----------------------------------------------------------------------------
@@ -1309,8 +1340,9 @@ async def api_stop_recording() -> Response:
         intent_dict = await text_to_intent_dict(text, output_format=output_format)
         return jsonify(intent_dict)
     finally:
-        # Re-enable intent handling
-        core.publish(HandleToggleOn(siteId=core.siteId))
+        if no_hass:
+            # Re-enable intent handling
+            core.publish(HandleToggleOn(siteId=core.siteId))
 
 
 @app.route("/api/play-recording", methods=["POST"])
@@ -1372,9 +1404,14 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
 async def api_tts_voices() -> Response:
     """Get available voices for text to speech system."""
     assert core is not None
-    voices = await core.get_voices()
 
-    return jsonify(attr.asdict(voices)["voices"])
+    try:
+        voices = await core.get_voices()
+        return jsonify(attr.asdict(voices)["voices"])
+    except Exception:
+        _LOGGER.exception("api_wake_words")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -1548,6 +1585,98 @@ async def api_mqtt(topic: str):
     core.client.publish(topic, payload)
 
     return f"Published {len(payload)} byte(s) to {topic}"
+
+
+# -----------------------------------------------------------------------------
+
+
+@app.route("/api/evaluate", methods=["POST"])
+async def api_evaluate() -> Response:
+    """Evaluates speech/intent recognition on a set of WAV/JSON files."""
+    assert core is not None
+    files = await request.files
+    assert "archive" in files, "Missing file named 'archive'"
+
+    # Extract archive
+    archive_form_file = files["archive"]
+
+    with tempfile.TemporaryDirectory() as work_dir:
+        archive_path = os.path.join(work_dir, archive_form_file.filename)
+        with open(archive_path, "wb") as archive_file:
+            for chunk in archive_form_file.stream:
+                archive_file.write(chunk)
+
+        extract_dir = os.path.join(work_dir, "extract")
+        shutil.unpack_archive(archive_path, extract_dir)
+        _LOGGER.debug("Extracted archive to %s", extract_dir)
+
+        # Process WAV file(s)
+        expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+        actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+
+        extract_path = Path(extract_dir)
+        for wav_file in extract_path.rglob("*.wav"):
+            wav_key = str(wav_file.relative_to(extract_path))
+
+            # JSON file contains expected intent
+            json_file = wav_file.with_suffix(".json")
+            if not json_file.exists():
+                _LOGGER.warning(
+                    "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
+                )
+
+            _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
+
+            # Load expected intent
+            with open(json_file, "r") as expected_file:
+                expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
+                    json.load(expected_file)
+                )
+
+            # Get transcription
+            wav_bytes = wav_file.read_bytes()
+            wav_duration = get_wav_duration(wav_bytes)
+
+            text_captured = await core.transcribe_wav(
+                wav_bytes, sendAudioCaptured=False
+            )
+
+            if not isinstance(text_captured, AsrTextCaptured):
+                _LOGGER.warning("Transcription failed: %s", text_captured)
+
+                # Empty transcription
+                text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
+
+            _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
+
+            # Get intent
+            nlu_intent = await core.recognize_intent(text_captured.text)
+            if not isinstance(nlu_intent, NluIntent):
+                _LOGGER.warning("Recognition failed: %s", nlu_intent)
+
+                # Empty intent
+                nlu_intent = NluIntent(
+                    input=text_captured.text,
+                    intent=rhasspyhermes.intent.Intent(
+                        intentName="", confidenceScore=0
+                    ),
+                )
+
+            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
+
+            # Convert to Recognition
+            actual_intent = rhasspynlu.intent.Recognition.from_dict(
+                nlu_intent.to_rhasspy_dict()
+            )
+            actual_intent.transcribe_seconds = text_captured.seconds
+            actual_intent.wav_seconds = wav_duration
+
+            actual[wav_key] = actual_intent
+
+        _LOGGER.debug("Generating report")
+        report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
+
+        return jsonify(attr.asdict(report))
 
 
 # -----------------------------------------------------------------------------
@@ -1983,7 +2112,7 @@ async def text_to_intent_dict(text, output_format="rhasspy"):
         intent_dict["speech_confidence"] = 1
 
         intent_sec = time.perf_counter() - start_time
-        intent_dict["time_sec"] = intent_sec
+        intent_dict["recognize_seconds"] = intent_sec
 
     return intent_dict
 

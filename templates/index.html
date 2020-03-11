@@ -127,6 +127,10 @@
                 <input type="text" id="intent-text" class="form-control ml-1" placeholder="Text to recognize">
                 <i id="intent-websocket" class="fas fa-circle text-success ml-2 pt-2" style="display: none;" title="Connected to intent websocket"></i>
             </div>
+            <div class="input-group">
+                <input type="checkbox" class="mr-2" id="handle-intent">
+                <label for="handle-intent" class="col-form-label">Handle Intent</label>
+            </div>
             <div id="intent-error" class="alert alert-danger mt-3 mb-0" style="display: none;">
                 No intent recognized
             </div>
@@ -276,7 +280,12 @@
      var text = $('#intent-text').val();
      if (text.length > 0) {
          $('#intent-recognize').prop('disabled', true);
-         rhasspy.postBusy('Recognizing intent', '/api/text-to-intent', text)
+         params = '?nohass=true'
+         if ($('#handle-intent').prop('checked')) {
+             params = ''
+         }
+
+         rhasspy.postBusy('Recognizing intent', '/api/text-to-intent' + params, text)
                 .always(function() {
                     $('#intent-recognize').prop('disabled', false);
                 })

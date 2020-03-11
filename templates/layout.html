@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <link rel="icon" href="/img/favicon.png">
-        <title>Rhasspy Voice Assistant</title>
+        <title>{{ siteId }} | Rhasspy</title>
 
         <!-- CSS -->
         <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -38,7 +38,7 @@
 
                 <!-- Version -->
                 <div class="navbar-container">
-                    <a href="/api/" x-text="version.value" title="HTTP API" class="badge badge-info"></a>
+                    <a href="/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
                 </div>
 
                 <!-- Page Drop Down -->
@@ -282,9 +282,6 @@
              unknownWords: {},
              unknownWordsText: { value: '' },
 
-             // Server version
-             version: { value: '' },
-
              // Files that need to be downloaded
              missingFiles: {},
              missingSize: '',
@@ -322,12 +319,6 @@
                                .map((kv) => kv[0] + ' ' + kv[1])
                                .join('\n');
                  })
-
-                 // Load version
-                 $.get('/api/version', (r) => {
-                     rhasspy.version.value = r;
-                  })
-
              },
 
              // True if the busy modal should be hidden after its finished with its show animation.
@@ -534,10 +525,16 @@
                  var wsURL = wsProtocol + window.location.host + urlFragment;
                  var socket = new WebSocket(wsURL);
                  socket.onclose = () => {
+                     socket = null;
+
                      // Try to reconnect
                      setTimeout(() => {
                          rhasspy.makeWebSocket(urlFragment, afterFunc);
                      }, 5000);
+                 }
+
+                 socket.onerror = () => {
+                     socket.close();
                  }
 
                  if (afterFunc != undefined) {

@@ -755,7 +755,7 @@ async def api_listen_for_command() -> Response:
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.id == sessionId):
+                ) and (message.sessionId == sessionId):
                     return message
 
         topics = [

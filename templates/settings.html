@@ -20,21 +20,8 @@
         <div class="col-auto">
             <label for="mqtt-siteid" class="col-form-label">siteId:</label>
         </div>
-        <div class="col-sm-auto">
+        <div class="col-6">
             <input id="mqtt-siteid" type="text" class="form-control" x-model="profile.mqtt.site_id" placeholder="default">
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="form-row">
-        <div class="col-auto">
-            <label for="mqtt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-        </div>
-        <div class="col-sm-auto">
-            <input id="mqtt-satellite-siteids" type="text" class="form-control" x-model="profile.mqtt.satellite_site_ids">
-        </div>
-        <div class="col text-muted">
-            (comma-separated)
         </div>
     </div>
 </div>
@@ -677,6 +664,19 @@
                         </ul>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Pocketsphinx -->
 
@@ -710,6 +710,19 @@
                         </ul>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Kaldi -->
 
@@ -735,6 +748,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Remote -->
 
@@ -750,6 +776,19 @@
                         <label for="stt-program" class="col-form-label">Program</label>
                         <div class="col">
                             <input id="stt-program" type="text" class="form-control" x-model="profile.speech_to_text.command.program" :disabled="profile.speech_to_text.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -819,6 +858,19 @@
                         <label for="fsticuffs-fuzzy" class="col-form-label">Fuzzy text matching</label>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Fsticuffs -->
 
@@ -827,6 +879,19 @@
                 <div class="form-group">
                     <div class="form-row">
                         <a target="_blank" href="docs/intent-recognition/#fuzzywuzzy">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
                     </div>
                 </div>
             </div>
@@ -854,6 +919,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Remote -->
 
@@ -869,6 +947,19 @@
                         <label for="stt-program" class="col-form-label">Program</label>
                         <div class="col">
                             <input id="stt-program" type="text" class="form-control" x-model="profile.intent.command.program" :disabled="profile.intent.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -948,6 +1039,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Espeak -->
 
@@ -963,6 +1067,19 @@
                         <label for="picotts-language" class="col-form-label">Language:</label>
                         <div class="col">
                             <input id="picotts-language" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -996,6 +1113,19 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="refreshVoices('flite')" class="btn btn-primary form-control" title="Refresh flite voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -1063,6 +1193,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End MaryTTS -->
 
@@ -1088,6 +1231,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Remote -->
 
@@ -1103,6 +1259,19 @@
                         <label for="tts-program" class="col-form-label">Program</label>
                         <div class="col">
                             <input id="tts-program" type="text" class="form-control" x-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -1264,6 +1433,19 @@
                         <p>
                             Uses <a href="https://github.com/rhasspy/rhasspy-dialogue-hermes">rhasspy-dialogue-hermes</a> service
                         </p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="dialogue-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="dialogue-satellite-siteids" type="text" class="form-control" x-model="profile.dialogue.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1493,29 +1675,6 @@
  }
 
  $(() => {
-     // Refresh audio devices on start up
-     var micSystem = rhasspy.profile.microphone.system;
-     if ((micSystem == 'pyaudio') || (micSystem == 'arecord')) {
-         refreshInputDevices(micSystem);
-     }
-
-     var soundSystem = rhasspy.profile.sounds.system;
-     if (soundSystem == 'aplay') {
-         refreshOutputDevices(soundSystem);
-     }
-
-     // Refresh wake words on start up
-     var wakeSystem = rhasspy.profile.wake.system;
-     if ((wakeSystem == 'porcupine') || (wakeSystem == 'snowboy')) {
-         refreshHotwords(wakeSystem);
-     }
-
-     // Refresh TTS voices on start up
-     var ttsSystem = rhasspy.profile.text_to_speech.system;
-     if ((ttsSystem == 'espeak') || (ttsSystem == 'flite') || (ttsSystem == 'marytts')) {
-         refreshVoices(ttsSystem);
-     }
-
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
      if (hash.length > 0) {

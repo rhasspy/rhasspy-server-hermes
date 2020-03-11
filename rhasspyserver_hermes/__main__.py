@@ -149,10 +149,15 @@ if certfile:
 
 version_path = web_dir.parent / "VERSION"
 
+if version_path.is_file():
+    version = version_path.read_text().strip()
+else:
+    version = ""
+
 
 def get_version() -> str:
     """Return Rhasspy version"""
-    return version_path.read_text().strip()
+    return version
 
 
 def get_template_args() -> typing.Dict[str, typing.Any]:
@@ -165,6 +170,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "profile": core.profile,
         "profile_json": json.dumps(core.profile.json, indent=4),
         "profile_dir": core.profile.write_path(""),
+        "version": version,
     }
 
 
@@ -605,11 +611,17 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
-    microphones = await core.get_microphones()
 
-    return jsonify(
-        {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
-    )
+    try:
+        microphones = await core.get_microphones()
+
+        return jsonify(
+            {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
+        )
+    except Exception:
+        _LOGGER.exception("api_microphones")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -637,9 +649,16 @@ async def api_test_microphones() -> Response:
 async def api_speakers() -> Response:
     """Get a dictionary of available playback devices"""
     assert core is not None
-    speakers = await core.get_speakers()
 
-    return jsonify({speaker.name: speaker.description for speaker in speakers.devices})
+    try:
+        speakers = await core.get_speakers()
+        return jsonify(
+            {speaker.name: speaker.description for speaker in speakers.devices}
+        )
+    except Exception:
+        _LOGGER.exception("api_speakers")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -649,9 +668,13 @@ async def api_speakers() -> Response:
 async def api_wake_words() -> Response:
     """Get a dictionary of available wake words"""
     assert core is not None
-    hotwords = await core.get_hotwords()
+    try:
+        hotwords = await core.get_hotwords()
+        return jsonify(attr.asdict(hotwords)["models"])
+    except Exception:
+        _LOGGER.exception("api_wake_words")
 
-    return jsonify(attr.asdict(hotwords)["models"])
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------
@@ -1380,9 +1403,14 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
 async def api_tts_voices() -> Response:
     """Get available voices for text to speech system."""
     assert core is not None
-    voices = await core.get_voices()
 
-    return jsonify(attr.asdict(voices)["voices"])
+    try:
+        voices = await core.get_voices()
+        return jsonify(attr.asdict(voices)["voices"])
+    except Exception:
+        _LOGGER.exception("api_wake_words")
+
+    return jsonify({})
 
 
 # -----------------------------------------------------------------------------

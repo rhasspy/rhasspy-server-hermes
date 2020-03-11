@@ -6,7 +6,6 @@ import logging
 import os
 import ssl
 import typing
-import wave
 from pathlib import Path
 from uuid import uuid4
 

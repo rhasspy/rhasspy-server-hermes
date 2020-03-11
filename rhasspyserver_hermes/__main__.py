@@ -171,6 +171,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "profile_json": json.dumps(core.profile.json, indent=4),
         "profile_dir": core.profile.write_path(""),
         "version": version,
+        "siteId": core.siteId,
     }
 
 

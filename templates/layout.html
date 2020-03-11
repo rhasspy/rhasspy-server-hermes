@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <link rel="icon" href="/img/favicon.png">
-        <title>Rhasspy Voice Assistant</title>
+        <title>{{ siteId }} | Rhasspy</title>
 
         <!-- CSS -->
         <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -525,10 +525,16 @@
                  var wsURL = wsProtocol + window.location.host + urlFragment;
                  var socket = new WebSocket(wsURL);
                  socket.onclose = () => {
+                     socket = null;
+
                      // Try to reconnect
                      setTimeout(() => {
                          rhasspy.makeWebSocket(urlFragment, afterFunc);
                      }, 5000);
+                 }
+
+                 socket.onerror = () => {
+                     socket.close();
                  }
 
                  if (afterFunc != undefined) {

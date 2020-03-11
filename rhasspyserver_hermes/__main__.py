@@ -37,6 +37,7 @@ from quart import (
 )
 from quart_cors import cors
 from rhasspyhermes.asr import (
+    AsrAudioCaptured,
     AsrError,
     AsrStartListening,
     AsrStopListening,
@@ -1189,6 +1190,10 @@ async def api_speech_to_text() -> str:
         # Wrap in WAV
         wav_bytes = buffer_to_wav(wav_bytes)
 
+    # Save last command
+    core.last_audio_captured = AsrAudioCaptured(wav_bytes=wav_bytes)
+
+    # Transcribe
     start_time = time.perf_counter()
     result = await core.transcribe_wav(wav_bytes)
     end_time = time.perf_counter()
@@ -1253,6 +1258,9 @@ async def api_speech_to_intent() -> Response:
     try:
         # Prefer 16-bit 16Khz mono, but will convert with sox if needed
         wav_bytes = await request.data
+
+        # Save last command
+        core.last_audio_captured = AsrAudioCaptured(wav_bytes=wav_bytes)
 
         # speech -> text
         transcription = await core.transcribe_wav(wav_bytes)

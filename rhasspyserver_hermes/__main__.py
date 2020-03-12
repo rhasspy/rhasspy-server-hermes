@@ -103,6 +103,11 @@ parser.add_argument("--certfile", help="SSL certificate file")
 parser.add_argument("--keyfile", help="SSL private key file (optional)")
 parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
 parser.add_argument(
+    "--log-format",
+    default="[%(levelname)s:%(asctime)s] %(name)s: %(message)s",
+    help="Python logger format",
+)
+parser.add_argument(
     "--web-dir", default="web", help="Directory with compiled Vue site (default: web)"
 )
 
@@ -110,7 +115,7 @@ args = parser.parse_args()
 
 # Set log level
 log_level = getattr(logging, args.log_level.upper())
-logging.basicConfig(level=log_level)
+logging.basicConfig(level=log_level, format=args.log_format)
 
 
 _LOGGER.debug(args)
@@ -1721,7 +1726,8 @@ logging.root.addHandler(
     FunctionLoggingHandler(
         lambda message: asyncio.run_coroutine_threadsafe(
             broadcast_logging(message), loop
-        )
+        ),
+        log_format=args.log_format,
     )
 )
 

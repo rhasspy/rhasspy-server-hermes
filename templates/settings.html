@@ -217,7 +217,7 @@
                     <div class="form-row">
                         <label for="microphone-program" class="col-form-label">Program</label>
                         <div class="col">
-                            <input id="microphone-program" type="text" class="form-control" x-model="profile.microphone.command.program" :disabled="profile.microphone.system != 'command'">
+                            <input id="microphone-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -225,7 +225,7 @@
                     <div class="form-row">
                         <label for="microphone-arguments" class="col-form-label">Arguments</label>
                         <div class="col">
-                            <input id="microphone-arguments" type="text" class="form-control" x-model="profile.microphone.command.arguments" :disabled="profile.microphone.system != 'command'">
+                            <input id="microphone-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -1426,7 +1426,7 @@
                     <div class="form-row">
                         <label for="sounds-program" class="col-form-label">Program</label>
                         <div class="col">
-                            <input id="sounds-program" type="text" class="form-control" x-model="profile.sounds.command.program" :disabled="profile.sounds.system != 'command'">
+                            <input id="sounds-program" type="text" class="form-control" x-model="profile.sounds.command.play_program" :disabled="profile.sounds.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -1434,7 +1434,7 @@
                     <div class="form-row">
                         <label for="sounds-arguments" class="col-form-label">Arguments</label>
                         <div class="col">
-                            <input id="sounds-arguments" type="text" class="form-control" x-model="profile.sounds.command.arguments" :disabled="profile.sounds.system != 'command'">
+                            <input id="sounds-arguments" type="text" class="form-control" x-model="profile.sounds.command.play_arguments" :disabled="profile.sounds.system != 'command'">
                         </div>
                     </div>
                 </div>

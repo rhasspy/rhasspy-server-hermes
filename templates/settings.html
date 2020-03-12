@@ -248,6 +248,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="microphone-arguments" type="text" class="form-control" x-model="profile.microphone.command.arguments" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Command -->
 
@@ -397,6 +405,14 @@
                         <label for="handle-program" class="col-form-label">Program</label>
                         <div class="col">
                             <input id="handle-program" type="text" class="form-control" x-model="profile.handle.command.program" :disabled="profile.handle.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="handle-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="handle-arguments" type="text" class="form-control" x-model="profile.handle.command.arguments" :disabled="profile.handle.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -613,6 +629,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="wake-arguments" type="text" class="form-control" x-model="profile.wake.command.arguments" :disabled="profile.wake.system != 'command'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Command -->
 
@@ -808,6 +832,14 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <label for="stt-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="stt-arguments" type="text" class="form-control" x-model="profile.speech_to_text.command.arguments" :disabled="profile.speech_to_text.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-auto">
                             <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
                         </div>
@@ -971,9 +1003,17 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="stt-program" class="col-form-label">Program</label>
+                        <label for="intent-program" class="col-form-label">Program</label>
                         <div class="col">
-                            <input id="stt-program" type="text" class="form-control" x-model="profile.intent.command.program" :disabled="profile.intent.system != 'command'">
+                            <input id="intent-program" type="text" class="form-control" x-model="profile.intent.command.program" :disabled="profile.intent.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="intent-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="intent-arguments" type="text" class="form-control" x-model="profile.intent.command.arguments" :disabled="profile.intent.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -1291,6 +1331,14 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <label for="tts-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="tts-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.arguments" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-auto">
                             <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
                         </div>
@@ -1406,6 +1454,14 @@
                         <label for="sounds-program" class="col-form-label">Program</label>
                         <div class="col">
                             <input id="sounds-program" type="text" class="form-control" x-model="profile.sounds.command.program" :disabled="profile.sounds.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="sounds-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="sounds-arguments" type="text" class="form-control" x-model="profile.sounds.command.arguments" :disabled="profile.sounds.system != 'command'">
                         </div>
                     </div>
                 </div>

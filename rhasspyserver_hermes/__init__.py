@@ -419,7 +419,7 @@ class RhasspyCore:
             return NluIntentNotRecognized(input="")
 
         nlu_id = str(uuid4())
-        query = NluQuery(id=nlu_id, input=text, siteId=self.siteId)
+        query = NluQuery(id=nlu_id, input=text, siteId=self.siteId, sessionId=nlu_id)
 
         def handle_intent():
             while True:
@@ -427,7 +427,7 @@ class RhasspyCore:
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.id == nlu_id):
+                ) and (message.sessionId == nlu_id):
                     return message
 
         messages = [query]
@@ -916,11 +916,11 @@ class RhasspyCore:
 
                 intent = NluIntent.from_dict(json_payload)
 
+                self.handle_message(msg.topic, intent)
+
                 # Report to websockets
                 for queue in self.message_queues:
                     self.loop.call_soon_threadsafe(queue.put_nowait, ("intent", intent))
-
-                self.handle_message(msg.topic, intent)
             elif msg.topic == NluIntentNotRecognized.topic():
                 # Intent not recognized
                 json_payload = json.loads(msg.payload)
@@ -958,18 +958,19 @@ class RhasspyCore:
                     text_captured.sessionId, "default"
                 )
 
-                # Report to websockets
-                for queue in self.message_queues:
-                    self.loop.call_soon_threadsafe(
-                        queue.put_nowait, ("text", text_captured, wakewordId)
-                    )
-
                 # Play recorded sound
                 asyncio.run_coroutine_threadsafe(
                     self.maybe_play_sound("recorded"), self.loop
                 )
 
                 self.handle_message(msg.topic, text_captured)
+
+                # Report to websockets
+                for queue in self.message_queues:
+                    self.loop.call_soon_threadsafe(
+                        queue.put_nowait, ("text", text_captured, wakewordId)
+                    )
+
             elif AudioPlayBytes.is_topic(msg.topic):
                 # Request to play audio
                 siteId = AudioPlayBytes.get_siteId(msg.topic)
@@ -1047,7 +1048,12 @@ class RhasspyCore:
                 # Cache wake word ID for session
                 self.session_wakewordIds[hotword_detected.sessionId] = wakewordId
 
-                # TODO: Report to webhooks
+                # Play wake sound
+                asyncio.run_coroutine_threadsafe(
+                    self.maybe_play_sound("wake"), self.loop
+                )
+
+                self.handle_message(msg.topic, hotword_detected)
 
                 # Report to websockets
                 for queue in self.message_queues:
@@ -1055,12 +1061,6 @@ class RhasspyCore:
                         queue.put_nowait, ("wake", hotword_detected, wakewordId)
                     )
 
-                # Play wake sound
-                asyncio.run_coroutine_threadsafe(
-                    self.maybe_play_sound("wake"), self.loop
-                )
-
-                self.handle_message(msg.topic, hotword_detected)
             elif msg.topic == DialogueSessionStarted.topic():
                 # Dialogue session started
                 json_payload = json.loads(msg.payload)

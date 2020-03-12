@@ -770,7 +770,12 @@ async def api_listen_for_command() -> Response:
         ]
         messages = [
             AsrStopListening(siteId=core.siteId, sessionId=sessionId),
-            NluQuery(id=sessionId, input=text_captured.text, siteId=core.siteId),
+            NluQuery(
+                id=sessionId,
+                input=text_captured.text,
+                siteId=core.siteId,
+                sessionId=sessionId,
+            ),
         ]
 
         # Expecting only a single result
@@ -1886,10 +1891,10 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
 @mqtt_websocket
 async def api_ws_intent(queue) -> None:
     """Websocket endpoint to send intents in Rhasspy JSON format."""
-    while True:
-        message = await queue.get()
-        if message[0] == "intent":
-            try:
+    try:
+        while True:
+            message = await queue.get()
+            if message[0] == "intent":
                 intent = typing.cast(
                     typing.Union[NluIntent, NluIntentNotRecognized], message[1]
                 )
@@ -1898,18 +1903,18 @@ async def api_ws_intent(queue) -> None:
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-            except Exception:
-                pass
+    except Exception:
+        pass
 
 
 @app.websocket("/api/events/wake")
 @mqtt_websocket
 async def api_ws_wake(queue) -> None:
     """Websocket endpoint to notify clients on wake up."""
-    while True:
-        message = await queue.get()
-        if message[0] == "wake":
-            try:
+    try:
+        while True:
+            message = await queue.get()
+            if message[0] == "wake":
                 hotword_detected: HotwordDetected = message[1]
                 wakewordId: str = message[2]
 
@@ -1918,18 +1923,18 @@ async def api_ws_wake(queue) -> None:
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-            except Exception:
-                pass
+    except Exception:
+        pass
 
 
 @app.websocket("/api/events/text")
 @mqtt_websocket
 async def api_ws_text(queue) -> None:
     """Websocket endpoint to notify clients when speech is transcribed."""
-    while True:
-        message = await queue.get()
-        if message[0] == "text":
-            try:
+    try:
+        while True:
+            message = await queue.get()
+            if message[0] == "text":
                 text_captured: AsrTextCaptured = message[1]
                 wakewordId: str = message[2]
 
@@ -1942,8 +1947,8 @@ async def api_ws_text(queue) -> None:
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-            except Exception:
-                pass
+    except Exception:
+        pass
 
 
 # -----------------------------------------------------------------------------

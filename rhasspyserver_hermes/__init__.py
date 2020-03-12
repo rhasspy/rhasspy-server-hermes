@@ -58,7 +58,7 @@ from rhasspyprofile import Profile
 from .train import sentences_to_graph
 from .utils import get_ini_paths
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("rhasspyserver_hermes")
 
 # -----------------------------------------------------------------------------
 

@@ -64,7 +64,7 @@ from .utils import (
     recursive_remove,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("rhasspyserver_hermes")
 loop = asyncio.get_event_loop()
 
 # -----------------------------------------------------------------------------

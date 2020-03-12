@@ -91,6 +91,7 @@
                 <option value="dummy">Disabled</option>
                 <option value="pyaudio">PyAudio</option>
                 <option value="arecord">arecord</option>
+                <option value="udpraw">UDP Raw</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
@@ -205,6 +206,32 @@
                 </div>
             </div>
             <!-- End arecord -->
+
+            <!-- UDP Raw -->
+            <div x-show="profile.microphone.system == 'udpraw'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/audio-input/#udpraw">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-udpraw-host" class="col-form-label">UDP Host</label>
+                        <div class="col">
+                            <input id="microphone-udpraw-host" type="text" class="form-control" x-model="profile.microphone.udpraw.host" :disabled="profile.microphone.system != 'udpraw'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-udpraw-port" class="col-form-label">UDP Port</label>
+                        <div class="col">
+                            <input id="microphone-udpraw-port" type="text" class="form-control" x-model="profile.microphone.udpraw.port" :disabled="profile.microphone.system != 'udpraw'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End UDP Raw -->
 
             <!-- Command -->
             <div x-show="profile.microphone.system == 'command'">

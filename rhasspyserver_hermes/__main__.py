@@ -1708,6 +1708,17 @@ async def api_evaluate() -> Response:
         # Restore sound setting
         core.sounds_enabled = sounds_enabled
 
+# -----------------------------------------------------------------------------
+
+@app.route("/api/handle-intent", methods=["POST"])
+async def api_handle_intent():
+    """Receive an intent via JSON and publish it."""
+    assert core is not None
+    intent_dict = await request.json
+    intent = NluIntent.from_dict(intent_dict)
+    core.publish(intent)
+
+    return "OK"
 
 # -----------------------------------------------------------------------------
 # WebSocket API

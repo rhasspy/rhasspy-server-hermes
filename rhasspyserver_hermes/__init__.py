@@ -456,12 +456,14 @@ class RhasspyCore:
         sentence: str,
         language: typing.Optional[str] = None,
         capture_audio: bool = False,
+        siteId: typing.Optional[str] = None,
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
             _LOGGER.debug("No text to speech system configured")
             return (TtsSayFinished(), None)
 
+        siteId = siteId or self.siteId
         tts_id = str(uuid4())
 
         def handle_finished():
@@ -483,14 +485,14 @@ class RhasspyCore:
                 if say_finished and play_bytes:
                     return (say_finished, play_bytes)
 
-        say = TtsSay(id=tts_id, text=sentence, siteId=self.siteId)
+        say = TtsSay(id=tts_id, text=sentence, siteId=siteId)
         if language:
             say.lang = language
 
         messages = [say]
         topics = [
             TtsSayFinished.topic(),
-            AudioPlayBytes.topic(siteId=self.siteId, requestId="+"),
+            AudioPlayBytes.topic(siteId=siteId, requestId="+"),
         ]
 
         # Expecting only a single result
@@ -569,12 +571,15 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    async def play_wav_data(self, wav_bytes: bytes) -> AudioPlayFinished:
+    async def play_wav_data(
+        self, wav_bytes: bytes, siteId: typing.Optional[str] = None
+    ) -> AudioPlayFinished:
         """Play WAV data through speakers."""
         if self.profile.get("sounds.system", "dummy") == "dummy":
             _LOGGER.debug("No audio output system configured")
             return AudioPlayFinished()
 
+        siteId = siteId or self.siteId
         requestId = str(uuid4())
 
         def handle_finished():
@@ -587,14 +592,14 @@ class RhasspyCore:
         def messages():
             yield (
                 AudioPlayBytes(wav_bytes=wav_bytes),
-                {"siteId": self.siteId, "requestId": requestId},
+                {"siteId": siteId, "requestId": requestId},
             )
 
-        topics = [AudioPlayFinished.topic(siteId=self.siteId)]
+        topics = [AudioPlayFinished.topic(siteId=siteId)]
 
         # Disable hotword/ASR
-        self.publish(HotwordToggleOff(siteId=self.siteId))
-        self.publish(AsrToggleOff(siteId=self.siteId))
+        self.publish(HotwordToggleOff(siteId=siteId))
+        self.publish(AsrToggleOff(siteId=siteId))
 
         try:
             # Expecting only a single result
@@ -608,8 +613,8 @@ class RhasspyCore:
             return result
         finally:
             # Enable hotword/ASR
-            self.publish(HotwordToggleOn(siteId=self.siteId))
-            self.publish(AsrToggleOn(siteId=self.siteId))
+            self.publish(HotwordToggleOn(siteId=siteId))
+            self.publish(AsrToggleOn(siteId=siteId))
 
     # -------------------------------------------------------------------------
 
@@ -765,7 +770,9 @@ class RhasspyCore:
 
     # -------------------------------------------------------------------------
 
-    async def maybe_play_sound(self, sound_name: str):
+    async def maybe_play_sound(
+        self, sound_name: str, siteId: typing.Optional[str] = None
+    ):
         """Play WAV sound through audio out if it exists."""
         sound_system = self.profile.get("sounds.system", "dummy")
         if sound_system == "dummy":
@@ -781,7 +788,7 @@ class RhasspyCore:
                 return
 
             _LOGGER.debug("Playing WAV %s", str(wav_path))
-            await self.play_wav_data(wav_path.read_bytes())
+            await self.play_wav_data(wav_path.read_bytes(), siteId=siteId)
 
     # -------------------------------------------------------------------------
     # Supporting Functions
@@ -937,7 +944,8 @@ class RhasspyCore:
 
                 # Play error sound
                 asyncio.run_coroutine_threadsafe(
-                    self.maybe_play_sound("error"), self.loop
+                    self.maybe_play_sound("error", siteId=not_recognized.siteId),
+                    self.loop,
                 )
 
                 self.handle_message(msg.topic, not_recognized)
@@ -960,7 +968,8 @@ class RhasspyCore:
 
                 # Play recorded sound
                 asyncio.run_coroutine_threadsafe(
-                    self.maybe_play_sound("recorded"), self.loop
+                    self.maybe_play_sound("recorded", siteId=text_captured.siteId),
+                    self.loop,
                 )
 
                 self.handle_message(msg.topic, text_captured)
@@ -1050,7 +1059,8 @@ class RhasspyCore:
 
                 # Play wake sound
                 asyncio.run_coroutine_threadsafe(
-                    self.maybe_play_sound("wake"), self.loop
+                    self.maybe_play_sound("wake", siteId=hotword_detected.siteId),
+                    self.loop,
                 )
 
                 self.handle_message(msg.topic, hotword_detected)
@@ -1092,6 +1102,7 @@ class RhasspyCore:
                 )
         except Exception:
             _LOGGER.exception("on_message")
+            _LOGGER.error("%s %s", msg.topic, msg.payload)
 
     def on_disconnect(self, client, userdata, flags, rc):
         """Disconnected from MQTT broker."""

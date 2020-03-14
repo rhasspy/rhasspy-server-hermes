@@ -939,6 +939,7 @@ async def api_pronounce() -> typing.Union[Response, str]:
 @app.route("/api/play-wav", methods=["POST"])
 async def api_play_wav() -> str:
     """Play WAV data through the configured audio output system"""
+    siteId = request.args.get("siteId", None)
     assert core is not None
 
     if request.content_type == "audio/wav":
@@ -954,7 +955,7 @@ async def api_play_wav() -> str:
 
     # Play through speakers
     _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
-    await core.play_wav_data(wav_bytes)
+    await core.play_wav_data(wav_bytes, siteId=siteId)
 
     return "OK"
 
@@ -1399,6 +1400,7 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
     repeat = request.args.get("repeat", "false").strip().lower() == "true"
     language = request.args.get("language")
     voice = request.args.get("voice")
+    siteId = request.args.get("siteId", None)
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
@@ -1406,7 +1408,7 @@ async def api_text_to_speech() -> typing.Union[bytes, str]:
 
     assert core is not None
     _, play_bytes = await core.speak_sentence(
-        sentence, language=(language or voice), capture_audio=True
+        sentence, language=(language or voice), capture_audio=True, siteId=siteId
     )
 
     # Cache last sentence spoken

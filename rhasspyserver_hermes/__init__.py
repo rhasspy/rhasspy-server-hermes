@@ -187,6 +187,9 @@ class RhasspyCore:
         # Holds last voice command
         self.last_audio_captured: typing.Optional[AsrAudioCaptured] = None
 
+        # Enable/disable playing sounds on events
+        self.sounds_enabled = True
+
     @property
     def http_session(self) -> aiohttp.ClientSession:
         """Get HTTP client session."""
@@ -775,7 +778,7 @@ class RhasspyCore:
     ):
         """Play WAV sound through audio out if it exists."""
         sound_system = self.profile.get("sounds.system", "dummy")
-        if sound_system == "dummy":
+        if (not self.sounds_enabled) or (sound_system == "dummy"):
             # No feedback sounds
             _LOGGER.debug("Sounds disabled (system=%s)", sound_system)
             return

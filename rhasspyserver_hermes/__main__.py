@@ -1620,83 +1620,93 @@ async def api_evaluate() -> Response:
     # Extract archive
     archive_form_file = files["archive"]
 
-    with tempfile.TemporaryDirectory() as work_dir:
-        archive_path = os.path.join(work_dir, archive_form_file.filename)
-        with open(archive_path, "wb") as archive_file:
-            for chunk in archive_form_file.stream:
-                archive_file.write(chunk)
+    # Disable sounds temporarily
+    sounds_enabled = core.sounds_enabled
+    core.sounds_enabled = False
 
-        extract_dir = os.path.join(work_dir, "extract")
-        shutil.unpack_archive(archive_path, extract_dir)
-        _LOGGER.debug("Extracted archive to %s", extract_dir)
+    try:
+        with tempfile.TemporaryDirectory() as work_dir:
+            archive_path = os.path.join(work_dir, archive_form_file.filename)
+            with open(archive_path, "wb") as archive_file:
+                for chunk in archive_form_file.stream:
+                    archive_file.write(chunk)
 
-        # Process WAV file(s)
-        expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
-        actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+            extract_dir = os.path.join(work_dir, "extract")
+            shutil.unpack_archive(archive_path, extract_dir)
+            _LOGGER.debug("Extracted archive to %s", extract_dir)
 
-        extract_path = Path(extract_dir)
-        for wav_file in extract_path.rglob("*.wav"):
-            wav_key = str(wav_file.relative_to(extract_path))
+            # Process WAV file(s)
+            expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+            actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
 
-            # JSON file contains expected intent
-            json_file = wav_file.with_suffix(".json")
-            if not json_file.exists():
-                _LOGGER.warning(
-                    "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
+            extract_path = Path(extract_dir)
+            for wav_file in extract_path.rglob("*.wav"):
+                wav_key = str(wav_file.relative_to(extract_path))
+
+                # JSON file contains expected intent
+                json_file = wav_file.with_suffix(".json")
+                if not json_file.exists():
+                    _LOGGER.warning(
+                        "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
+                    )
+
+                _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
+
+                # Load expected intent
+                with open(json_file, "r") as expected_file:
+                    expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
+                        json.load(expected_file)
+                    )
+
+                # Get transcription
+                wav_bytes = wav_file.read_bytes()
+                wav_duration = get_wav_duration(wav_bytes)
+
+                text_captured = await core.transcribe_wav(
+                    wav_bytes, sendAudioCaptured=False
                 )
 
-            _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
+                if not isinstance(text_captured, AsrTextCaptured):
+                    _LOGGER.warning("Transcription failed: %s", text_captured)
 
-            # Load expected intent
-            with open(json_file, "r") as expected_file:
-                expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
-                    json.load(expected_file)
+                    # Empty transcription
+                    text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
+
+                _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
+
+                # Get intent
+                nlu_intent = await core.recognize_intent(text_captured.text)
+                if not isinstance(nlu_intent, NluIntent):
+                    _LOGGER.warning("Recognition failed: %s", nlu_intent)
+
+                    # Empty intent
+                    nlu_intent = NluIntent(
+                        input=text_captured.text,
+                        intent=rhasspyhermes.intent.Intent(
+                            intentName="", confidenceScore=0
+                        ),
+                    )
+
+                _LOGGER.debug(
+                    "%s -> %s", text_captured.text, nlu_intent.intent.intentName
                 )
 
-            # Get transcription
-            wav_bytes = wav_file.read_bytes()
-            wav_duration = get_wav_duration(wav_bytes)
-
-            text_captured = await core.transcribe_wav(
-                wav_bytes, sendAudioCaptured=False
-            )
-
-            if not isinstance(text_captured, AsrTextCaptured):
-                _LOGGER.warning("Transcription failed: %s", text_captured)
-
-                # Empty transcription
-                text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
-
-            _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
-
-            # Get intent
-            nlu_intent = await core.recognize_intent(text_captured.text)
-            if not isinstance(nlu_intent, NluIntent):
-                _LOGGER.warning("Recognition failed: %s", nlu_intent)
-
-                # Empty intent
-                nlu_intent = NluIntent(
-                    input=text_captured.text,
-                    intent=rhasspyhermes.intent.Intent(
-                        intentName="", confidenceScore=0
-                    ),
+                # Convert to Recognition
+                actual_intent = rhasspynlu.intent.Recognition.from_dict(
+                    nlu_intent.to_rhasspy_dict()
                 )
+                actual_intent.transcribe_seconds = text_captured.seconds
+                actual_intent.wav_seconds = wav_duration
 
-            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
+                actual[wav_key] = actual_intent
 
-            # Convert to Recognition
-            actual_intent = rhasspynlu.intent.Recognition.from_dict(
-                nlu_intent.to_rhasspy_dict()
-            )
-            actual_intent.transcribe_seconds = text_captured.seconds
-            actual_intent.wav_seconds = wav_duration
+            _LOGGER.debug("Generating report")
+            report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
 
-            actual[wav_key] = actual_intent
-
-        _LOGGER.debug("Generating report")
-        report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
-
-        return jsonify(attr.asdict(report))
+            return jsonify(attr.asdict(report))
+    finally:
+        # Restore sound setting
+        core.sounds_enabled = sounds_enabled
 
 
 # -----------------------------------------------------------------------------

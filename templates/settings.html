@@ -70,7 +70,7 @@
                 <div class="form-row">
                     <label for="mqtt-password" class="col-form-label">Password</label>
                     <div class="col-sm-auto">
-                        <input id="mqtt-password" type="text" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
+                        <input id="mqtt-password" type="password" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
                     </div>
                 </div>
             </div>
@@ -305,7 +305,7 @@
                     <div class="form-row">
                         <label for="hass-password" class="col-form-label">API Password</label>
                         <div class="col">
-                            <input id="hass-password" type="text" class="form-control" x-model="profile.home_assistant.api_password"
+                            <input id="hass-password" type="password" class="form-control" x-model="profile.home_assistant.api_password"
                                    :disabled="profile.handle.system != 'hass'">
                         </div>
                         <div class="col text-muted">

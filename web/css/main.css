@@ -69,3 +69,14 @@ div.card-header .fas {
     margin : 0;
     max-width: 100%;
 }
+
+.p-0 {
+    position: fixed;
+    width: 60px;
+    top: 64px;
+    height: 100vh;
+}
+.main-container {
+    left: 60px;
+    max-width: calc(100% - 60px);
+}

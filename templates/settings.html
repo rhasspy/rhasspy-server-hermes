@@ -293,7 +293,7 @@
                     <div class="form-row">
                         <label for="hass-token" class="col-form-label">Access Token</label>
                         <div class="col">
-                            <input id="hass-token" type="text" class="form-control" x-model="profile.home_assistant.access_token"
+                            <input id="hass-token" type="password" class="form-control" x-model="profile.home_assistant.access_token"
                                    :disabled="profile.handle.system != 'hass'">
                         </div>
                         <div class="col text-muted">
@@ -926,6 +926,7 @@
                 <option value="dummy">Disabled</option>
                 <option value="fsticuffs">Fsticuffs</option>
                 <option value="fuzzywuzzy">Fuzzywuzzy</option>
+                <option value="rasa">Rasa NLU</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -995,6 +996,75 @@
                 </div>
             </div>
             <!-- End Fuzzywuzzy -->
+
+            <!-- Rasa NLU -->
+            <div x-show="profile.intent.system == 'rasa'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/intent-recognition/#rasanlu">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-rasa-url" class="col-form-label">Server URL:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-rasa-url" type="text" class="form-control" x-model="profile.intent.rasa.url">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col text-muted">
+                            Example: http://localhost:5005
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Examples File: <tt>{{ profile.read_path(profile.get("intent.rasa.examples_markdown")) }}</tt> </li>
+                            <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-rasa-project" class="col-form-label">Project Name:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-rasa-project" type="text" class="form-control" x-model="profile.intent.rasa.project_name">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-rasa-config" class="col-form-label">YAML Config:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-rasa-config" type="text" class="form-control" x-model="profile.intent.rasa.config_yaml" placeholder="(auto-generated)">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Fsticuffs -->
+
 
             <!-- Remote -->
             <div x-show="profile.intent.system == 'remote'">

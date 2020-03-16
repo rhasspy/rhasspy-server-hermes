@@ -1708,7 +1708,9 @@ async def api_evaluate() -> Response:
         # Restore sound setting
         core.sounds_enabled = sounds_enabled
 
+
 # -----------------------------------------------------------------------------
+
 
 @app.route("/api/handle-intent", methods=["POST"])
 async def api_handle_intent():
@@ -1719,6 +1721,7 @@ async def api_handle_intent():
     core.publish(intent)
 
     return "OK"
+
 
 # -----------------------------------------------------------------------------
 # WebSocket API

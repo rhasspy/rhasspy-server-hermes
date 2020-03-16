@@ -1,5 +1,6 @@
 """Hermes implementation of RhasspyCore"""
 import asyncio
+import gzip
 import io
 import json
 import logging
@@ -11,8 +12,8 @@ from uuid import uuid4
 
 import aiohttp
 import attr
+import networkx as nx
 import paho.mqtt.client as mqtt
-import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
@@ -303,18 +304,13 @@ class RhasspyCore:
             word_transform=word_transform,
         )
 
-        # Convert to dictionary
-        graph_dict = rhasspynlu.graph_to_json(intent_graph)
+        # Convert to gzipped pickle
+        graph_path = self.profile.write_path("intent_graph.pickle.gz")
+        _LOGGER.debug("Writing %s", graph_path)
+        with gzip.GzipFile(graph_path, mode="wb") as graph_gzip:
+            nx.readwrite.gpickle.write_gpickle(intent_graph, graph_gzip)
 
-        # Save to JSON file
-        graph_path = self.profile.write_path(
-            self.profile.get("intent.fsticuffs.intent_graph", "intent.json")
-        )
-
-        with open(graph_path, "w") as graph_file:
-            json.dump(graph_dict, graph_file)
-
-        _LOGGER.debug("Wrote intent graph to %s", str(graph_path))
+        _LOGGER.debug("Finished writing %s", graph_path)
 
         # Send to ASR/NLU systems
         speech_system = self.profile.get("speech_to_text.system", "dummy")
@@ -365,7 +361,7 @@ class RhasspyCore:
                 # Request ASR training
                 messages.append(
                     (
-                        AsrTrain(id=request_id, graph_dict=graph_dict),
+                        AsrTrain(id=request_id, graph_path=str(graph_path.absolute())),
                         {"siteId": self.siteId},
                     )
                 )
@@ -377,7 +373,7 @@ class RhasspyCore:
                 # Request NLU training
                 messages.append(
                     (
-                        NluTrain(id=request_id, graph_dict=graph_dict),
+                        NluTrain(id=request_id, graph_path=str(graph_path.absolute())),
                         {"siteId": self.siteId},
                     )
                 )
@@ -1129,10 +1125,6 @@ class RhasspyCore:
             if isinstance(message, (AudioFrame, AudioSessionFrame, AudioPlayBytes)):
                 # Handle binary payloads specially
                 payload = message.wav_bytes
-            elif isinstance(message, (AsrTrain, NluTrain)):
-                # Don't print entire intent graph to console
-                _LOGGER.debug("-> %s(id=%s)", message.__class__.__name__, message.id)
-                payload = json.dumps(attr.asdict(message))
             else:
                 _LOGGER.debug("-> %s", message)
                 payload = json.dumps(attr.asdict(message))

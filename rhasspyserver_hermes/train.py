@@ -20,6 +20,7 @@ def sentences_to_graph(
     replace_numbers: bool = True,
     language: str = "en",
     word_transform: typing.Optional[typing.Callable[[str], str]] = None,
+    add_intent_weights: bool = True,
 ) -> nx.DiGraph:
     """Transform sentences to an intent graph"""
     slots_dirs = slots_dirs or []
@@ -95,6 +96,8 @@ def sentences_to_graph(
                 )
 
     # Convert to directed graph
-    intent_graph = rhasspynlu.sentences_to_graph(sentences, replacements=replacements)
+    intent_graph = rhasspynlu.sentences_to_graph(
+        sentences, replacements=replacements, add_intent_weights=add_intent_weights
+    )
 
     return intent_graph

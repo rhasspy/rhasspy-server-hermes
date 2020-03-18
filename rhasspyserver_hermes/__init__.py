@@ -191,6 +191,9 @@ class RhasspyCore:
         # Enable/disable playing sounds on events
         self.sounds_enabled = True
 
+        self.asr_system = self.profile.get("speech_to_text.system", "dummy")
+        self.dialogue_system = self.profile.get("dialogue.system", "dummy")
+
     @property
     def http_session(self) -> aiohttp.ClientSession:
         """Get HTTP client session."""
@@ -1068,6 +1071,11 @@ class RhasspyCore:
                 for queue in self.message_queues:
                     self.loop.call_soon_threadsafe(
                         queue.put_nowait, ("wake", hotword_detected, wakewordId)
+                    )
+
+                if (self.dialogue_system == "dummy") and (self.asr_system != "dummy"):
+                    _LOGGER.warning(
+                        "Dialogue management is disabled. ASR will NOT be automatically enabled."
                     )
 
             elif msg.topic == DialogueSessionStarted.topic():

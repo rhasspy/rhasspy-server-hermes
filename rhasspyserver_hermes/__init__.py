@@ -857,11 +857,9 @@ class RhasspyCore:
 
     def handle_message(self, topic: str, message: Message):
         """Send matching messages to waiting handlers."""
-        if isinstance(
-            message, (AsrAudioCaptured, AudioPlayBytes, AudioFrame, AudioSessionFrame)
-        ):
+        if message.__class__.is_binary_payload():
             _LOGGER.debug(
-                "<- %s(%s byte(s))", message.__class__.__name__, len(message.wav_bytes)
+                "<- %s(%s byte(s))", message.__class__.__name__, len(message.payload())
             )
         else:
             _LOGGER.debug("<- %s", message)

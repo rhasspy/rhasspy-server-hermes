@@ -43,6 +43,7 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
+from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
@@ -714,8 +715,8 @@ async def api_listen_for_command() -> Response:
     output_format = request.args.get("outputFormat", "rhasspy").lower()
     sessionId = str(uuid4())
 
-    topics: typing.List[str] = []
     messages: typing.List[typing.Any] = []
+    message_types: typing.List[typing.Type[Message]] = []
 
     if no_hass:
         # Temporarily disable intent handling
@@ -732,7 +733,7 @@ async def api_listen_for_command() -> Response:
                 ):
                     return message
 
-        topics = [AsrTextCaptured.topic(), AsrError.topic()]
+        message_types = [AsrTextCaptured, AsrError]
         messages = [
             AsrStartListening(
                 siteId=core.siteId,
@@ -745,7 +746,9 @@ async def api_listen_for_command() -> Response:
         # Expecting only a single result
         _LOGGER.debug("Waiting for transcription (sessionId=%s)", sessionId)
         text_captured = None
-        async for response in core.publish_wait(handle_captured(), messages, topics):
+        async for response in core.publish_wait(
+            handle_captured(), messages, message_types
+        ):
             text_captured = response
 
         if isinstance(text_captured, AsrError):
@@ -763,11 +766,7 @@ async def api_listen_for_command() -> Response:
                 ) and (message.sessionId == sessionId):
                     return message
 
-        topics = [
-            NluIntent.topic(intentName="#"),
-            NluIntentNotRecognized.topic(),
-            NluError.topic(),
-        ]
+        message_types = [NluIntent, NluIntentNotRecognized, NluError]
         messages = [
             AsrStopListening(siteId=core.siteId, sessionId=sessionId),
             NluQuery(
@@ -781,7 +780,9 @@ async def api_listen_for_command() -> Response:
         # Expecting only a single result
         _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
         nlu_intent = None
-        async for response in core.publish_wait(handle_intent(), messages, topics):
+        async for response in core.publish_wait(
+            handle_intent(), messages, message_types
+        ):
             nlu_intent = response
 
         if isinstance(nlu_intent, NluError):
@@ -1345,13 +1346,15 @@ async def api_stop_recording() -> Response:
                 ):
                     return message
 
-        topics = [AsrTextCaptured.topic()]
+        message_types: typing.List[typing.Type[Message]] = [AsrTextCaptured]
         messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
 
         # Expecting only a single result
         _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
         text_captured = None
-        async for response in core.publish_wait(handle_captured(), messages, topics):
+        async for response in core.publish_wait(
+            handle_captured(), messages, message_types
+        ):
             text_captured = response
 
         assert isinstance(text_captured, AsrTextCaptured)
@@ -1572,12 +1575,10 @@ def api_intents():
 async def api_mqtt(topic: str):
     """POST an MQTT message to a topic."""
     assert core is not None
-    assert core.client is not None
-
     if request.method == "GET":
         assert topic, "Topic is required"
         topic_matcher = MQTTMatcher()
-        core.client.subscribe(topic)
+        core.mqtt_client.subscribe(topic)
         _LOGGER.debug("Subscribed to %s for http", topic)
         topic_matcher[topic] = True
 
@@ -1602,7 +1603,7 @@ async def api_mqtt(topic: str):
     payload = await request.data
 
     # Publish directly to MQTT broker
-    core.client.publish(topic, payload)
+    core.mqtt_client.publish(topic, payload)
 
     return f"Published {len(payload)} byte(s) to {topic}"
 
@@ -1811,7 +1812,6 @@ async def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
 def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
     """Handle subscribe/publish MQTT requests from a websocket."""
     assert core is not None
-    assert core.client is not None
 
     message_dict = json.loads(message)
     message_type = message_dict["type"]
@@ -1823,12 +1823,12 @@ def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
     topic = message_dict["topic"]
 
     if message_type == "subscribe":
-        core.client.subscribe(topic)
+        core.mqtt_client.subscribe(topic)
         matcher[topic] = message_dict
         _LOGGER.debug("Subscribed to %s", topic)
     elif message_type == "publish":
         payload = json.dumps(message_dict["payload"])
-        core.client.publish(topic, payload)
+        core.mqtt_client.publish(topic, payload)
         _LOGGER.debug("Published %s char(s) to %s", len(payload), topic)
 
 
@@ -1888,10 +1888,9 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
     """Websocket endpoint to receive MQTT messages from a specific topic."""
     topic_matcher = MQTTMatcher()
 
-    assert core
-    assert core.client
+    assert core is not None
 
-    core.client.subscribe(topic)
+    core.mqtt_client.subscribe(topic)
     topic_matcher[topic] = True
     _LOGGER.debug("Subscribed to %s for websocket", topic)
 

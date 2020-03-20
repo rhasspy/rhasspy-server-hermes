@@ -308,7 +308,9 @@ class RhasspyCore:
         )
 
         # Convert to gzipped pickle
-        graph_path = self.profile.write_path("intent_graph.pickle.gz")
+        graph_path = self.profile.write_path(
+            self.profile.get("intent.fsticuffs.intent_json", "intent_graph.pickle.gz")
+        )
         _LOGGER.debug("Writing %s", graph_path)
         with gzip.GzipFile(graph_path, mode="wb") as graph_gzip:
             nx.readwrite.gpickle.write_gpickle(intent_graph, graph_gzip)

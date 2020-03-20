@@ -826,7 +826,7 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="stt-url" class="col-form-label">Rhasspy Speech-to-Text URL</label>
+                        <label for="stt-url" class="col-form-label">Speech to Text URL</label>
                         <div class="col">
                             <input id="stt-url" type="text" class="form-control" x-model="profile.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
                         </div>
@@ -836,6 +836,14 @@
                     <div class="form-row">
                         <div class="col text-muted">
                             Example: http://localhost:12101/api/speech-to-text
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="stt-train-url" class="col-form-label">Training URL</label>
+                        <div class="col">
+                            <input id="stt-train-url" type="text" class="form-control" x-model="profile.training.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
                         </div>
                     </div>
                 </div>
@@ -1085,6 +1093,14 @@
                     <div class="form-row">
                         <div class="col text-muted">
                             Example: http://localhost:12101/api/text-to-intent
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="intent-train-url" class="col-form-label">Training URL</label>
+                        <div class="col">
+                            <input id="intent-train-url" type="text" class="form-control" x-model="profile.training.intent.remote.url" :disabled="profile.intent.system != 'remote'">
                         </div>
                     </div>
                 </div>

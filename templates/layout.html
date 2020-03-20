@@ -90,41 +90,6 @@
 
         <!-- Main -->
         <div>
-            <!-- New Alert -->
-            <div id="new-alert" class="alert alert-success alert-dismissable" role="alert" x-show="allDummy()" x-cloak>
-                <span class="ml-2">
-                    New to Rhasspy? Try the <a target="_blank" href="/docs/tutorials/#getting-started-guide">Getting Started Guide</a> &#x263A;
-                </span>
-                <button type="button" onclick="$('#new-alert').hide()" class="close ml-auto" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <!-- End New Alert -->
-
-            <!-- Download Alert -->
-            <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
-                <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
-                <span class="ml-2">
-                    Rhasspy needs to download some files for your profile <a href="#" onclick="showFilesToDownload()">(<span x-text="Object.keys(missingFiles).length"></span> missing, <span x-text="missingSize"></span>)</a>
-                </span>
-                <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <!-- End Download Alert -->
-
-            <!-- Unknown Words Alert -->
-            <div id="unknown-words-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(unknownWords)" x-cloak>
-                <a title="Go to Words page" href="/words" class="btn btn-primary">View</a>
-                <span class="ml-2">
-                    There are <span x-text="Object.keys(unknownWords).length"></span> word(s) that Rhasspy isn't sure how to pronounce
-                </span>
-                <button type="button" onclick="$('#unknown-words-alert').hide()" class="close ml-auto" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <!-- End Unknown Words Alert -->
-
             <div class="row">
                 <div class="col-xs-auto bg-dark p-0">
                     <a href="/" title="Test" class="btn w-100  {{ "btn-light rounded-0" if page == "Test" else "btn-dark" }}">
@@ -156,7 +121,44 @@
                     </a>
                 </div>
                 <div class="col main-container">
-                    {% block body %}{% endblock %}
+                    <!-- New Alert -->
+                    <div id="new-alert" class="alert alert-success alert-dismissable" role="alert" x-show="allDummy()" x-cloak>
+                        <span class="ml-2">
+                            New to Rhasspy? Try the <a target="_blank" href="/docs/tutorials/#getting-started-guide">Getting Started Guide</a> &#x263A;
+                        </span>
+                        <button type="button" onclick="$('#new-alert').hide()" class="close ml-auto" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <!-- End New Alert -->
+
+                    <!-- Download Alert -->
+                    <div id="download-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(missingFiles)" x-cloak>
+                        <button onclick="rhasspy.downloadProfile()" class="btn btn-primary">Download</button>
+                        <span class="ml-2">
+                            Rhasspy needs to download some files for your profile <a href="#" onclick="showFilesToDownload()">(<span x-text="Object.keys(missingFiles).length"></span> missing, <span x-text="missingSize"></span>)</a>
+                        </span>
+                        <button type="button" onclick="$('#download-alert').hide()" class="close ml-auto" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <!-- End Download Alert -->
+
+                    <!-- Unknown Words Alert -->
+                    <div id="unknown-words-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(unknownWords)" x-cloak>
+                        <a title="Go to Words page" href="/words" class="btn btn-primary">View</a>
+                        <span class="ml-2">
+                            There are <span x-text="Object.keys(unknownWords).length"></span> word(s) that Rhasspy isn't sure how to pronounce
+                        </span>
+                        <button type="button" onclick="$('#unknown-words-alert').hide()" class="close ml-auto" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <!-- End Unknown Words Alert -->
+
+                    <div class="main-body">
+                        {% block body %}{% endblock %}
+                    </div>
                 </div>
             </div>
         </div>

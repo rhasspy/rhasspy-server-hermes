@@ -4,7 +4,12 @@ body {
 }
 
 .main-container {
-    padding: 1rem;
+    left: 60px;
+    max-width: calc(100% - 60px);
+}
+
+.main-body {
+    padding-top: 0.5rem;
 }
 
 .main-alert {
@@ -75,8 +80,4 @@ div.card-header .fas {
     width: 60px;
     top: 64px;
     height: 100vh;
-}
-.main-container {
-    left: 60px;
-    max-width: calc(100% - 60px);
 }

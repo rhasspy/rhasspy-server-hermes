@@ -1478,7 +1478,7 @@ async def api_slots() -> typing.Union[str, Response]:
 
 
 @app.route("/api/slots/<name>", methods=["GET", "POST"])
-def api_slots_by_name(name: str) -> typing.Union[str, Response]:
+async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
     """Get or set the values of a slot list."""
     assert core is not None
     overwrite_all = request.args.get("overwrite_all", "false").lower() == "true"
@@ -1488,35 +1488,49 @@ def api_slots_by_name(name: str) -> typing.Union[str, Response]:
     )
 
     if request.method == "POST":
+        data = await request.data
+        slot_path = Path(safe_join(slots_dir, name))
+        slot_values: typing.Set[str] = set(json.loads(data))
+
         if overwrite_all:
             # Remote existing values first
-            slots_path = safe_join(slots_dir, f"{name}")
-            if slots_path.is_file():
+            if slot_path.is_file():
                 try:
-                    slots_path.unlink()
+                    slot_path.unlink()
                 except Exception:
                     _LOGGER.exception("api_slots_by_name")
+        elif slot_path.is_file():
+            # Load existing values
+            with open(slot_path, "r") as slot_file:
+                for line in slot_file:
+                    line = line.strip()
+                    if line:
+                        slot_values.add(line)
 
-        slots_path = Path(
+        slot_path = Path(
             core.profile.write_path(
-                core.profile.get("speech_to_text.slots_dir", "slots"), f"{name}"
+                core.profile.get("speech_to_text.slots_dir", "slots"), name
             )
         )
 
         # Create directories
-        slots_path.parent.mkdir(parents=True, exist_ok=True)
+        slot_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write data
-        with open(slots_path, "wb") as slots_file:
-            slots_file.write(request.data)
+        # Write values
+        if slot_values:
+            with open(slot_path, "w") as slot_file:
+                for value in slot_values:
+                    value = value.strip()
+                    if value:
+                        print(value, file=slot_file)
 
-        return f"Wrote {len(request.data)} byte(s) to {slots_path}"
+        return f"Wrote to {slot_path}"
 
     # Load slots values
     slot_values: typing.List[str] = []
-    slot_file_path = slots_dir / name
-    if slot_file_path.is_file():
-        slot_values = [line.strip() for line in slot_file_path.read_text().splitlines()]
+    slot_path = slots_dir / name
+    if slot_path.is_file():
+        slot_values = [line.strip() for line in slot_path.read_text().splitlines()]
 
     return jsonify(slot_values)
 

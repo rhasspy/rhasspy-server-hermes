@@ -81,6 +81,12 @@ parser.add_argument("--port", type=int, help="Port for web server", default=1210
 parser.add_argument("--mqtt-host", type=str, help="Host for MQTT broker", default=None)
 parser.add_argument("--mqtt-port", type=int, help="Port for MQTT broker", default=None)
 parser.add_argument(
+    "--mqtt-username", type=str, help="Host for MQTT broker", default=None
+)
+parser.add_argument(
+    "--mqtt-password", type=int, help="Port for MQTT broker", default=None
+)
+parser.add_argument(
     "--local-mqtt-port",
     type=int,
     default=12183,
@@ -414,6 +420,8 @@ async def start_rhasspy() -> None:
         user_profiles_dir,
         host=args.mqtt_host,
         port=args.mqtt_port,
+        username=args.mqtt_username,
+        password=args.mqtt_password,
         local_mqtt_port=args.local_mqtt_port,
         certfile=certfile,
         keyfile=keyfile,
@@ -1487,10 +1495,12 @@ async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
         core.profile.read_path(core.profile.get("speech_to_text.slots_dir", "slots"))
     )
 
+    slot_values: typing.Set[str] = set()
+
     if request.method == "POST":
         data = await request.data
         slot_path = Path(safe_join(slots_dir, name))
-        slot_values: typing.Set[str] = set(json.loads(data))
+        slot_values = set(json.loads(data))
 
         if overwrite_all:
             # Remote existing values first
@@ -1527,12 +1537,11 @@ async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
         return f"Wrote to {slot_path}"
 
     # Load slots values
-    slot_values: typing.List[str] = []
     slot_path = slots_dir / name
     if slot_path.is_file():
-        slot_values = [line.strip() for line in slot_path.read_text().splitlines()]
+        slot_values = set(line.strip() for line in slot_path.read_text().splitlines())
 
-    return jsonify(slot_values)
+    return jsonify(list(slot_values))
 
 
 # -----------------------------------------------------------------------------

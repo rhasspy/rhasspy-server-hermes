@@ -87,6 +87,8 @@ class RhasspyCore(HermesClient):
         user_profiles_dir: typing.Union[str, Path],
         host: typing.Optional[str] = None,
         port: typing.Optional[int] = None,
+        username: typing.Optional[str] = None,
+        password: typing.Optional[str] = None,
         local_mqtt_port: int = 12183,
         loop=None,
         connection_retries: int = 10,
@@ -137,10 +139,18 @@ class RhasspyCore(HermesClient):
             # External broker
             self.host = host or str(self.profile.get("mqtt.host", "localhost"))
             self.port = port or int(self.profile.get("mqtt.port", 1883))
+            self.username = username or str(self.profile.get("mqtt.username", ""))
+            self.password = password or str(self.profile.get("mqtt.password", ""))
         else:
             # Internal broker
             self.host = host or "localhost"
             self.port = port or local_mqtt_port
+            self.username = ""
+            self.password = ""
+
+        if self.username:
+            # MQTT username/password
+            self.mqtt_client.username_pw_set(self.username, self.password)
 
         # MQTT retries
         self.connection_retries = connection_retries

@@ -1,6 +1,5 @@
 """Hermes implementation of RhasspyCore"""
 import asyncio
-import gzip
 import io
 import logging
 import os
@@ -11,8 +10,8 @@ from uuid import uuid4
 
 import aiohttp
 import attr
-import networkx as nx
 import paho.mqtt.client as mqtt
+import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
@@ -35,7 +34,7 @@ from rhasspyhermes.audioserver import (
     AudioSessionFrame,
 )
 from rhasspyhermes.base import Message
-from rhasspyhermes.client import HermesClient
+from rhasspyhermes.client import GeneratorType, HermesClient
 from rhasspyhermes.dialogue import DialogueSessionStarted
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
@@ -298,8 +297,8 @@ class RhasspyCore(HermesClient):
             self.profile.get("intent.fsticuffs.intent_json", "intent_graph.pickle.gz")
         )
         _LOGGER.debug("Writing %s", graph_path)
-        with gzip.GzipFile(graph_path, mode="wb") as graph_gzip:
-            nx.readwrite.gpickle.write_gpickle(intent_graph, graph_gzip)
+        with open(graph_path, mode="wb") as graph_file:
+            rhasspynlu.graph_to_gzip_pickle(intent_graph, graph_file)
 
         _LOGGER.debug("Finished writing %s", graph_path)
 
@@ -900,7 +899,7 @@ class RhasspyCore(HermesClient):
         siteId: typing.Optional[str] = None,
         sessionId: typing.Optional[str] = None,
         topic: typing.Optional[str] = None,
-    ):
+    ) -> GeneratorType:
         """Received message from MQTT broker."""
         assert topic, "Missing topic"
 
@@ -1002,38 +1001,11 @@ class RhasspyCore(HermesClient):
         else:
             _LOGGER.warning("Unexpected message: %s", message)
 
+        # Mark as async generator
+        yield None
+
     async def on_raw_message(self, topic: str, payload: bytes):
         """Handle raw MQTT messages."""
         # Forward to external message queues
         for queue in self.message_queues:
             queue.put_nowait(("mqtt", topic, payload))
-
-    # -------------------------------------------------------------------------
-
-    # def publish(self, message: Message, **topic_args):
-    #     """Publish a Hermes message to MQTT."""
-    #     try:
-    #         assert self.client
-    #         topic = message.topic(**topic_args)
-    #         payload: typing.Union[str, bytes]
-
-    #         if isinstance(message, (AudioFrame, AudioSessionFrame, AudioPlayBytes)):
-    #             # Handle binary payloads specially
-    #             payload = message.wav_bytes
-    #         else:
-    #             _LOGGER.debug("-> %s", message)
-    #             payload = json.dumps(attr.asdict(message))
-
-    #         self.client.publish(topic, payload)
-    #     except Exception:
-    #         _LOGGER.exception("on_message")
-
-    # -------------------------------------------------------------------------
-
-    # def _check_siteId(self, json_payload: typing.Dict[str, typing.Any]) -> bool:
-    #     if self.siteIds:
-    #         payload_siteId = json_payload.get("siteId", "default")
-    #         return payload_siteId in self.siteIds
-
-    #     # All sites
-    #     return True

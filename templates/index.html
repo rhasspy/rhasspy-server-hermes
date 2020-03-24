@@ -94,6 +94,21 @@
                         <span>Play Recording</span>
                     </div>
                 </div>
+                <div class="row mt-2">
+                    <div class="col-xs-auto">
+                        <input title="Show audio energy" type="checkbox" id="audio-summary" class="form-control">
+                    </div>
+                    <div class="col">
+                        <div title="Debiased audio energy" class="progress position-relative" style="height: 1rem;">
+                            <div id="progress-audio" class="progress-bar w-0" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1000">
+                                <small class="justify-content-center d-flex position-absolute w-100">Audio Energy</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-auto">
+                        <i id="audio-websocket" class="fas fa-circle text-success" style="display: none; vertical-align:top;" title="Connected to audio summary websocket"></i>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card-footer">
@@ -326,7 +341,26 @@
              socket.onmessage = (e) => {
                  setIntent(JSON.parse(e.data));
              }
-     });
+         });
+
+     rhasspy.makeWebSocket(
+         '/api/events/audiosummary',
+         (socket) => {
+             $('#audio-websocket').show();
+
+             socket.onmessage = (e) => {
+                 var summary = JSON.parse(e.data);
+                 var progressPercent = summary.debiased_energy / 10;
+                 var progressId = "#progress-audio";
+                 $(progressId).width(progressPercent + '%');
+
+                 if (summary.is_speech) {
+                     $(progressId).addClass('bg-success');
+                 } else {
+                     $(progressId).removeClass('bg-success');
+                 }
+             }
+         });
  })
 
 </script>

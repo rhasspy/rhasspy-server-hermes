@@ -32,6 +32,7 @@ from rhasspyhermes.audioserver import (
     AudioPlayBytes,
     AudioPlayFinished,
     AudioSessionFrame,
+    AudioSummary,
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.client import GeneratorType, HermesClient
@@ -124,6 +125,7 @@ class RhasspyCore(HermesClient):
             NluIntent,
             NluIntentNotRecognized,
             AsrAudioCaptured,
+            AudioSummary,
         )
 
         # Event loop
@@ -929,6 +931,13 @@ class RhasspyCore(HermesClient):
             # Audio finished playing
             assert siteId, "Missing siteId"
             self.handle_message(topic, message)
+        elif isinstance(message, AudioSummary):
+            # Audio summary statistics
+            assert siteId, "Missing siteId"
+
+            # Report to websockets
+            for queue in self.message_queues:
+                queue.put_nowait(("audiosummary", message))
         elif isinstance(message, DialogueSessionStarted):
             # Dialogue session started
             self.handle_message(topic, message)

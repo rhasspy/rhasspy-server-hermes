@@ -43,6 +43,7 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
+from rhasspyhermes.audioserver import AudioSummary
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -1995,6 +1996,21 @@ async def api_ws_text(queue) -> None:
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
+    except Exception:
+        pass
+
+
+@app.websocket("/api/events/audiosummary")
+@mqtt_websocket
+async def api_ws_audiosummary(queue) -> None:
+    """Websocket endpoint to notify clients when audio summary statistics are available."""
+    try:
+        while True:
+            message = await queue.get()
+            if message[0] == "audiosummary":
+                audio_summary: AudioSummary = message[1]
+                ws_message = json.dumps(attr.asdict(audio_summary))
+                await websocket.send(ws_message)
     except Exception:
         pass
 

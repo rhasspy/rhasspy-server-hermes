@@ -5,11 +5,11 @@ import logging
 import os
 import ssl
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
 import aiohttp
-import attr
 import paho.mqtt.client as mqtt
 import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
@@ -64,7 +64,7 @@ _LOGGER = logging.getLogger("rhasspyserver_hermes")
 # -----------------------------------------------------------------------------
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class TrainingFailedException(Exception):
     """Raised when training fails."""
 

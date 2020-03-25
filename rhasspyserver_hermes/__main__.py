@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import atexit
+import dataclasses
 import io
 import json
 import logging
@@ -18,7 +19,6 @@ from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 
-import attr
 import rhasspyhermes
 import rhasspynlu
 import rhasspyprofile
@@ -146,7 +146,7 @@ web_dir = Path(args.web_dir)
 assert web_dir.is_dir(), f"Missing web directory {web_dir}"
 template_dir = web_dir.parent / "templates"
 
-app = Quart("rhasspy", template_folder=template_dir)
+app = Quart("rhasspy", template_folder=str(template_dir))
 app.secret_key = str(uuid4())
 app = cors(app)
 
@@ -535,7 +535,7 @@ async def api_download_profile() -> str:
 
 
 @app.route("/api/download-status", methods=["GET"])
-async def api_download_status() -> str:
+async def api_download_status() -> Response:
     """Get status of profile file downloads"""
     assert core is not None
 
@@ -687,7 +687,7 @@ async def api_wake_words() -> Response:
     assert core is not None
     try:
         hotwords = await core.get_hotwords()
-        return jsonify(attr.asdict(hotwords)["models"])
+        return jsonify(dataclasses.asdict(hotwords)["models"])
     except Exception:
         _LOGGER.exception("api_wake_words")
 
@@ -800,11 +800,14 @@ async def api_listen_for_command() -> Response:
         assert isinstance(nlu_intent, (NluIntent, NluIntentNotRecognized))
         if output_format == "hermes":
             if isinstance(nlu_intent, NluIntent):
-                intent_dict = {"type": "intent", "value": attr.asdict(nlu_intent)}
+                intent_dict = {
+                    "type": "intent",
+                    "value": dataclasses.asdict(nlu_intent),
+                }
             else:
                 intent_dict = {
                     "type": "intentNotRecognized",
-                    "value": attr.asdict(nlu_intent),
+                    "value": dataclasses.asdict(nlu_intent),
                 }
         else:
             # Rhasspy format
@@ -864,7 +867,7 @@ async def api_lookup() -> Response:
     result = await core.get_word_pronunciations([word], n)
 
     if output_format == "hermes":
-        return jsonify({"type": "phonemes", "value": attr.asdict(result)})
+        return jsonify({"type": "phonemes", "value": dataclasses.asdict(result)})
 
     # Convert to Rhasspy format
     pronunciation_dict: typing.Dict[str, typing.Any] = {}
@@ -1199,7 +1202,7 @@ async def api_restart() -> str:
 
 
 @app.route("/api/speech-to-text", methods=["POST"])
-async def api_speech_to_text() -> str:
+async def api_speech_to_text() -> typing.Union[Response, str]:
     """Transcribe speech from WAV file."""
     assert core is not None
     no_header = request.args.get("noheader", "false").lower() == "true"
@@ -1220,7 +1223,7 @@ async def api_speech_to_text() -> str:
     end_time = time.perf_counter()
 
     if output_format == "hermes":
-        return jsonify({"type": "textCaptured", "value": attr.asdict(result)})
+        return jsonify({"type": "textCaptured", "value": dataclasses.asdict(result)})
 
     if prefers_json():
         # Return extra info in JSON
@@ -1406,7 +1409,7 @@ last_sentence = ""
 
 
 @app.route("/api/text-to-speech", methods=["POST"])
-async def api_text_to_speech() -> typing.Union[bytes, str]:
+async def api_text_to_speech() -> typing.Union[Response, str]:
     """Speak a sentence with text to speech system."""
     global last_sentence
     repeat = request.args.get("repeat", "false").strip().lower() == "true"
@@ -1439,7 +1442,7 @@ async def api_tts_voices() -> Response:
 
     try:
         voices = await core.get_voices()
-        return jsonify(attr.asdict(voices)["voices"])
+        return jsonify(dataclasses.asdict(voices)["voices"])
     except Exception:
         _LOGGER.exception("api_wake_words")
 
@@ -1580,7 +1583,7 @@ def api_intents():
     for intent_name, intent_sentences in intents.items():
         sentence_dicts = []
         for sentence in intent_sentences:
-            sentence_dict = attr.asdict(sentence)
+            sentence_dict = dataclasses.asdict(sentence)
 
             # Add item_type field
             add_type(sentence, sentence_dict)
@@ -1728,7 +1731,7 @@ async def api_evaluate() -> Response:
             _LOGGER.debug("Generating report")
             report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
 
-            return jsonify(attr.asdict(report))
+            return jsonify(dataclasses.asdict(report))
     finally:
         # Restore sound setting
         core.sounds_enabled = sounds_enabled
@@ -2009,7 +2012,7 @@ async def api_ws_audiosummary(queue) -> None:
             message = await queue.get()
             if message[0] == "audiosummary":
                 audio_summary: AudioSummary = message[1]
-                ws_message = json.dumps(attr.asdict(audio_summary))
+                ws_message = json.dumps(dataclasses.asdict(audio_summary))
                 await websocket.send(ws_message)
     except Exception:
         pass
@@ -2102,13 +2105,13 @@ async def docs(filename) -> Response:
 
 
 @app.route("/", methods=["GET"])
-async def page_index() -> Response:
+async def page_index() -> str:
     """Render main web page."""
     return await render_template("index.html", page="Test", **get_template_args())
 
 
 @app.route("/sentences", methods=["GET", "POST"])
-async def page_sentences() -> Response:
+async def page_sentences() -> str:
     """Render sentences web page."""
     return await render_template(
         "sentences.html", page="Sentences", **get_template_args()
@@ -2116,19 +2119,19 @@ async def page_sentences() -> Response:
 
 
 @app.route("/words", methods=["GET", "POST"])
-async def page_words() -> Response:
+async def page_words() -> str:
     """Render words web page."""
     return await render_template("words.html", page="Words", **get_template_args())
 
 
 @app.route("/slots", methods=["GET", "POST"])
-async def page_slots() -> Response:
+async def page_slots() -> str:
     """Render slots web page."""
     return await render_template("slots.html", page="Slots", **get_template_args())
 
 
 @app.route("/settings", methods=["GET"])
-async def page_settings() -> Response:
+async def page_settings() -> str:
     """Render settings web page."""
     return await render_template(
         "settings.html", page="Settings", **get_template_args()
@@ -2136,7 +2139,7 @@ async def page_settings() -> Response:
 
 
 @app.route("/advanced", methods=["GET", "POST"])
-async def page_advanced() -> Response:
+async def page_advanced() -> str:
     """Render advanced web page."""
     assert core is not None
     return await render_template(
@@ -2184,9 +2187,12 @@ async def text_to_intent_dict(text, output_format="rhasspy"):
 
     if output_format == "hermes":
         if isinstance(result, NluIntent):
-            intent_dict = {"type": "intent", "value": attr.asdict(result)}
+            intent_dict = {"type": "intent", "value": dataclasses.asdict(result)}
         else:
-            intent_dict = {"type": "intentNotRecognized", "value": attr.asdict(result)}
+            intent_dict = {
+                "type": "intentNotRecognized",
+                "value": dataclasses.asdict(result),
+            }
     else:
         # Rhasspy format
         intent_dict = result.to_rhasspy_dict()

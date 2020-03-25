@@ -30,7 +30,6 @@ from quart import (
     jsonify,
     render_template,
     request,
-    safe_join,
     send_file,
     send_from_directory,
     websocket,
@@ -43,7 +42,7 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
-from rhasspyhermes.audioserver import AudioSummary, SummaryToggleOn, SummaryToggleOff
+from rhasspyhermes.audioserver import AudioSummary, SummaryToggleOff, SummaryToggleOn
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -1628,7 +1627,10 @@ async def api_mqtt(topic: str):
                     for _ in topic_matcher.iter_match(topic):
                         return jsonify({"topic": topic, "payload": json.loads(payload)})
         finally:
-            core.message_queues.remove(queue)
+            try:
+                core.message_queues.remove(queue)
+            except KeyError:
+                pass
 
         # Empty response
         return jsonify({})
@@ -1807,12 +1809,6 @@ async def broadcast_logging(message):
         await queue.put(message)
 
 
-def logging_func(message):
-    global loop
-    if loop and loop.is_running():
-        asyncio.run_coroutine_threadsafe(broadcast_logging(message), loop)
-
-
 logging.root.addHandler(
     FunctionLoggingHandler(
         lambda message: asyncio.run_coroutine_threadsafe(
@@ -1857,7 +1853,10 @@ def mqtt_websocket(func):
             return await func(queue, *_args, **kwargs)
         finally:
             mqtt_websockets.remove(queue)
-            core.message_queues.remove(queue)
+            try:
+                core.message_queues.remove(queue)
+            except KeyError:
+                pass
 
     return wrapper
 
@@ -2197,18 +2196,9 @@ quart_api_doc(
 
 def prefers_json() -> bool:
     """True if client prefers JSON over plain text."""
-    return quality(request.accept_mimetypes, "application/json") > quality(
-        request.accept_mimetypes, "text/plain"
-    )
-
-
-def quality(accept, key: str) -> float:
-    """Return Accept quality for media type."""
-    for option in accept.options:
-        # pylint: disable=W0212
-        if accept._values_match(key, option.value):
-            return option.quality
-    return 0.0
+    return request.accept_mimetypes.quality(
+        "application/json"
+    ) > request.accept_mimetypes.quality("text/plain")
 
 
 async def text_to_intent_dict(text, output_format="rhasspy"):

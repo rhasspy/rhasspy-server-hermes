@@ -43,7 +43,7 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
-from rhasspyhermes.audioserver import AudioSummary
+from rhasspyhermes.audioserver import AudioSummary, SummaryToggleOn, SummaryToggleOff
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -326,7 +326,7 @@ def save_slots(
     if overwrite_all:
         # Remote existing values first
         for name in new_slot_values:
-            slots_path = safe_join(slots_dir, name)
+            slots_path = slots_dir / name
             if slots_path.is_file():
                 try:
                     slots_path.unlink()
@@ -351,7 +351,7 @@ def save_slots(
                 if value:
                     values.add(value)
 
-        slots_path = safe_join(slots_dir, name)
+        slots_path = slots_dir / name
 
         # Create directories
         slots_path.parent.mkdir(parents=True, exist_ok=True)
@@ -404,10 +404,15 @@ core = None
 @atexit.register
 def shutdown(*_args: typing.Any, **kwargs: typing.Any) -> None:
     """Ensure Rhasspy core is stopped."""
-    global core
+    global core, loop
+
     if core is not None:
-        loop.run_until_complete(loop.create_task(core.shutdown()))
+        _core = core
         core = None
+        asyncio.run(_core.shutdown())
+
+
+signal.signal(signal.SIGTERM, shutdown)
 
 
 async def start_rhasspy() -> None:
@@ -1287,10 +1292,12 @@ async def api_speech_to_intent() -> Response:
         core.last_audio_captured = AsrAudioCaptured(wav_bytes=wav_bytes)
 
         # speech -> text
+        _LOGGER.debug("Waiting for transcription")
         transcription = await core.transcribe_wav(wav_bytes)
         text = transcription.text
 
         # text -> intent
+        _LOGGER.debug("Waiting for intent")
         intent_dict = await text_to_intent_dict(text, output_format=output_format)
 
         if output_format == "rhasspy":
@@ -1503,7 +1510,7 @@ async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
 
     if request.method == "POST":
         data = await request.data
-        slot_path = Path(safe_join(slots_dir, name))
+        slot_path = slots_dir / name
         slot_values = set(json.loads(data))
 
         if overwrite_all:
@@ -1752,6 +1759,25 @@ async def api_handle_intent():
 
 
 # -----------------------------------------------------------------------------
+
+
+@app.route("/api/audio-summaries", methods=["POST"])
+async def api_audio_summaries() -> str:
+    """Turn audio summaries on or off."""
+    assert core is not None
+    toggle_off = (await request.data).decode().lower() in ["false", "off"]
+
+    if toggle_off:
+        # Disable
+        core.publish(SummaryToggleOff(siteId=core.siteId))
+        return "off"
+
+    # Enable
+    core.publish(SummaryToggleOn(siteId=core.siteId))
+    return "on"
+
+
+# -----------------------------------------------------------------------------
 # WebSocket API
 # -----------------------------------------------------------------------------
 
@@ -1779,6 +1805,12 @@ async def broadcast_logging(message):
     """Broadcasts a logging message to all logging websockets."""
     for queue in logging_websockets:
         await queue.put(message)
+
+
+def logging_func(message):
+    global loop
+    if loop and loop.is_running():
+        asyncio.run_coroutine_threadsafe(broadcast_logging(message), loop)
 
 
 logging.root.addHandler(
@@ -2092,7 +2124,7 @@ async def docs_index() -> Response:
 @app.route("/docs/<path:filename>")
 async def docs(filename) -> Response:
     """Documentation static endpoint."""
-    doc_file = Path(safe_join(docs_dir, filename))
+    doc_file = docs_dir / filename
     if doc_file.is_dir():
         doc_file = doc_file / "index.html"
 
@@ -2227,7 +2259,9 @@ _LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.por
 
 
 try:
-    app.run(host=args.host, port=args.port, certfile=certfile, keyfile=keyfile)
+    app.run(
+        host=args.host, port=args.port, certfile=certfile, keyfile=keyfile, loop=loop
+    )
 except KeyboardInterrupt:
     pass
 except LocalProtocolError:

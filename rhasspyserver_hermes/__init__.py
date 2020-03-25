@@ -4,6 +4,7 @@ import io
 import logging
 import os
 import ssl
+import sys
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -227,9 +228,10 @@ class RhasspyCore(HermesClient):
 
     async def shutdown(self):
         """Disconnect from MQTT broker"""
-        _LOGGER.debug("Shutting down core")
+        print("Shutting down core", file=sys.stderr)
 
         # Shut down MQTT client
+        self.stop()
         self.mqtt_client.loop_stop()
 
         # Shut down HTTP session
@@ -854,13 +856,6 @@ class RhasspyCore(HermesClient):
 
     def handle_message(self, topic: str, message: Message):
         """Send matching messages to waiting handlers."""
-        if message.__class__.is_binary_payload():
-            _LOGGER.debug(
-                "<- %s(%s byte(s))", message.__class__.__name__, len(message.payload())
-            )
-        else:
-            _LOGGER.debug("<- %s", message)
-
         for handler_id in list(self.handler_matchers):
             handler_matcher = self.handler_matchers[handler_id]
 

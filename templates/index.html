@@ -96,7 +96,7 @@
                 </div>
                 <div class="row mt-2">
                     <div class="col-xs-auto">
-                        <input title="Show audio energy" type="checkbox" id="audio-summary" class="form-control">
+                        <input title="Show audio energy" type="checkbox" id="audio-summary" onclick="toggleAudioSummary()" class="form-control">
                     </div>
                     <div class="col">
                         <div title="Debiased audio energy" class="progress position-relative" style="height: 1rem;">
@@ -331,6 +331,19 @@
 
      return false;
  }
+
+ // Enable or disable audio summaries
+ function toggleAudioSummary() {
+     if ($('#audio-summary').prop('checked')) {
+         $.post('/api/audio-summaries', 'on');
+
+     } else {
+         $.post('/api/audio-summaries', 'off');
+     }
+
+     $('#progress-audio').width('0%');
+ }
+
 
  $(() => {
      rhasspy.makeWebSocket(

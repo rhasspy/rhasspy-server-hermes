@@ -49,7 +49,13 @@ def sentences_to_graph(
         def transform_visitor(word: Expression):
             if isinstance(word, Word):
                 assert word_transform
-                word.text = word_transform(word.text)
+                new_text = word_transform(word.text)
+
+                # Preserve case by using original text as substition
+                if (word.substitution is None) and (new_text != word.text):
+                    word.substitution = word.text
+
+                word.text = new_text
 
             return word
 

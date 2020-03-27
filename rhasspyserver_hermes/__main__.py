@@ -42,7 +42,13 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
-from rhasspyhermes.audioserver import AudioSummary, SummaryToggleOff, SummaryToggleOn
+from rhasspyhermes.audioserver import (
+    AudioSummary,
+    SummaryToggleOff,
+    SummaryToggleOn,
+    AudioToggleOff,
+    AudioToggleOn,
+)
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -1419,26 +1425,42 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     """Speak a sentence with text to speech system."""
     global last_sentence
     repeat = request.args.get("repeat", "false").strip().lower() == "true"
+    play = request.args.get("play", "true").strip().lower() == "true"
     language = request.args.get("language")
     voice = request.args.get("voice")
     siteId = request.args.get("siteId", None)
+    sessionId = request.args.get("sessionId", "")
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
     sentence = last_sentence if repeat else data.decode().strip()
 
     assert core is not None
-    _, play_bytes = await core.speak_sentence(
-        sentence, language=(language or voice), capture_audio=True, siteId=siteId
-    )
 
-    # Cache last sentence spoken
-    last_sentence = sentence
+    if not play:
+        # Disable audio output
+        core.publish(AudioToggleOff(siteId=core.siteId))
 
-    if play_bytes:
-        return Response(play_bytes.wav_bytes, mimetype="audio/wav")
+    try:
+        _, play_bytes = await core.speak_sentence(
+            sentence,
+            language=(language or voice),
+            capture_audio=True,
+            siteId=siteId,
+            sessionId=sessionId,
+        )
 
-    return sentence
+        # Cache last sentence spoken
+        last_sentence = sentence
+
+        if play_bytes:
+            return Response(play_bytes.wav_bytes, mimetype="audio/wav")
+
+        return sentence
+    finally:
+        if not play:
+            # Re-enable audio output
+            core.publish(AudioToggleOn(siteId=core.siteId))
 
 
 @app.route("/api/tts-voices", methods=["GET"])

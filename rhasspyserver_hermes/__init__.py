@@ -448,6 +448,7 @@ class RhasspyCore(HermesClient):
         language: typing.Optional[str] = None,
         capture_audio: bool = False,
         siteId: typing.Optional[str] = None,
+        sessionId: str = "",
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
@@ -476,7 +477,7 @@ class RhasspyCore(HermesClient):
                 if say_finished and play_bytes:
                     return (say_finished, play_bytes)
 
-        say = TtsSay(id=tts_id, text=sentence, siteId=siteId)
+        say = TtsSay(id=tts_id, text=sentence, siteId=siteId, sessionId=sessionId)
         if language:
             say.lang = language
 

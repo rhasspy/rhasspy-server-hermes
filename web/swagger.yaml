@@ -5,6 +5,9 @@ info:
   description: 'API for Rhasspy Voice Assistant Toolkit'
 schemes:
   - http
+servers:
+  - url: http://localhost:12101
+    description: Local development server
 paths:
   /api/backup-profile:
     get:
@@ -530,6 +533,17 @@ paths:
               type: string
       parameters:
         - in: query
+          name: language
+          description: 'Override default language'
+          schema:
+            type: string
+        - in: query
+          name: play
+          description: 'If true, output audio (default)'
+          schema:
+            type: boolean
+            default: true
+        - in: query
           name: repeat
           description: 'True if Rhasspy should repeat the last spoken sentence'
           schema:
@@ -538,11 +552,6 @@ paths:
         - in: query
           name: voice
           description: 'Override default voice'
-          schema:
-            type: string
-        - in: query
-          name: language
-          description: 'Override default language'
           schema:
             type: string
       responses:

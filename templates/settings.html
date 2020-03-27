@@ -992,6 +992,19 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
+                            <label for="intent-fuzzywuzzy-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-fuzzywuzzy-min-confidence" type="text" class="form-control" x-model="profile.intent.fuzzywuzzy.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
                             <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
                         </div>
                         <div class="col">

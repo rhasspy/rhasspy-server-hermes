@@ -594,8 +594,8 @@ class RhasspyCore(HermesClient):
         message_types: typing.List[typing.Type[Message]] = [AudioPlayFinished]
 
         # Disable hotword/ASR
-        self.publish(HotwordToggleOff(siteId=siteId))
-        self.publish(AsrToggleOff(siteId=siteId))
+        self.publish(HotwordToggleOff(siteId=siteId, reason="playBytes"))
+        self.publish(AsrToggleOff(siteId=siteId, reason="playBytes"))
 
         try:
             # Expecting only a single result
@@ -609,8 +609,8 @@ class RhasspyCore(HermesClient):
             return result
         finally:
             # Enable hotword/ASR
-            self.publish(HotwordToggleOn(siteId=siteId))
-            self.publish(AsrToggleOn(siteId=siteId))
+            self.publish(HotwordToggleOn(siteId=siteId, reason="playBytes"))
+            self.publish(AsrToggleOn(siteId=siteId, reason="playBytes"))
 
     # -------------------------------------------------------------------------
 

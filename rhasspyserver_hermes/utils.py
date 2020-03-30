@@ -15,20 +15,20 @@ _LOGGER = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 
 
-# class FunctionLoggingHandler(logging.Handler):
-#     """Calls a function for each logging message."""
+class FunctionLoggingHandler(logging.Handler):
+    """Calls a function for each logging message."""
 
-#     def __init__(
-#         self,
-#         func,
-#         log_format: str = "[%(levelname)s:%(asctime)s] %(name)s: %(message)s",
-#     ):
-#         logging.Handler.__init__(self)
-#         self.func = func
-#         self.formatter = logging.Formatter(log_format)
+    def __init__(
+        self,
+        func,
+        log_format: str = "[%(levelname)s:%(asctime)s] %(name)s: %(message)s",
+    ):
+        logging.Handler.__init__(self)
+        self.func = func
+        self.formatter = logging.Formatter(log_format)
 
-#     def handle(self, record):
-#         self.func(self.formatter.format(record))
+    def handle(self, record):
+        self.func(self.formatter.format(record))
 
 
 # -----------------------------------------------------------------------------

@@ -266,7 +266,7 @@
         <!-- End Log -->
 
         <!-- Load Javascript libraries -->
-        <script src="/js/recorder.js"></script>
+        <script src="/js/reconnecting-websocket-iife.min.js"></script>
         <script src="/js/jquery-3.4.1.min.js"></script>
         <script src="/js/popper.min.js"></script>
         <script src="/js/bootstrap.min.js"></script>
@@ -525,19 +525,7 @@
                  }
 
                  var wsURL = wsProtocol + window.location.host + urlFragment;
-                 var socket = new WebSocket(wsURL);
-                 socket.onclose = () => {
-                     socket = null;
-
-                     // Try to reconnect
-                     setTimeout(() => {
-                         rhasspy.makeWebSocket(urlFragment, afterFunc);
-                     }, 5000);
-                 }
-
-                 socket.onerror = () => {
-                     socket.close();
-                 }
+                 var socket = new ReconnectingWebSocket(wsURL);
 
                  if (afterFunc != undefined) {
                      afterFunc(socket);
@@ -583,7 +571,7 @@
              return true;
          }
 
-         $(() => {
+         $(window).on("load", () => {
              // Disable GET caches
              $.ajaxSetup({ cache: false });
 

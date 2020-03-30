@@ -211,7 +211,7 @@
      }
  }
 
- $(function() {
+ $(document).ready(() => {
      // Load custom words
      $.get('/api/custom-words', (r) => words.customWords.value = r);
 

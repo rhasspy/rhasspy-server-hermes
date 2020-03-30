@@ -345,7 +345,7 @@
  }
 
 
- $(() => {
+ $(document).ready(() => {
      rhasspy.makeWebSocket(
          '/api/events/intent',
          (socket) => {

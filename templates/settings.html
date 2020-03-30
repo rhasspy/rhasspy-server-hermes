@@ -1896,7 +1896,7 @@
      return rhasspy.profile.wake[wakeSystem].compatible;
  }
 
- $(() => {
+ $(document).ready(() => {
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
      if (hash.length > 0) {

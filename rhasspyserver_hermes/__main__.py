@@ -15,6 +15,7 @@ import time
 import typing
 import zipfile
 from collections import defaultdict
+from concurrent.futures import CancelledError
 from functools import wraps
 from pathlib import Path
 from uuid import uuid4
@@ -60,6 +61,7 @@ from wsproto.utilities import LocalProtocolError
 
 from . import RhasspyCore
 from .utils import (
+    FunctionLoggingHandler,
     buffer_to_wav,
     get_all_intents,
     get_espeak_phonemes,
@@ -1844,16 +1846,27 @@ def broadcast_logging(message):
         queue.put_nowait(message)
 
 
+logging.root.addHandler(
+    FunctionLoggingHandler(
+        lambda message: broadcast_logging(message),
+        log_format=_ARGS.log_format,
+    )
+)
+
 @app.websocket("/api/events/log")
 @logging_websocket
 async def api_events_log(queue) -> None:
     """Websocket endpoint to send out logging messages as text."""
-    while True:
-        try:
+    try:
+        await websocket.accept()
+
+        while True:
             message = await queue.get()
             await websocket.send(message)
-        except Exception:
-            break
+    except CancelledError:
+        pass
+    except Exception:
+        _LOGGER.debug("api_events_log")
 
 
 # -----------------------------------------------------------------------------
@@ -1977,8 +1990,10 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
     topic_matcher[topic] = True
     _LOGGER.debug("Subscribed to %s for websocket", topic)
 
-    while True:
-        try:
+    try:
+        await websocket.accept()
+
+        while True:
             # Send out queued message (if matches topic)
             message = await queue.get()
             if message[0] == "mqtt":
@@ -1991,8 +2006,10 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
                     await websocket.send(mqtt_message)
                     _LOGGER.debug("Sent %s char(s) to websocket", len(mqtt_message))
                     break
-        except Exception:
-            _LOGGER.debug(topic)
+    except CancelledError:
+        pass
+    except Exception:
+        _LOGGER.exception(f"api_ws_mqtt_topic (topic={topic})")
 
 
 @app.websocket("/api/events/intent")
@@ -2000,6 +2017,8 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
 async def api_ws_intent(queue) -> None:
     """Websocket endpoint to send intents in Rhasspy JSON format."""
     try:
+        await websocket.accept()
+
         while True:
             message = await queue.get()
             if message[0] == "intent":
@@ -2011,8 +2030,10 @@ async def api_ws_intent(queue) -> None:
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-    except Exception:
+    except CancelledError:
         pass
+    except Exception:
+        _LOGGER.exception("api_ws_intent")
 
 
 @app.websocket("/api/events/wake")
@@ -2020,6 +2041,8 @@ async def api_ws_intent(queue) -> None:
 async def api_ws_wake(queue) -> None:
     """Websocket endpoint to notify clients on wake up."""
     try:
+        await websocket.accept()
+
         while True:
             message = await queue.get()
             if message[0] == "wake":
@@ -2031,8 +2054,10 @@ async def api_ws_wake(queue) -> None:
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-    except Exception:
+    except CancelledError:
         pass
+    except Exception:
+        _LOGGER.exception("api_ws_wake")
 
 
 @app.websocket("/api/events/text")
@@ -2040,6 +2065,8 @@ async def api_ws_wake(queue) -> None:
 async def api_ws_text(queue) -> None:
     """Websocket endpoint to notify clients when speech is transcribed."""
     try:
+        await websocket.accept()
+
         while True:
             message = await queue.get()
             if message[0] == "text":
@@ -2055,8 +2082,10 @@ async def api_ws_text(queue) -> None:
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
-    except Exception:
+    except CancelledError:
         pass
+    except Exception:
+        _LOGGER.exception("api_ws_text")
 
 
 @app.websocket("/api/events/audiosummary")
@@ -2064,14 +2093,18 @@ async def api_ws_text(queue) -> None:
 async def api_ws_audiosummary(queue) -> None:
     """Websocket endpoint to notify clients when audio summary statistics are available."""
     try:
+        await websocket.accept()
+
         while True:
             message = await queue.get()
             if message[0] == "audiosummary":
                 audio_summary: AudioSummary = message[1]
                 ws_message = json.dumps(dataclasses.asdict(audio_summary))
                 await websocket.send(ws_message)
-    except Exception:
+    except CancelledError:
         pass
+    except Exception:
+        _LOGGER.exception("api_ws_audiosummary")
 
 
 # -----------------------------------------------------------------------------

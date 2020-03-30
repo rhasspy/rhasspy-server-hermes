@@ -2,15 +2,14 @@
 import asyncio
 import io
 import logging
-import os
-import ssl
 import sys
+import threading
+import time
 import typing
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-import aiohttp
 import paho.mqtt.client as mqtt
 import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
@@ -22,6 +21,7 @@ from rhasspyhermes.asr import (
     AsrTextCaptured,
     AsrToggleOff,
     AsrToggleOn,
+    AsrToggleReason,
     AsrTrain,
     AsrTrainSuccess,
 )
@@ -36,7 +36,7 @@ from rhasspyhermes.audioserver import (
     AudioSummary,
 )
 from rhasspyhermes.base import Message
-from rhasspyhermes.client import GeneratorType, HermesClient
+from rhasspyhermes.client import HermesClient
 from rhasspyhermes.dialogue import DialogueSessionStarted
 from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
@@ -54,6 +54,7 @@ from rhasspyhermes.wake import (
     Hotwords,
     HotwordToggleOff,
     HotwordToggleOn,
+    HotwordToggleReason,
 )
 from rhasspyprofile import Profile
 
@@ -78,7 +79,7 @@ class TrainingFailedException(Exception):
 # -----------------------------------------------------------------------------
 
 
-class RhasspyCore(HermesClient):
+class RhasspyCore:
     """Core Rhasspy functionality, abstracted over MQTT Hermes services"""
 
     def __init__(
@@ -91,7 +92,6 @@ class RhasspyCore(HermesClient):
         username: typing.Optional[str] = None,
         password: typing.Optional[str] = None,
         local_mqtt_port: int = 12183,
-        loop=None,
         connection_retries: int = 10,
         retry_seconds: float = 1,
         message_timeout_seconds: float = 30,
@@ -115,22 +115,26 @@ class RhasspyCore(HermesClient):
 
         # Look up siteId(s) in profile
         siteIds = str(self.profile.get("mqtt.site_id", "")).split(",")
+        self.siteIds = set(siteIds)
 
-        super().__init__(
-            "rhasspyserver_hermes", mqtt.Client(), siteIds=siteIds, loop=loop
-        )
+        if siteIds:
+            self.siteId = siteIds[0]
+        else:
+            self.siteId = "default"
 
-        self.subscribe(
-            HotwordDetected,
-            AsrTextCaptured,
-            NluIntent,
-            NluIntentNotRecognized,
-            AsrAudioCaptured,
-            AudioSummary,
-        )
+        # MQTT client
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
+        self.client.on_message = self.on_message
 
-        # Event loop
-        self.loop = loop or asyncio.get_event_loop()
+        self.is_connected = False
+        self.connected_event = threading.Event()
+
+        # Message types that are we are subscribed to
+        self.subscribed_types: typing.Set[typing.Type[Message]] = set()
+
+        # super().__init__("rhasspyserver_hermes", mqtt.Client(), siteIds=siteIds)
 
         # Default timeout for response messages
         self.message_timeout_seconds = message_timeout_seconds
@@ -152,7 +156,7 @@ class RhasspyCore(HermesClient):
 
         if self.username:
             # MQTT username/password
-            self.mqtt_client.username_pw_set(self.username, self.password)
+            self.client.username_pw_set(self.username, self.password)
 
         # MQTT retries
         self.connection_retries = connection_retries
@@ -167,15 +171,6 @@ class RhasspyCore(HermesClient):
         # External message queues
         self.message_queues: typing.Set[asyncio.Queue] = set()
 
-        # Shared aiohttp client session (enable SSL)
-        self.ssl_context = ssl.SSLContext()
-        if certfile:
-            self.ssl_context.load_cert_chain(certfile, keyfile)
-
-        self._http_session: typing.Optional[
-            aiohttp.ClientSession
-        ] = aiohttp.ClientSession()
-
         # Cached wake word IDs for sessions
         self.session_wakewordIds: typing.Dict[str, str] = {}
 
@@ -188,56 +183,44 @@ class RhasspyCore(HermesClient):
         self.asr_system = self.profile.get("speech_to_text.system", "dummy")
         self.dialogue_system = self.profile.get("dialogue.system", "dummy")
 
-    @property
-    def http_session(self) -> aiohttp.ClientSession:
-        """Get HTTP client session."""
-        if self._http_session is None:
-            self._http_session = aiohttp.ClientSession()
-
-        return self._http_session
-
     # -------------------------------------------------------------------------
 
-    async def start(self):
+    def start(self):
         """Connect to MQTT broker"""
         _LOGGER.debug("Starting core")
 
         # Connect to MQTT broker
         retries = 0
-        connected = False
-        while retries < self.connection_retries:
+        while (not self.is_connected) and (retries < self.connection_retries):
             try:
                 _LOGGER.debug(
-                    "Connecting to %s:%s (retries: %s)", self.host, self.port, retries
+                    "Connecting to %s:%s (retries: %s/%s)",
+                    self.host,
+                    self.port,
+                    retries,
+                    self.connection_retries,
                 )
-                self.mqtt_client.connect(self.host, self.port)
-                self.mqtt_client.loop_start()
-                await self.mqtt_connected_event.wait()
-                connected = True
-                break
+
+                self.client.connect(self.host, self.port)
+                self.client.loop_start()
+                self.connected_event.wait(timeout=5)
             except Exception:
                 _LOGGER.exception("mqtt connect")
                 retries += 1
-                await asyncio.sleep(self.retry_seconds)
+                time.sleep(self.retry_seconds)
 
-        if not connected:
+        if not self.is_connected:
             _LOGGER.fatal(
                 "Failed to connect to MQTT broker (%s:%s)", self.host, self.port
             )
             raise RuntimeError("Failed to connect to MQTT broker")
 
-    async def shutdown(self):
+    def shutdown(self):
         """Disconnect from MQTT broker"""
         print("Shutting down core", file=sys.stderr)
 
         # Shut down MQTT client
-        self.stop()
-        self.mqtt_client.loop_stop()
-
-        # Shut down HTTP session
-        if self._http_session is not None:
-            await self._http_session.close()
-            self._http_session = None
+        self.client.loop_stop()
 
     # -------------------------------------------------------------------------
 
@@ -594,8 +577,10 @@ class RhasspyCore(HermesClient):
         message_types: typing.List[typing.Type[Message]] = [AudioPlayFinished]
 
         # Disable hotword/ASR
-        self.publish(HotwordToggleOff(siteId=siteId, reason="playBytes"))
-        self.publish(AsrToggleOff(siteId=siteId, reason="playBytes"))
+        self.publish(
+            HotwordToggleOff(siteId=siteId, reason=HotwordToggleReason.PLAY_AUDIO)
+        )
+        self.publish(AsrToggleOff(siteId=siteId, reason=AsrToggleReason.PLAY_AUDIO))
 
         try:
             # Expecting only a single result
@@ -609,8 +594,10 @@ class RhasspyCore(HermesClient):
             return result
         finally:
             # Enable hotword/ASR
-            self.publish(HotwordToggleOn(siteId=siteId, reason="playBytes"))
-            self.publish(AsrToggleOn(siteId=siteId, reason="playBytes"))
+            self.publish(
+                HotwordToggleOn(siteId=siteId, reason=HotwordToggleReason.PLAY_AUDIO)
+            )
+            self.publish(AsrToggleOn(siteId=siteId, reason=AsrToggleReason.PLAY_AUDIO))
 
     # -------------------------------------------------------------------------
 
@@ -775,28 +762,6 @@ class RhasspyCore(HermesClient):
         return result
 
     # -------------------------------------------------------------------------
-
-    async def maybe_play_sound(
-        self, sound_name: str, siteId: typing.Optional[str] = None
-    ):
-        """Play WAV sound through audio out if it exists."""
-        sound_system = self.profile.get("sounds.system", "dummy")
-        if (not self.sounds_enabled) or (sound_system == "dummy"):
-            # No feedback sounds
-            _LOGGER.debug("Sounds disabled (system=%s)", sound_system)
-            return
-
-        wav_path_str = os.path.expandvars(self.profile.get(f"sounds.{sound_name}", ""))
-        if wav_path_str:
-            wav_path = self.profile.read_path(wav_path_str)
-            if not wav_path.is_file():
-                _LOGGER.error("WAV does not exist: %s", str(wav_path))
-                return
-
-            _LOGGER.debug("Playing WAV %s", str(wav_path))
-            await self.play_wav_data(wav_path.read_bytes(), siteId=siteId)
-
-    # -------------------------------------------------------------------------
     # Supporting Functions
     # -------------------------------------------------------------------------
 
@@ -883,134 +848,209 @@ class RhasspyCore(HermesClient):
 
                     # Signal other thread
                     if done or (result is not None):
-                        self.loop.call_soon_threadsafe(
-                            self.handler_queues[handler_id].put_nowait, (done, result)
-                        )
+                        self.handler_queues[handler_id].put_nowait((done, result))
                 except Exception:
                     _LOGGER.exception("handle_message")
 
     # -------------------------------------------------------------------------
+    # MQTT Event Handlers
+    # -------------------------------------------------------------------------
 
-    async def on_message(
-        self,
-        message: Message,
-        siteId: typing.Optional[str] = None,
-        sessionId: typing.Optional[str] = None,
-        topic: typing.Optional[str] = None,
-    ) -> GeneratorType:
+    def on_connect(self, client, userdata, flags, rc):
+        """Connected to MQTT broker."""
+        try:
+            self.is_connected = True
+            _LOGGER.debug("Connected to MQTT broker")
+
+            # Default subscriptions
+            self.subscribe(
+                HotwordDetected,
+                AsrTextCaptured,
+                NluIntent,
+                NluIntentNotRecognized,
+                AsrAudioCaptured,
+                AudioSummary,
+            )
+
+            self.connected_event.set()
+        except Exception:
+            _LOGGER.exception("on_connect")
+
+    def on_disconnect(self, client, userdata, flags, rc):
+        """Automatically reconnect when disconnected."""
+        try:
+            self.connected_event.clear()
+            self.is_connected = False
+            _LOGGER.warning("Disconnected. Trying to reconnect...")
+            self.client.reconnect()
+        except Exception:
+            _LOGGER.exception("on_disconnect")
+
+    def on_message(self, client, userdata, msg):
         """Received message from MQTT broker."""
-        assert topic, "Missing topic"
+        try:
+            topic, payload = msg.topic, msg.payload
 
-        if isinstance(message, AsrError):
-            # ASR service error
-            self.handle_message(topic, message)
-        elif isinstance(message, AsrTextCaptured):
-            # Successful transcription
-            wakewordId = self.session_wakewordIds.pop(message.sessionId, "default")
+            for message, siteId, _ in HermesClient.parse_mqtt_message(
+                topic, payload, self.subscribed_types
+            ):
+                if siteId and self.siteIds and (siteId not in self.siteIds):
+                    # Invalid siteId
+                    continue
 
-            self.handle_message(topic, message)
+                if isinstance(message, AsrError):
+                    # ASR service error
+                    self.handle_message(topic, message)
+                elif isinstance(message, AsrTextCaptured):
+                    # Successful transcription
+                    wakewordId = self.session_wakewordIds.pop(
+                        message.sessionId, "default"
+                    )
 
-            # Report to websockets
-            for queue in self.message_queues:
-                queue.put_nowait(("text", message, wakewordId))
+                    self.handle_message(topic, message)
 
-            # Play recorded sound
-            await self.maybe_play_sound("recorded", siteId=message.siteId)
-        elif isinstance(message, AudioDevices):
-            # Microphones or speakers
-            self.handle_message(topic, message)
-        elif isinstance(message, AudioPlayBytes):
-            # Request to play audio
-            assert siteId, "Missing siteId"
-            self.handle_message(topic, message)
-        elif isinstance(message, AudioPlayFinished):
-            # Audio finished playing
-            assert siteId, "Missing siteId"
-            self.handle_message(topic, message)
-        elif isinstance(message, AudioSummary):
-            # Audio summary statistics
-            assert siteId, "Missing siteId"
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("text", message, wakewordId))
 
-            # Report to websockets
-            for queue in self.message_queues:
-                queue.put_nowait(("audiosummary", message))
-        elif isinstance(message, DialogueSessionStarted):
-            # Dialogue session started
-            self.handle_message(topic, message)
-        elif isinstance(message, NluError):
-            # NLU service error
-            self.handle_message(topic, message)
-        elif isinstance(message, NluIntent):
-            # Successful intent recognition
-            self.handle_message(topic, message)
+                    # Play recorded sound
+                    # await self.maybe_play_sound("recorded", siteId=message.siteId)
+                elif isinstance(message, AudioDevices):
+                    # Microphones or speakers
+                    self.handle_message(topic, message)
+                elif isinstance(message, AudioPlayBytes):
+                    # Request to play audio
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, AudioPlayFinished):
+                    # Audio finished playing
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, AudioSummary):
+                    # Audio summary statistics
+                    assert siteId, "Missing siteId"
 
-            # Report to websockets
-            for queue in self.message_queues:
-                queue.put_nowait(("intent", message))
-        elif isinstance(message, G2pPhonemes):
-            # Word pronunciations
-            self.handle_message(topic, message)
-        elif isinstance(message, Hotwords):
-            # Hotword list
-            self.handle_message(topic, message)
-        elif isinstance(message, NluIntentNotRecognized):
-            # Failed intent recognition
-            self.handle_message(topic, message)
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("audiosummary", message))
+                elif isinstance(message, DialogueSessionStarted):
+                    # Dialogue session started
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluError):
+                    # NLU service error
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluIntent):
+                    # Successful intent recognition
+                    self.handle_message(topic, message)
 
-            # Report to websockets
-            for queue in self.message_queues:
-                queue.put_nowait(("intent", message))
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("intent", message))
+                elif isinstance(message, G2pPhonemes):
+                    # Word pronunciations
+                    self.handle_message(topic, message)
+                elif isinstance(message, Hotwords):
+                    # Hotword list
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluIntentNotRecognized):
+                    # Failed intent recognition
+                    self.handle_message(topic, message)
 
-            # Play error sound
-            await self.maybe_play_sound("error", siteId=message.siteId)
-        elif isinstance(message, TtsSayFinished):
-            # Text to speech complete
-            self.handle_message(topic, message)
-        elif isinstance(message, AsrTrainSuccess):
-            # ASR training success
-            assert siteId, "Missing siteId"
-            self.handle_message(topic, message)
-        elif isinstance(message, AsrAudioCaptured):
-            # Audio data from ASR session
-            assert siteId, "Missing siteId"
-            self.last_audio_captured = message
-            self.handle_message(topic, message)
-        elif isinstance(message, NluTrainSuccess):
-            # NLU training success
-            assert siteId, "Missing siteId"
-            self.handle_message(topic, message)
-        elif isinstance(message, HotwordDetected):
-            # Hotword detected
-            wakewordId = HotwordDetected.get_wakewordId(topic)
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("intent", message))
 
-            # Cache wake word ID for session
-            self.session_wakewordIds[message.sessionId] = wakewordId
+                    # Play error sound
+                    # await self.maybe_play_sound("error", siteId=message.siteId)
+                elif isinstance(message, TtsSayFinished):
+                    # Text to speech complete
+                    self.handle_message(topic, message)
+                elif isinstance(message, AsrTrainSuccess):
+                    # ASR training success
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, AsrAudioCaptured):
+                    # Audio data from ASR session
+                    assert siteId, "Missing siteId"
+                    self.last_audio_captured = message
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluTrainSuccess):
+                    # NLU training success
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, HotwordDetected):
+                    # Hotword detected
+                    wakewordId = HotwordDetected.get_wakewordId(topic)
 
-            self.handle_message(topic, message)
+                    # Cache wake word ID for session
+                    self.session_wakewordIds[message.sessionId] = wakewordId
 
-            # Report to websockets
-            for queue in self.message_queues:
-                queue.put_nowait(("wake", message, wakewordId))
+                    self.handle_message(topic, message)
 
-            # Warn user if they're expected wake -> ASR -> NLU workflow
-            if (self.dialogue_system == "dummy") and (self.asr_system != "dummy"):
-                _LOGGER.warning(
-                    "Dialogue management is disabled. ASR will NOT be automatically enabled."
-                )
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("wake", message, wakewordId))
 
-            # Play wake sound
-            await self.maybe_play_sound("wake", siteId=message.siteId)
-        elif isinstance(message, Voices):
-            # Text to speech voices
-            self.handle_message(topic, message)
+                    # Warn user if they're expected wake -> ASR -> NLU workflow
+                    if (self.dialogue_system == "dummy") and (
+                        self.asr_system != "dummy"
+                    ):
+                        _LOGGER.warning(
+                            "Dialogue management is disabled. ASR will NOT be automatically enabled."
+                        )
+
+                    # Play wake sound
+                    # await self.maybe_play_sound("wake", siteId=message.siteId)
+                elif isinstance(message, Voices):
+                    # Text to speech voices
+                    self.handle_message(topic, message)
+                else:
+                    _LOGGER.warning("Unexpected message: %s", message)
+
+                # Forward to external message queues
+                for queue in self.message_queues:
+                    queue.put_nowait(("mqtt", topic, payload))
+        except Exception:
+            _LOGGER.exception("on_message")
+
+    def subscribe(self, *message_types):
+        """Subscribe to one or more Hermes messages."""
+        topics: typing.List[str] = []
+
+        if self.siteIds:
+            # Specific siteIds
+            for siteId in self.siteIds:
+                for message_type in message_types:
+                    topics.append(message_type.topic(siteId=siteId))
+                    self.subscribed_types.add(message_type)
         else:
-            _LOGGER.warning("Unexpected message: %s", message)
+            # All siteIds
+            for message_type in message_types:
+                topics.append(message_type.topic())
+                self.subscribed_types.add(message_type)
 
-        # Mark as async generator
-        yield None
+        for topic in topics:
+            self.client.subscribe(topic)
+            _LOGGER.debug("Subscribed to %s", topic)
 
-    async def on_raw_message(self, topic: str, payload: bytes):
-        """Handle raw MQTT messages."""
-        # Forward to external message queues
-        for queue in self.message_queues:
-            queue.put_nowait(("mqtt", topic, payload))
+    def publish(self, message: Message, **topic_args):
+        """Publish a Hermes message to MQTT."""
+        try:
+            topic = message.topic(**topic_args)
+            payload = message.payload()
+
+            if message.is_binary_payload():
+                # Don't log audio frames
+                if not isinstance(message, (AudioFrame, AudioSessionFrame)):
+                    _LOGGER.debug(
+                        "-> %s(%s byte(s))", message.__class__.__name__, len(payload)
+                    )
+            else:
+                # Log most JSON messages
+                if not isinstance(message, AudioSummary):
+                    _LOGGER.debug("-> %s", message)
+                    _LOGGER.debug("Publishing %s bytes(s) to %s", len(payload), topic)
+
+            self.client.publish(topic, payload)
+        except Exception:
+            _LOGGER.exception("publish")

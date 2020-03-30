@@ -1,7 +1,6 @@
 """Rhasspy web application server."""
 import argparse
 import asyncio
-import atexit
 import dataclasses
 import io
 import json
@@ -10,6 +9,7 @@ import os
 import re
 import shutil
 import signal
+import ssl
 import tempfile
 import time
 import typing
@@ -19,6 +19,7 @@ from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 
+import aiohttp
 import rhasspyhermes
 import rhasspynlu
 import rhasspyprofile
@@ -44,10 +45,10 @@ from rhasspyhermes.asr import (
 )
 from rhasspyhermes.audioserver import (
     AudioSummary,
-    SummaryToggleOff,
-    SummaryToggleOn,
     AudioToggleOff,
     AudioToggleOn,
+    SummaryToggleOff,
+    SummaryToggleOn,
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
@@ -59,7 +60,6 @@ from wsproto.utilities import LocalProtocolError
 
 from . import RhasspyCore
 from .utils import (
-    FunctionLoggingHandler,
     buffer_to_wav,
     get_all_intents,
     get_espeak_phonemes,
@@ -72,82 +72,154 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger("rhasspyserver_hermes")
-loop = asyncio.get_event_loop()
 
 # -----------------------------------------------------------------------------
-# Parse Arguments
+
+
+def parse_args():
+    """Parse command-line arguments"""
+    parser = argparse.ArgumentParser("Rhasspy")
+    parser.add_argument(
+        "--profile", "-p", required=True, type=str, help="Name of profile to load"
+    )
+    parser.add_argument(
+        "--host", type=str, help="Host for web server", default="0.0.0.0"
+    )
+    parser.add_argument("--port", type=int, help="Port for web server", default=12101)
+    parser.add_argument(
+        "--mqtt-host", type=str, help="Host for MQTT broker", default=None
+    )
+    parser.add_argument(
+        "--mqtt-port", type=int, help="Port for MQTT broker", default=None
+    )
+    parser.add_argument(
+        "--mqtt-username", type=str, help="Host for MQTT broker", default=None
+    )
+    parser.add_argument(
+        "--mqtt-password", type=int, help="Port for MQTT broker", default=None
+    )
+    parser.add_argument(
+        "--local-mqtt-port",
+        type=int,
+        default=12183,
+        help="Port to use for internal MQTT broker (default: 12183)",
+    )
+    parser.add_argument(
+        "--system-profiles",
+        type=str,
+        help="Directory with base profile files (read only)",
+    )
+    parser.add_argument(
+        "--user-profiles",
+        type=str,
+        help="Directory with user profile files (read/write)",
+    )
+    parser.add_argument(
+        "--set",
+        "-s",
+        nargs=2,
+        action="append",
+        help="Set a profile setting value",
+        default=[],
+    )
+    parser.add_argument("--certfile", help="SSL certificate file")
+    parser.add_argument("--keyfile", help="SSL private key file (optional)")
+    parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
+    parser.add_argument(
+        "--log-format",
+        default="[%(levelname)s:%(asctime)s] %(name)s: %(message)s",
+        help="Python logger format",
+    )
+    parser.add_argument(
+        "--web-dir",
+        default="web",
+        help="Directory with compiled Vue site (default: web)",
+    )
+
+    return parser.parse_args()
+
+
 # -----------------------------------------------------------------------------
 
-parser = argparse.ArgumentParser("Rhasspy")
-parser.add_argument(
-    "--profile", "-p", required=True, type=str, help="Name of profile to load"
-)
-parser.add_argument("--host", type=str, help="Host for web server", default="0.0.0.0")
-parser.add_argument("--port", type=int, help="Port for web server", default=12101)
-parser.add_argument("--mqtt-host", type=str, help="Host for MQTT broker", default=None)
-parser.add_argument("--mqtt-port", type=int, help="Port for MQTT broker", default=None)
-parser.add_argument(
-    "--mqtt-username", type=str, help="Host for MQTT broker", default=None
-)
-parser.add_argument(
-    "--mqtt-password", type=int, help="Port for MQTT broker", default=None
-)
-parser.add_argument(
-    "--local-mqtt-port",
-    type=int,
-    default=12183,
-    help="Port to use for internal MQTT broker (default: 12183)",
-)
-parser.add_argument(
-    "--system-profiles", type=str, help="Directory with base profile files (read only)"
-)
-parser.add_argument(
-    "--user-profiles", type=str, help="Directory with user profile files (read/write)"
-)
-parser.add_argument(
-    "--set",
-    "-s",
-    nargs=2,
-    action="append",
-    help="Set a profile setting value",
-    default=[],
-)
-parser.add_argument("--certfile", help="SSL certificate file")
-parser.add_argument("--keyfile", help="SSL private key file (optional)")
-parser.add_argument("--log-level", default="DEBUG", help="Set logging level")
-parser.add_argument(
-    "--log-format",
-    default="[%(levelname)s:%(asctime)s] %(name)s: %(message)s",
-    help="Python logger format",
-)
-parser.add_argument(
-    "--web-dir", default="web", help="Directory with compiled Vue site (default: web)"
-)
-
-args = parser.parse_args()
+_ARGS = parse_args()
 
 # Set log level
-log_level = getattr(logging, args.log_level.upper())
-logging.basicConfig(level=log_level, format=args.log_format)
+log_level = getattr(logging, _ARGS.log_level.upper())
+logging.basicConfig(level=log_level, format=_ARGS.log_format)
 
-
-_LOGGER.debug(args)
+_LOGGER.debug(_ARGS)
 
 # Convert profile directories to Paths
 system_profiles_dir: typing.Optional[Path] = None
-if args.system_profiles:
-    system_profiles_dir = Path(args.system_profiles)
+if _ARGS.system_profiles:
+    system_profiles_dir = Path(_ARGS.system_profiles)
 
-if args.user_profiles:
-    user_profiles_dir = Path(args.user_profiles)
+if _ARGS.user_profiles:
+    user_profiles_dir = Path(_ARGS.user_profiles)
 else:
     user_profiles_dir = Path("~/.config/rhasspy/profiles").expanduser()
+
+# Shared aiohttp client session (enable SSL)
+ssl_context = ssl.SSLContext()
+if _ARGS.certfile:
+    ssl_context.load_cert_chain(_ARGS.certfile, _ARGS.keyfile)
+
+http_session: typing.Optional[aiohttp.ClientSession] = None
+
+
+def get_http_session():
+    """Get or create async HTTP session."""
+    global http_session
+    if http_session is None:
+        http_session = aiohttp.ClientSession()
+
+    return http_session
+
+
+# -----------------------------------------------------------------------------
+
+core: typing.Optional[RhasspyCore] = None
+
+
+def start_rhasspy() -> None:
+    """Create new Rhasspy core and start it."""
+    global core
+
+    # Load core
+    core = RhasspyCore(
+        _ARGS.profile,
+        system_profiles_dir,
+        user_profiles_dir,
+        host=_ARGS.mqtt_host,
+        port=_ARGS.mqtt_port,
+        username=_ARGS.mqtt_username,
+        password=_ARGS.mqtt_password,
+        local_mqtt_port=_ARGS.local_mqtt_port,
+        certfile=_ARGS.certfile,
+        keyfile=_ARGS.keyfile,
+    )
+
+    # Add profile settings from the command line
+    extra_settings = {}
+    for key, value in _ARGS.set:
+        try:
+            value = json.loads(value)
+        except Exception:
+            pass
+
+        _LOGGER.debug("Profile: %s=%s", key, value)
+        extra_settings[key] = value
+        core.profile.set(key, value)
+
+    core.start()
+    _LOGGER.info("Started")
+
 
 # -----------------------------------------------------------------------------
 # Quart Web App Setup
 # -----------------------------------------------------------------------------
 
-web_dir = Path(args.web_dir)
+web_dir = Path(_ARGS.web_dir)
 assert web_dir.is_dir(), f"Missing web directory {web_dir}"
 template_dir = web_dir.parent / "templates"
 
@@ -156,8 +228,8 @@ app.secret_key = str(uuid4())
 app = cors(app)
 
 # SSL settings
-certfile: typing.Optional[str] = args.certfile
-keyfile: typing.Optional[str] = args.keyfile
+certfile: typing.Optional[str] = _ARGS.certfile
+keyfile: typing.Optional[str] = _ARGS.keyfile
 
 if certfile:
     _LOGGER.debug("Using SSL with certfile=%s, keyfile=%s", certfile, keyfile)
@@ -209,13 +281,13 @@ def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
     _LOGGER.debug(msg)
 
     # Re-generate supevisord config
-    new_profile = Profile(args.profile, system_profiles_dir, user_profiles_dir)
+    new_profile = Profile(_ARGS.profile, system_profiles_dir, user_profiles_dir)
     supervisor_conf_path = new_profile.write_path("supervisord.conf")
     _LOGGER.debug("Re-generating %s", str(supervisor_conf_path))
 
     with open(supervisor_conf_path, "w") as supervisor_conf_file:
         rhasspysupervisor.profile_to_conf(
-            new_profile, supervisor_conf_file, local_mqtt_port=args.local_mqtt_port
+            new_profile, supervisor_conf_file, local_mqtt_port=_ARGS.local_mqtt_port
         )
 
     # Re-genenerate Docker compose YAML
@@ -224,7 +296,7 @@ def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
 
     with open(docker_compose_path, "w") as docker_compose_file:
         rhasspysupervisor.profile_to_docker(
-            new_profile, docker_compose_file, local_mqtt_port=args.local_mqtt_port
+            new_profile, docker_compose_file, local_mqtt_port=_ARGS.local_mqtt_port
         )
 
     return msg
@@ -400,66 +472,6 @@ def read_unknown_words():
 
 
 # -----------------------------------------------------------------------------
-# Dialogue Manager Setup
-# -----------------------------------------------------------------------------
-
-core = None
-
-# We really, *really* want shutdown to be called
-@atexit.register
-def shutdown(*_args: typing.Any, **kwargs: typing.Any) -> None:
-    """Ensure Rhasspy core is stopped."""
-    global core, loop
-
-    if core is not None:
-        _core = core
-        core = None
-        asyncio.run(_core.shutdown())
-
-
-signal.signal(signal.SIGTERM, shutdown)
-
-
-async def start_rhasspy() -> None:
-    """Create actor system and Rhasspy core."""
-    global core
-
-    # Load core
-    core = RhasspyCore(
-        args.profile,
-        system_profiles_dir,
-        user_profiles_dir,
-        host=args.mqtt_host,
-        port=args.mqtt_port,
-        username=args.mqtt_username,
-        password=args.mqtt_password,
-        local_mqtt_port=args.local_mqtt_port,
-        certfile=certfile,
-        keyfile=keyfile,
-    )
-
-    # Set environment variables
-    os.environ["RHASSPY_BASE_DIR"] = os.getcwd()
-    os.environ["RHASSPY_PROFILE"] = core.profile.name
-    os.environ["RHASSPY_PROFILE_DIR"] = str(core.profile.write_dir())
-
-    # Add profile settings from the command line
-    extra_settings = {}
-    for key, value in args.set:
-        try:
-            value = json.loads(value)
-        except Exception:
-            pass
-
-        _LOGGER.debug("Profile: %s=%s", key, value)
-        extra_settings[key] = value
-        core.profile.set(key, value)
-
-    await core.start()
-    _LOGGER.info("Started")
-
-
-# -----------------------------------------------------------------------------
 # HTTP API
 # -----------------------------------------------------------------------------
 
@@ -535,8 +547,8 @@ async def api_download_profile() -> str:
     await rhasspyprofile.download_files(
         core.profile,
         status_fun=update_status,
-        session=core.http_session,
-        ssl_context=core.ssl_context,
+        session=get_http_session(),
+        ssl_context=ssl_context,
     )
 
     download_status = {}
@@ -973,7 +985,7 @@ async def api_play_wav() -> str:
         url = data.decode()
         _LOGGER.debug("Loading WAV data from %s", url)
 
-        async with core.http_session.get(url, ssl=core.ssl_context) as response:
+        async with get_http_session().get(url, ssl=ssl_context) as response:
             wav_bytes = await response.read()
 
     # Play through speakers
@@ -1191,14 +1203,15 @@ async def api_restart() -> str:
         restart_path.write_text("")
 
     # Shut down core
-    await core.shutdown()
+    core.shutdown()
 
     # Start core back up
-    await start_rhasspy()
+    start_rhasspy()
 
     if in_docker:
         seconds_left = 30.0
         wait_seconds = 0.5
+        _LOGGER.debug("Waiting for Docker shutdown signal")
         while restart_path.is_file():
             await asyncio.sleep(wait_seconds)
             seconds_left -= wait_seconds
@@ -1633,7 +1646,7 @@ async def api_mqtt(topic: str):
     if request.method == "GET":
         assert topic, "Topic is required"
         topic_matcher = MQTTMatcher()
-        core.mqtt_client.subscribe(topic)
+        core.client.subscribe(topic)
         _LOGGER.debug("Subscribed to %s for http", topic)
         topic_matcher[topic] = True
 
@@ -1661,7 +1674,7 @@ async def api_mqtt(topic: str):
     payload = await request.data
 
     # Publish directly to MQTT broker
-    core.mqtt_client.publish(topic, payload)
+    core.client.publish(topic, payload)
 
     return f"Published {len(payload)} byte(s) to {topic}"
 
@@ -1825,20 +1838,10 @@ def logging_websocket(func):
     return wrapper
 
 
-async def broadcast_logging(message):
+def broadcast_logging(message):
     """Broadcasts a logging message to all logging websockets."""
     for queue in logging_websockets:
-        await queue.put(message)
-
-
-logging.root.addHandler(
-    FunctionLoggingHandler(
-        lambda message: asyncio.run_coroutine_threadsafe(
-            broadcast_logging(message), loop
-        ),
-        log_format=args.log_format,
-    )
-)
+        queue.put_nowait(message)
 
 
 @app.websocket("/api/events/log")
@@ -1883,10 +1886,10 @@ def mqtt_websocket(func):
     return wrapper
 
 
-async def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
-    """Broadcasts an MQTT topic/payload to all MQTT websockets."""
-    for queue in mqtt_websockets:
-        await queue.put((topic, payload))
+# def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
+#     """Broadcasts an MQTT topic/payload to all MQTT websockets."""
+#     for queue in mqtt_websockets:
+#         queue.put_nowait((topic, payload))
 
 
 def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
@@ -1903,12 +1906,12 @@ def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
     topic = message_dict["topic"]
 
     if message_type == "subscribe":
-        core.mqtt_client.subscribe(topic)
+        core.client.subscribe(topic)
         matcher[topic] = message_dict
         _LOGGER.debug("Subscribed to %s", topic)
     elif message_type == "publish":
         payload = json.dumps(message_dict["payload"])
-        core.mqtt_client.publish(topic, payload)
+        core.client.publish(topic, payload)
         _LOGGER.debug("Published %s char(s) to %s", len(payload), topic)
 
 
@@ -1917,8 +1920,8 @@ def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
 async def api_ws_mqtt(queue) -> None:
     """Websocket endpoint to send/receive MQTT messages."""
     topic_matcher = MQTTMatcher()
-    receive_task = loop.create_task(websocket.receive())
-    send_task = loop.create_task(queue.get())
+    receive_task = asyncio.create_task(websocket.receive())
+    send_task = asyncio.create_task(queue.get())
     pending: typing.Set[
         typing.Union[asyncio.Future[typing.Any], asyncio.Task[typing.Any]]
     ] = {receive_task, send_task}
@@ -1936,7 +1939,7 @@ async def api_ws_mqtt(queue) -> None:
                     _LOGGER.exception("api_ws_mqtt (receive)")
 
                 # Schedule another receive
-                receive_task = loop.create_task(websocket.receive())
+                receive_task = asyncio.create_task(websocket.receive())
                 pending.add(receive_task)
             elif task is send_task:
                 try:
@@ -1958,7 +1961,7 @@ async def api_ws_mqtt(queue) -> None:
                     pass
 
                 # Schedule another send
-                send_task = loop.create_task(queue.get())
+                send_task = asyncio.create_task(queue.get())
                 pending.add(send_task)
 
 
@@ -1970,7 +1973,7 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
 
     assert core is not None
 
-    core.mqtt_client.subscribe(topic)
+    core.client.subscribe(topic)
     topic_matcher[topic] = True
     _LOGGER.debug("Subscribed to %s for websocket", topic)
 
@@ -2089,7 +2092,6 @@ async def api_ws_audiosummary(queue) -> None:
 #     )
 
 #     return spoken.wav_bytes
-
 
 # -----------------------------------------------------------------------------
 
@@ -2252,29 +2254,28 @@ async def text_to_intent_dict(text, output_format="rhasspy"):
 
 # -----------------------------------------------------------------------------
 
-# Start Rhasspy actors
-loop.run_until_complete(start_rhasspy())
-
-# -----------------------------------------------------------------------------
-
 # Disable useless logging messages
 for logger_name in ["wsproto", "hpack", "quart.serving", "asyncio"]:
     logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 
+start_rhasspy()
+
 # Start web server
-if certfile:
+if _ARGS.certfile:
     protocol = "https"
 else:
     protocol = "http"
 
-_LOGGER.debug("Starting web server at %s://%s:%s", protocol, args.host, args.port)
-
+_LOGGER.debug("Starting web server at %s://%s:%s", protocol, _ARGS.host, _ARGS.port)
 
 try:
     app.run(
-        host=args.host, port=args.port, certfile=certfile, keyfile=keyfile, loop=loop
+        host=_ARGS.host, port=_ARGS.port, certfile=_ARGS.certfile, keyfile=_ARGS.keyfile
     )
 except KeyboardInterrupt:
     pass
 except LocalProtocolError:
     pass
+finally:
+    if core is not None:
+        core.shutdown()

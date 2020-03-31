@@ -134,8 +134,6 @@ class RhasspyCore:
         # Message types that are we are subscribed to
         self.subscribed_types: typing.Set[typing.Type[Message]] = set()
 
-        # super().__init__("rhasspyserver_hermes", mqtt.Client(), siteIds=siteIds)
-
         # Default timeout for response messages
         self.message_timeout_seconds = message_timeout_seconds
         self.training_timeout_seconds = training_timeout_seconds
@@ -172,8 +170,6 @@ class RhasspyCore:
         self.message_queues: typing.Set[asyncio.Queue] = set()
 
         # Cached wake word IDs for sessions
-        self.session_wakewordIds: typing.Dict[str, str] = {}
-
         # Holds last voice command
         self.last_audio_captured: typing.Optional[AsrAudioCaptured] = None
 
@@ -903,18 +899,11 @@ class RhasspyCore:
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrTextCaptured):
                     # Successful transcription
-                    wakewordId = self.session_wakewordIds.pop(
-                        message.sessionId, "default"
-                    )
-
                     self.handle_message(topic, message)
 
                     # Report to websockets
                     for queue in self.message_queues:
-                        queue.put_nowait(("text", message, wakewordId))
-
-                    # Play recorded sound
-                    # await self.maybe_play_sound("recorded", siteId=message.siteId)
+                        queue.put_nowait(("text", message))
                 elif isinstance(message, AudioDevices):
                     # Microphones or speakers
                     self.handle_message(topic, message)
@@ -959,9 +948,6 @@ class RhasspyCore:
                     # Report to websockets
                     for queue in self.message_queues:
                         queue.put_nowait(("intent", message))
-
-                    # Play error sound
-                    # await self.maybe_play_sound("error", siteId=message.siteId)
                 elif isinstance(message, TtsSayFinished):
                     # Text to speech complete
                     self.handle_message(topic, message)
@@ -981,10 +967,6 @@ class RhasspyCore:
                 elif isinstance(message, HotwordDetected):
                     # Hotword detected
                     wakewordId = HotwordDetected.get_wakewordId(topic)
-
-                    # Cache wake word ID for session
-                    self.session_wakewordIds[message.sessionId] = wakewordId
-
                     self.handle_message(topic, message)
 
                     # Report to websockets
@@ -998,18 +980,18 @@ class RhasspyCore:
                         _LOGGER.warning(
                             "Dialogue management is disabled. ASR will NOT be automatically enabled."
                         )
-
-                    # Play wake sound
-                    # await self.maybe_play_sound("wake", siteId=message.siteId)
                 elif isinstance(message, Voices):
                     # Text to speech voices
                     self.handle_message(topic, message)
                 else:
                     _LOGGER.warning("Unexpected message: %s", message)
 
-                # Forward to external message queues
-                for queue in self.message_queues:
-                    queue.put_nowait(("mqtt", topic, payload))
+            # -----------------------------------------------------------------
+
+            # Forward to external message queues
+            for queue in self.message_queues:
+                queue.put_nowait(("mqtt", topic, payload))
+
         except Exception:
             _LOGGER.exception("on_message")
 

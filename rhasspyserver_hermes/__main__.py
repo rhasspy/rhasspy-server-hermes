@@ -21,6 +21,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import aiohttp
+import quart_cors
 import rhasspyhermes
 import rhasspynlu
 import rhasspyprofile
@@ -36,7 +37,6 @@ from quart import (
     send_from_directory,
     websocket,
 )
-from quart_cors import cors
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,
@@ -227,7 +227,18 @@ template_dir = web_dir.parent / "templates"
 
 app = Quart("rhasspy", template_folder=str(template_dir))
 app.secret_key = str(uuid4())
-app = cors(app)
+
+# Monkey patch quart_cors to get rid of non-standard requirement that websockets
+# have origin header set.
+async def _apply_websocket_cors(*args, **kwargs):
+    """Allow null origin."""
+    pass
+
+
+quart_cors._apply_websocket_cors = _apply_websocket_cors
+
+# Allow all origins
+app = quart_cors.cors(app, allow_origin="*")
 
 # SSL settings
 certfile: typing.Optional[str] = _ARGS.certfile
@@ -1848,10 +1859,10 @@ def broadcast_logging(message):
 
 logging.root.addHandler(
     FunctionLoggingHandler(
-        lambda message: broadcast_logging(message),
-        log_format=_ARGS.log_format,
+        lambda message: broadcast_logging(message), log_format=_ARGS.log_format
     )
 )
+
 
 @app.websocket("/api/events/log")
 @logging_websocket
@@ -2071,13 +2082,12 @@ async def api_ws_text(queue) -> None:
             message = await queue.get()
             if message[0] == "text":
                 text_captured: AsrTextCaptured = message[1]
-                wakewordId: str = message[2]
 
                 ws_message = json.dumps(
                     {
                         "text": text_captured.text,
                         "siteId": text_captured.siteId,
-                        "wakewordId": wakewordId,
+                        "wakewordId": text_captured.wakewordId,
                     }
                 )
                 await websocket.send(ws_message)

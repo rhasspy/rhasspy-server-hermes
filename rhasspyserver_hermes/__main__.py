@@ -230,11 +230,14 @@ app.secret_key = str(uuid4())
 
 # Monkey patch quart_cors to get rid of non-standard requirement that websockets
 # have origin header set.
+
+
 async def _apply_websocket_cors(*args, **kwargs):
     """Allow null origin."""
     pass
 
 
+# pylint: disable=W0212
 quart_cors._apply_websocket_cors = _apply_websocket_cors
 
 # Allow all origins
@@ -1243,6 +1246,9 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
     assert core is not None
     no_header = request.args.get("noheader", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+    detect_silence = (
+        request.args.get("detect_silence", "true").strip().lower() == "true"
+    )
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
     wav_bytes = await request.data
@@ -1255,7 +1261,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
 
     # Transcribe
     start_time = time.perf_counter()
-    result = await core.transcribe_wav(wav_bytes)
+    result = await core.transcribe_wav(wav_bytes, stopOnSilence=detect_silence)
     end_time = time.perf_counter()
 
     if output_format == "hermes":
@@ -1310,6 +1316,9 @@ async def api_speech_to_intent() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+    detect_silence = (
+        request.args.get("detect_silence", "true").strip().lower() == "true"
+    )
 
     if no_hass:
         # Temporarily disable intent handling
@@ -1324,7 +1333,9 @@ async def api_speech_to_intent() -> Response:
 
         # speech -> text
         _LOGGER.debug("Waiting for transcription")
-        transcription = await core.transcribe_wav(wav_bytes)
+        transcription = await core.transcribe_wav(
+            wav_bytes, stopOnSilence=detect_silence
+        )
         text = transcription.text
 
         # text -> intent
@@ -1699,99 +1710,117 @@ async def api_mqtt(topic: str):
 async def api_evaluate() -> Response:
     """Evaluates speech/intent recognition on a set of WAV/JSON files."""
     assert core is not None
-    files = await request.files
-    assert "archive" in files, "Missing file named 'archive'"
+    is_path = request.args.get("path", "false").strip().lower() == "true"
+    detect_silence = (
+        request.args.get("detect_silence", "true").strip().lower() == "true"
+    )
+    temp_dir = None
 
-    # Extract archive
-    archive_form_file = files["archive"]
+    if is_path:
+        # Path is provided in body
+        data = await request.data
+        wav_dir = Path(data.decode())
+    else:
+        # .tar.gz is provided in files
+        files = await request.files
+        assert "archive" in files, "Missing file named 'archive'"
+
+        # Extract archive to temporary directory
+        archive_form_file = files["archive"]
+
+        temp_dir = tempfile.TemporaryDirectory()
+        work_dir = temp_dir.name
+
+        archive_path = os.path.join(work_dir, archive_form_file.filename)
+        with open(archive_path, "wb") as archive_file:
+            for chunk in archive_form_file.stream:
+                archive_file.write(chunk)
+
+        extract_dir = os.path.join(work_dir, "extract")
+        shutil.unpack_archive(archive_path, extract_dir)
+        _LOGGER.debug("Extracted archive to %s", extract_dir)
+
+        wav_dir = Path(extract_dir)
 
     # Disable sounds temporarily
     sounds_enabled = core.sounds_enabled
     core.sounds_enabled = False
 
     try:
-        with tempfile.TemporaryDirectory() as work_dir:
-            archive_path = os.path.join(work_dir, archive_form_file.filename)
-            with open(archive_path, "wb") as archive_file:
-                for chunk in archive_form_file.stream:
-                    archive_file.write(chunk)
+        # Process WAV file(s)
+        expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
+        actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
 
-            extract_dir = os.path.join(work_dir, "extract")
-            shutil.unpack_archive(archive_path, extract_dir)
-            _LOGGER.debug("Extracted archive to %s", extract_dir)
+        for wav_file in wav_dir.rglob("*.wav"):
+            wav_key = str(wav_file.relative_to(wav_dir))
 
-            # Process WAV file(s)
-            expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
-            actual: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
-
-            extract_path = Path(extract_dir)
-            for wav_file in extract_path.rglob("*.wav"):
-                wav_key = str(wav_file.relative_to(extract_path))
-
-                # JSON file contains expected intent
-                json_file = wav_file.with_suffix(".json")
-                if not json_file.exists():
-                    _LOGGER.warning(
-                        "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
-                    )
-
-                _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
-
-                # Load expected intent
-                with open(json_file, "r") as expected_file:
-                    expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
-                        json.load(expected_file)
-                    )
-
-                # Get transcription
-                wav_bytes = wav_file.read_bytes()
-                wav_duration = get_wav_duration(wav_bytes)
-
-                text_captured = await core.transcribe_wav(
-                    wav_bytes, sendAudioCaptured=False
+            # JSON file contains expected intent
+            json_file = wav_file.with_suffix(".json")
+            if not json_file.exists():
+                _LOGGER.warning(
+                    "Skipping %s (missing %s)", str(wav_key), str(json_file.name)
                 )
 
-                if not isinstance(text_captured, AsrTextCaptured):
-                    _LOGGER.warning("Transcription failed: %s", text_captured)
+            _LOGGER.debug("Processing %s (%s)", str(wav_key), str(json_file.name))
 
-                    # Empty transcription
-                    text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
-
-                _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
-
-                # Get intent
-                nlu_intent = await core.recognize_intent(text_captured.text)
-                if not isinstance(nlu_intent, NluIntent):
-                    _LOGGER.warning("Recognition failed: %s", nlu_intent)
-
-                    # Empty intent
-                    nlu_intent = NluIntent(
-                        input=text_captured.text,
-                        intent=rhasspyhermes.intent.Intent(
-                            intentName="", confidenceScore=0
-                        ),
-                    )
-
-                _LOGGER.debug(
-                    "%s -> %s", text_captured.text, nlu_intent.intent.intentName
+            # Load expected intent
+            with open(json_file, "r") as expected_file:
+                expected[wav_key] = rhasspynlu.intent.Recognition.from_dict(
+                    json.load(expected_file)
                 )
 
-                # Convert to Recognition
-                actual_intent = rhasspynlu.intent.Recognition.from_dict(
-                    nlu_intent.to_rhasspy_dict()
+            # Get transcription
+            wav_bytes = wav_file.read_bytes()
+            wav_duration = get_wav_duration(wav_bytes)
+
+            text_captured = await core.transcribe_wav(
+                wav_bytes, sendAudioCaptured=False, stopOnSilence=detect_silence
+            )
+
+            if not isinstance(text_captured, AsrTextCaptured):
+                _LOGGER.warning("Transcription failed: %s", text_captured)
+
+                # Empty transcription
+                text_captured = AsrTextCaptured(text="", likelihood=0, seconds=0)
+
+            _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
+
+            # Get intent
+            nlu_intent = await core.recognize_intent(text_captured.text)
+            if not isinstance(nlu_intent, NluIntent):
+                _LOGGER.warning("Recognition failed: %s", nlu_intent)
+
+                # Empty intent
+                nlu_intent = NluIntent(
+                    input=text_captured.text,
+                    intent=rhasspyhermes.intent.Intent(
+                        intentName="", confidenceScore=0
+                    ),
                 )
-                actual_intent.transcribe_seconds = text_captured.seconds
-                actual_intent.wav_seconds = wav_duration
 
-                actual[wav_key] = actual_intent
+            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
 
-            _LOGGER.debug("Generating report")
-            report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
+            # Convert to Recognition
+            actual_intent = rhasspynlu.intent.Recognition.from_dict(
+                nlu_intent.to_rhasspy_dict()
+            )
+            actual_intent.transcribe_seconds = text_captured.seconds
+            actual_intent.wav_seconds = wav_duration
 
-            return jsonify(dataclasses.asdict(report))
+            actual[wav_key] = actual_intent
+
+        _LOGGER.debug("Generating report")
+        report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
+
+        return jsonify(dataclasses.asdict(report))
     finally:
         # Restore sound setting
         core.sounds_enabled = sounds_enabled
+
+        if temp_dir:
+            temp_dir.cleanup()
+
+        _LOGGER.debug("Evaluation complete")
 
 
 # -----------------------------------------------------------------------------
@@ -1858,9 +1887,7 @@ def broadcast_logging(message):
 
 
 logging.root.addHandler(
-    FunctionLoggingHandler(
-        lambda message: broadcast_logging(message), log_format=_ARGS.log_format
-    )
+    FunctionLoggingHandler(broadcast_logging, log_format=_ARGS.log_format)
 )
 
 
@@ -2020,7 +2047,7 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
     except CancelledError:
         pass
     except Exception:
-        _LOGGER.exception(f"api_ws_mqtt_topic (topic={topic})")
+        _LOGGER.exception("api_ws_mqtt_topic (topic=%s)", topic)
 
 
 @app.websocket("/api/events/intent")

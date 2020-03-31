@@ -487,7 +487,11 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def transcribe_wav(
-        self, wav_bytes: bytes, frames_per_chunk: int = 4096, sendAudioCaptured=True
+        self,
+        wav_bytes: bytes,
+        frames_per_chunk: int = 4096,
+        sendAudioCaptured=True,
+        stopOnSilence=False,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
         if self.profile.get("speech_to_text.system", "dummy") == "dummy":
@@ -509,7 +513,7 @@ class RhasspyCore:
             yield AsrStartListening(
                 siteId=self.siteId,
                 sessionId=sessionId,
-                stopOnSilence=False,
+                stopOnSilence=stopOnSilence,
                 sendAudioCaptured=sendAudioCaptured,
             )
 

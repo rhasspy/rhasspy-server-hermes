@@ -74,6 +74,7 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger("rhasspyserver_hermes")
+_LOOP = asyncio.get_event_loop()
 
 # -----------------------------------------------------------------------------
 
@@ -199,6 +200,7 @@ def start_rhasspy() -> None:
         local_mqtt_port=_ARGS.local_mqtt_port,
         certfile=_ARGS.certfile,
         keyfile=_ARGS.keyfile,
+        loop=_LOOP,
     )
 
     # Add profile settings from the command line
@@ -1247,7 +1249,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
     no_header = request.args.get("noheader", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
     detect_silence = (
-        request.args.get("detect_silence", "true").strip().lower() == "true"
+        request.args.get("detect_silence", "false").strip().lower() == "true"
     )
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
@@ -1317,7 +1319,7 @@ async def api_speech_to_intent() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
     detect_silence = (
-        request.args.get("detect_silence", "true").strip().lower() == "true"
+        request.args.get("detect_silence", "false").strip().lower() == "true"
     )
 
     if no_hass:
@@ -1710,10 +1712,21 @@ async def api_mqtt(topic: str):
 async def api_evaluate() -> Response:
     """Evaluates speech/intent recognition on a set of WAV/JSON files."""
     assert core is not None
+
+    # POST body is a directory path, not a .tar.gz file
     is_path = request.args.get("path", "false").strip().lower() == "true"
+
+    # Crop audio with speech/silence detection
     detect_silence = (
-        request.args.get("detect_silence", "true").strip().lower() == "true"
+        request.args.get("detect_silence", "false").strip().lower() == "true"
     )
+
+    # Terminate evaluation if intent recognition fails
+    stop_on_error = request.args.get("stop_on_error", "false").strip().lower() == "true"
+
+    # Number of times to retry transcription/recognition if timeout
+    timeout_retries = int(request.args.get("timeout_retries", "0"))
+
     temp_dir = None
 
     if is_path:
@@ -1746,6 +1759,9 @@ async def api_evaluate() -> Response:
     sounds_enabled = core.sounds_enabled
     core.sounds_enabled = False
 
+    last_wav_key = ""
+    success = False
+
     try:
         # Process WAV file(s)
         expected: typing.Dict[str, rhasspynlu.intent.Recognition] = {}
@@ -1753,6 +1769,7 @@ async def api_evaluate() -> Response:
 
         for wav_file in wav_dir.rglob("*.wav"):
             wav_key = str(wav_file.relative_to(wav_dir))
+            last_wav_key = wav_key
 
             # JSON file contains expected intent
             json_file = wav_file.with_suffix(".json")
@@ -1773,9 +1790,22 @@ async def api_evaluate() -> Response:
             wav_bytes = wav_file.read_bytes()
             wav_duration = get_wav_duration(wav_bytes)
 
-            text_captured = await core.transcribe_wav(
-                wav_bytes, sendAudioCaptured=False, stopOnSilence=detect_silence
-            )
+            transcribe_retries = timeout_retries + 1
+            while transcribe_retries > 0:
+                transcribe_retries -= 1
+                try:
+                    text_captured = await core.transcribe_wav(
+                        wav_bytes, sendAudioCaptured=False, stopOnSilence=detect_silence
+                    )
+                except asyncio.TimeoutError as e:
+                    if transcribe_retries > 0:
+                        _LOGGER.warning(
+                            "Transcription timeout (retries=%s)", transcribe_retries
+                        )
+                    else:
+                        # Re-raise exception
+                        _LOGGER.debug("Exceeded total retries (%s)", timeout_retries)
+                        raise e
 
             if not isinstance(text_captured, AsrTextCaptured):
                 _LOGGER.warning("Transcription failed: %s", text_captured)
@@ -1786,9 +1816,30 @@ async def api_evaluate() -> Response:
             _LOGGER.debug("%s -> %s", wav_key, text_captured.text)
 
             # Get intent
-            nlu_intent = await core.recognize_intent(text_captured.text)
+            recognize_retries = timeout_retries + 1
+
+            while recognize_retries > 0:
+                recognize_retries -= 1
+                try:
+                    nlu_intent = await core.recognize_intent(text_captured.text)
+                except asyncio.TimeoutError as e:
+                    if recognize_retries > 0:
+                        _LOGGER.warning(
+                            "Recognition timeout (retries=%s)", recognize_retries
+                        )
+                    else:
+                        # Re-raise exception
+                        _LOGGER.debug("Exceeded total retries (%s)", timeout_retries)
+                        raise e
+
             if not isinstance(nlu_intent, NluIntent):
                 _LOGGER.warning("Recognition failed: %s", nlu_intent)
+
+                if stop_on_error:
+                    _LOGGER.error(
+                        "Stopping on %s (text=%s)", wav_key, text_captured.text
+                    )
+                    break
 
                 # Empty intent
                 nlu_intent = NluIntent(
@@ -1811,6 +1862,7 @@ async def api_evaluate() -> Response:
 
         _LOGGER.debug("Generating report")
         report = rhasspynlu.evaluate.evaluate_intents(expected, actual)
+        success = True
 
         return jsonify(dataclasses.asdict(report))
     finally:
@@ -1820,7 +1872,10 @@ async def api_evaluate() -> Response:
         if temp_dir:
             temp_dir.cleanup()
 
-        _LOGGER.debug("Evaluation complete")
+        if success:
+            _LOGGER.debug("Evaluation completed successfully")
+        else:
+            _LOGGER.error("Evaluation failed on %s", last_wav_key)
 
 
 # -----------------------------------------------------------------------------
@@ -2340,7 +2395,11 @@ _LOGGER.debug("Starting web server at %s://%s:%s", protocol, _ARGS.host, _ARGS.p
 
 try:
     app.run(
-        host=_ARGS.host, port=_ARGS.port, certfile=_ARGS.certfile, keyfile=_ARGS.keyfile
+        host=_ARGS.host,
+        port=_ARGS.port,
+        certfile=_ARGS.certfile,
+        keyfile=_ARGS.keyfile,
+        loop=_LOOP,
     )
 except KeyboardInterrupt:
     pass

@@ -98,7 +98,10 @@ class RhasspyCore:
         training_timeout_seconds: float = 600,
         certfile: typing.Optional[str] = None,
         keyfile: typing.Optional[str] = None,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
     ):
+        self.loop = loop or asyncio.get_event_loop()
+
         # Load profile
         self.profile_name = profile_name
 
@@ -802,13 +805,15 @@ class RhasspyCore:
                 message, kwargs = maybe_message
                 self.publish(message, **kwargs)
 
-        # Wait for response or timeout
-        result_awaitable = self.handler_queues[handler_id].get()
-
         try:
+            # Wait for response or timeout
+            result_awaitable = self.handler_queues[handler_id].get()
+
             if timeout_seconds > 0:
                 # With timeout
-                _, result = await asyncio.wait_for(result_awaitable, timeout_seconds)
+                _, result = await asyncio.wait_for(
+                    result_awaitable, timeout=timeout_seconds
+                )
             else:
                 # No timeout
                 _, result = await result_awaitable
@@ -848,7 +853,17 @@ class RhasspyCore:
 
                     # Signal other thread
                     if done or (result is not None):
-                        self.handler_queues[handler_id].put_nowait((done, result))
+                        if handler_id in self.handler_queues:
+                            self.loop.call_soon_threadsafe(
+                                self.handler_queues[handler_id].put_nowait,
+                                (done, result),
+                            )
+                        else:
+                            _LOGGER.warning(
+                                "Message queue missing (topic=%s, id=%s)",
+                                topic,
+                                handler_id,
+                            )
                 except Exception:
                     _LOGGER.exception("handle_message")
 
@@ -907,7 +922,9 @@ class RhasspyCore:
 
                     # Report to websockets
                     for queue in self.message_queues:
-                        queue.put_nowait(("text", message))
+                        self.loop.call_soon_threadsafe(
+                            queue.put_nowait, ("text", message)
+                        )
                 elif isinstance(message, AudioDevices):
                     # Microphones or speakers
                     self.handle_message(topic, message)
@@ -925,7 +942,9 @@ class RhasspyCore:
 
                     # Report to websockets
                     for queue in self.message_queues:
-                        queue.put_nowait(("audiosummary", message))
+                        self.loop.call_soon_threadsafe(
+                            queue.put_nowait, ("audiosummary", message)
+                        )
                 elif isinstance(message, DialogueSessionStarted):
                     # Dialogue session started
                     self.handle_message(topic, message)
@@ -938,7 +957,9 @@ class RhasspyCore:
 
                     # Report to websockets
                     for queue in self.message_queues:
-                        queue.put_nowait(("intent", message))
+                        self.loop.call_soon_threadsafe(
+                            queue.put_nowait, ("intent", message)
+                        )
                 elif isinstance(message, G2pPhonemes):
                     # Word pronunciations
                     self.handle_message(topic, message)
@@ -975,7 +996,9 @@ class RhasspyCore:
 
                     # Report to websockets
                     for queue in self.message_queues:
-                        queue.put_nowait(("wake", message, wakewordId))
+                        self.loop.call_soon_threadsafe(
+                            queue.put_nowait, ("wake", message, wakewordId)
+                        )
 
                     # Warn user if they're expected wake -> ASR -> NLU workflow
                     if (self.dialogue_system == "dummy") and (

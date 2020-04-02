@@ -19,6 +19,14 @@ body {
     z-index: 9999;
 }
 
+#services .col {
+    padding: 0;
+}
+
+#services .btn {
+    border-radius: 0;
+}
+
 .response {
     text-align: center;
 }

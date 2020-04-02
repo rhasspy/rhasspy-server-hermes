@@ -183,6 +183,7 @@ class RhasspyCore:
 
         self.asr_system = self.profile.get("speech_to_text.system", "dummy")
         self.dialogue_system = self.profile.get("dialogue.system", "dummy")
+        self.sound_system = self.profile.get("sounds.system", "dummy")
 
     # -------------------------------------------------------------------------
 
@@ -442,6 +443,10 @@ class RhasspyCore:
         siteId = siteId or self.siteId
         tts_id = str(uuid4())
 
+        if self.sound_system == "dummy":
+            # Will just time out
+            wait_play_finished = False
+
         def handle_finished():
             say_finished: typing.Optional[TtsSayFinished] = None
             play_bytes: typing.Optional[
@@ -581,7 +586,7 @@ class RhasspyCore:
         self, wav_bytes: bytes, siteId: typing.Optional[str] = None
     ) -> AudioPlayFinished:
         """Play WAV data through speakers."""
-        if self.profile.get("sounds.system", "dummy") == "dummy":
+        if self.sound_system == "dummy":
             raise RuntimeError("No audio output system configured")
 
         siteId = siteId or self.siteId

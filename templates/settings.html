@@ -2026,6 +2026,12 @@
 
          // Expand section
          $(hash + '-collapse').addClass('show');
+
+         // Account for fixed header top
+         // See: https://stackoverflow.com/questions/4086107/fixed-page-header-overlaps-in-page-anchors
+         var offset = $(':target').offset();
+         var scrollTo = offset.top - 70;
+         $('html, body').animate({ scrollTop: scrollTo}, 0);
      }
  })
 

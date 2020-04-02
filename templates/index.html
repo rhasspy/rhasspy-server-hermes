@@ -8,70 +8,70 @@
 <h3 class="text-center" title="Hermes Site Id" x-text="getSiteId()"></h3>
 
 <!-- Services Bar -->
-<div id="services" class="card-group text-center">
-    <div class="card bg-success" x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')" x-bind:class="{ 'bg-dark': !profile.mqtt.enabled }">
-        <a href="/settings#mqtt">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-network-wired fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Audio input: ' + profile.microphone.system" x-bind:class="{ 'bg-dark': profile.microphone.system == 'dummy' }">
-        <a href="/settings#microphone">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-microphone fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Intent handling: ' + profile.handle.system" x-bind:class="{ 'bg-dark': profile.handle.system == 'dummy' }">
-        <a href="/settings#handle">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-home fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Wake word: ' + profile.wake.system" x-bind:class="{ 'bg-dark': profile.wake.system == 'dummy' }">
-        <a href="/settings#wake">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Speech to text: ' + profile.speech_to_text.system" x-bind:class="{ 'bg-dark': profile.speech_to_text.system == 'dummy' }">
-        <a href="/settings#speech">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-phone-volume fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Intent recognition: ' + profile.intent.system" x-bind:class="{ 'bg-dark': profile.intent.system == 'dummy' }">
-        <a href="/settings#intent">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-comment fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Text to speech: ' + profile.text_to_speech.system" x-bind:class="{ 'bg-dark': profile.text_to_speech.system == 'dummy' }">
-        <a href="/settings#tts">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-paper-plane fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Audio output: ' + profile.sounds.system" x-bind:class="{ 'bg-dark': profile.sounds.system == 'dummy' }">
-        <a href="/settings#sounds">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-volume-up fa-lg"></i>
-            </div>
-        </a>
-    </div>
-    <div class="card bg-success" x-bind:title="'Dialogue management: ' + profile.dialogue.system" x-bind:class="{ 'bg-dark': profile.dialogue.system == 'dummy' }">
-        <a href="/settings#dialogue">
-            <div class="card-body p-2">
-                <i class="fas fa-inverse fa-tasks fa-lg"></i>
-            </div>
-        </a>
-    </div>
+<div id="services" class="btn-group text-center w-100">
+
+    <a href="/settings#mqtt" class="btn flex-fill p-2" 
+	   x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')" 
+	   x-bind:class="{ 'btn-dark': !profile.mqtt.enabled, 'btn-success' : profile.mqtt.enabled }"
+	>
+	    <i class="fas fa-inverse fa-network-wired fa-lg"></i>
+    </a>
+
+    <a href="/settings#microphone" class="btn flex-fill p-2" 
+	   x-bind:title="'Audio input: ' + profile.microphone.system" 
+	   x-bind:class="{ 'btn-dark': profile.microphone.system === 'dummy', 'btn-success': profile.microphone.system !== 'dummy' }"
+	>
+      <i class="fas fa-inverse fa-microphone fa-lg"></i>
+    </a>
+
+	<a href="/settings#handle" class="btn flex-fill p-2" 
+	   x-bind:title="'Intent handling: ' + profile.handle.system" 
+	   x-bind:class="{ 'btn-dark': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy'}"
+	>
+		<i class="fas fa-inverse fa-home fa-lg"></i>
+	</a>
+
+	<a href="/settings#wake" class="btn flex-fill p-2"
+	   x-bind:title="'Wake word: ' + profile.wake.system" 
+	   x-bind:class="{ 'btn-dark': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
+	</a>
+
+	<a href="/settings#speech" class="btn flex-fill p-2"
+	   x-bind:title="'Speech to text: ' + profile.speech_to_text.system" 
+	   x-bind:class="{ 'btn-dark': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-phone-volume fa-lg"></i>
+	</a>
+
+	<a href="/settings#intent" class="btn flex-fill p-2"
+	   x-bind:title="'Intent recognition: ' + profile.intent.system" 
+	   x-bind:class="{ 'btn-dark': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-comment fa-lg"></i>
+	</a>
+
+	<a href="/settings#tts" class="btn flex-fill p-2"
+	   x-bind:title="'Text to speech: ' + profile.text_to_speech.system" 
+	   x-bind:class="{ 'btn-dark': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-paper-plane fa-lg"></i>
+	</a>
+
+	<a href="/settings#sounds" class="btn flex-fill p-2"
+	   x-bind:title="'Audio output: ' + profile.sounds.system" 
+	   x-bind:class="{ 'btn-dark': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-volume-up fa-lg"></i>
+	</a>
+
+	<a href="/settings#dialogue" class="btn flex-fill p-2"
+	   x-bind:title="'Dialogue management: ' + profile.dialogue.system" 
+	   x-bind:class="{ 'btn-dark': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }"
+	>
+		<i class="fas fa-inverse fa-tasks fa-lg"></i>
+	</a>
 </div>
 <!-- End Services Bar -->
 

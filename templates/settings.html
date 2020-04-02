@@ -215,17 +215,81 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="microphone-program" class="col-form-label">Program</label>
+                        <label for="microphone-record-program" class="col-form-label">Record Program</label>
                         <div class="col">
-                            <input id="microphone-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system != 'command'">
+                            <input id="microphone-record-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system != 'command'">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="microphone-arguments" class="col-form-label">Arguments</label>
+                        <label for="microphone-record-arguments" class="col-form-label">Record Arguments</label>
                         <div class="col">
-                            <input id="microphone-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system != 'command'">
+                            <input id="microphone-record-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-sample-rate" class="col-form-label">Sample Rate</label>
+                        <div class="col">
+                            <input id="microphone-sample-rate" type="text" class="form-control" x-model="profile.microphone.command.sample_rate" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (Hertz)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-sample-width" class="col-form-label">Sample Width</label>
+                        <div class="col">
+                            <input id="microphone-sample-width" type="text" class="form-control" x-model="profile.microphone.command.sample_width" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (bytes)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-channels" class="col-form-label">Channels</label>
+                        <div class="col">
+                            <input id="microphone-channels" type="text" class="form-control" x-model="profile.microphone.command.channels" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-list-program" class="col-form-label">List Program</label>
+                        <div class="col">
+                            <input id="microphone-list-program" type="text" class="form-control" x-model="profile.microphone.command.list_program" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-list-arguments" class="col-form-label">List Arguments</label>
+                        <div class="col">
+                            <input id="microphone-list-arguments" type="text" class="form-control" x-model="profile.microphone.command.list_arguments" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-test-program" class="col-form-label">Test Program</label>
+                        <div class="col">
+                            <input id="microphone-test-program" type="text" class="form-control" x-model="profile.microphone.command.test_program" :disabled="profile.microphone.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="microphone-test-arguments" class="col-form-label">Test Arguments</label>
+                        <div class="col">
+                            <input id="microphone-test-arguments" type="text" class="form-control" x-model="profile.microphone.command.test_arguments" :disabled="profile.microphone.system != 'command'">
                         </div>
                     </div>
                 </div>
@@ -755,6 +819,7 @@
                         </ul>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -768,6 +833,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <h5>Voice Command Settings</h5>
@@ -861,6 +927,7 @@
                         </ul>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -874,6 +941,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <h5>Voice Command Settings</h5>
@@ -967,6 +1035,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1006,6 +1075,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1086,6 +1156,7 @@
                         <label for="fsticuffs-fuzzy" class="col-form-label">Fuzzy text matching</label>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1122,6 +1193,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1190,6 +1262,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1237,6 +1310,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1276,6 +1350,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1365,6 +1440,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1396,6 +1472,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1442,6 +1519,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1519,6 +1597,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1557,6 +1636,7 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -1582,20 +1662,46 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="tts-program" class="col-form-label">Program</label>
+                        <label for="tts-say-program" class="col-form-label">Say Program</label>
                         <div class="col">
-                            <input id="tts-program" type="text" class="form-control" x-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system != 'command'">
+                            <input id="tts-say-program" type="text" class="form-control" x-model="profile.text_to_speech.command.say_program" :disabled="profile.text_to_speech.system != 'command'">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="tts-arguments" class="col-form-label">Arguments</label>
+                        <label for="tts-say-arguments" class="col-form-label">Arguments</label>
                         <div class="col">
-                            <input id="tts-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.arguments" :disabled="profile.text_to_speech.system != 'command'">
+                            <input id="tts-say-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.say_arguments" :disabled="profile.text_to_speech.system != 'command'">
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-command-language" class="col-form-label">Default Language</label>
+                        <div class="col">
+                            <input id="tts-command-language" type="text" class="form-control" x-model="profile.text_to_speech.command.language" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-voices-program" class="col-form-label">Voices Program</label>
+                        <div class="col">
+                            <input id="tts-voices-program" type="text" class="form-control" x-model="profile.text_to_speech.command.voices_program" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-voices-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="tts-voices-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.voices_arguments" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">

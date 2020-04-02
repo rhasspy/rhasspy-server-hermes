@@ -31,7 +31,9 @@ from rhasspyhermes.audioserver import (
     AudioFrame,
     AudioGetDevices,
     AudioPlayBytes,
+    AudioPlayError,
     AudioPlayFinished,
+    AudioRecordError,
     AudioSessionFrame,
     AudioSummary,
 )
@@ -47,7 +49,7 @@ from rhasspyhermes.nlu import (
     NluTrain,
     NluTrainSuccess,
 )
-from rhasspyhermes.tts import GetVoices, TtsSay, TtsSayFinished, Voices
+from rhasspyhermes.tts import GetVoices, TtsError, TtsSay, TtsSayFinished, Voices
 from rhasspyhermes.wake import (
     GetHotwords,
     HotwordDetected,
@@ -416,7 +418,7 @@ class RhasspyCore:
             result = response
 
         if isinstance(result, NluError):
-            _LOGGER.debug(result)
+            _LOGGER.error(result)
             raise RuntimeError(result.error)
 
         assert isinstance(result, (NluIntent, NluIntentNotRecognized))
@@ -429,13 +431,13 @@ class RhasspyCore:
         sentence: str,
         language: typing.Optional[str] = None,
         capture_audio: bool = False,
+        wait_play_finished: bool = True,
         siteId: typing.Optional[str] = None,
         sessionId: str = "",
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
-            _LOGGER.debug("No text to speech system configured")
-            return (TtsSayFinished(), None)
+            raise RuntimeError("No text to speech system configured")
 
         siteId = siteId or self.siteId
         tts_id = str(uuid4())
@@ -445,18 +447,28 @@ class RhasspyCore:
             play_bytes: typing.Optional[
                 AudioPlayBytes
             ] = None if capture_audio else True
+            play_finished = not wait_play_finished
 
             while True:
                 topic, message = yield
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
                     say_finished = message
+                elif isinstance(message, TtsError):
+                    # Assume audio playback didn't happen
+                    say_finished = message
+                    play_bytes = True
+                    play_finished = True
                 elif isinstance(message, AudioPlayBytes):
                     requestId = AudioPlayBytes.get_requestId(topic)
                     if requestId == tts_id:
                         play_bytes = message
+                elif isinstance(message, AudioPlayError):
+                    play_bytes = message
+                elif isinstance(message, AudioPlayFinished):
+                    play_finished = True
 
-                if say_finished and play_bytes:
+                if say_finished and play_bytes and play_finished:
                     return (say_finished, play_bytes)
 
         say = TtsSay(id=tts_id, text=sentence, siteId=siteId, sessionId=sessionId)
@@ -466,7 +478,10 @@ class RhasspyCore:
         messages = [say]
         message_types: typing.List[typing.Type[Message]] = [
             TtsSayFinished,
+            TtsError,
             AudioPlayBytes,
+            AudioPlayFinished,
+            AudioPlayError,
         ]
 
         # Expecting only a single result
@@ -478,7 +493,16 @@ class RhasspyCore:
 
         assert isinstance(result, tuple), f"Expected tuple, got {result}"
         say_response, play_response = result
+
+        if isinstance(say_response, TtsError):
+            _LOGGER.error(say_response)
+            raise RuntimeError(say_response.error)
+
         assert isinstance(say_response, TtsSayFinished)
+
+        if isinstance(play_response, AudioPlayError):
+            _LOGGER.error(play_response)
+            raise RuntimeError(f"Audio: {play_response.error}")
 
         if capture_audio:
             assert isinstance(play_response, AudioPlayBytes)
@@ -545,7 +569,7 @@ class RhasspyCore:
             result = response
 
         if isinstance(result, AsrError):
-            _LOGGER.debug(result)
+            _LOGGER.error(result)
             raise RuntimeError(result.error)
 
         assert isinstance(result, AsrTextCaptured)
@@ -558,8 +582,7 @@ class RhasspyCore:
     ) -> AudioPlayFinished:
         """Play WAV data through speakers."""
         if self.profile.get("sounds.system", "dummy") == "dummy":
-            _LOGGER.debug("No audio output system configured")
-            return AudioPlayFinished()
+            raise RuntimeError("No audio output system configured")
 
         siteId = siteId or self.siteId
         requestId = str(uuid4())
@@ -568,7 +591,9 @@ class RhasspyCore:
             while True:
                 _, message = yield
 
-                if isinstance(message, AudioPlayFinished) and (message.id == requestId):
+                if (
+                    isinstance(message, AudioPlayFinished) and (message.id == requestId)
+                ) or isinstance(message, AudioPlayError):
                     return message
 
         def messages():
@@ -577,7 +602,10 @@ class RhasspyCore:
                 {"siteId": siteId, "requestId": requestId},
             )
 
-        message_types: typing.List[typing.Type[Message]] = [AudioPlayFinished]
+        message_types: typing.List[typing.Type[Message]] = [
+            AudioPlayFinished,
+            AudioPlayError,
+        ]
 
         # Disable hotword/ASR
         self.publish(
@@ -592,6 +620,10 @@ class RhasspyCore:
                 handle_finished(), messages(), message_types
             ):
                 result = response
+
+            if isinstance(result, AudioPlayError):
+                _LOGGER.error(result)
+                raise RuntimeError(result.error)
 
             assert isinstance(result, AudioPlayFinished)
             return result
@@ -913,7 +945,12 @@ class RhasspyCore:
                     # Invalid siteId
                     continue
 
-                if isinstance(message, AsrError):
+                if isinstance(message, AsrAudioCaptured):
+                    # Audio data from ASR session
+                    assert siteId, "Missing siteId"
+                    self.last_audio_captured = message
+                    self.handle_message(topic, message)
+                elif isinstance(message, AsrError):
                     # ASR service error
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrTextCaptured):
@@ -932,9 +969,15 @@ class RhasspyCore:
                     # Request to play audio
                     assert siteId, "Missing siteId"
                     self.handle_message(topic, message)
+                elif isinstance(message, AudioPlayError):
+                    # Error playing audio
+                    self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayFinished):
                     # Audio finished playing
                     assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, AudioRecordError):
+                    # Error recording audio
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioSummary):
                     # Audio summary statistics
@@ -948,46 +991,11 @@ class RhasspyCore:
                 elif isinstance(message, DialogueSessionStarted):
                     # Dialogue session started
                     self.handle_message(topic, message)
-                elif isinstance(message, NluError):
-                    # NLU service error
-                    self.handle_message(topic, message)
-                elif isinstance(message, NluIntent):
-                    # Successful intent recognition
-                    self.handle_message(topic, message)
-
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("intent", message)
-                        )
                 elif isinstance(message, G2pPhonemes):
                     # Word pronunciations
                     self.handle_message(topic, message)
                 elif isinstance(message, Hotwords):
                     # Hotword list
-                    self.handle_message(topic, message)
-                elif isinstance(message, NluIntentNotRecognized):
-                    # Failed intent recognition
-                    self.handle_message(topic, message)
-
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        queue.put_nowait(("intent", message))
-                elif isinstance(message, TtsSayFinished):
-                    # Text to speech complete
-                    self.handle_message(topic, message)
-                elif isinstance(message, AsrTrainSuccess):
-                    # ASR training success
-                    assert siteId, "Missing siteId"
-                    self.handle_message(topic, message)
-                elif isinstance(message, AsrAudioCaptured):
-                    # Audio data from ASR session
-                    assert siteId, "Missing siteId"
-                    self.last_audio_captured = message
-                    self.handle_message(topic, message)
-                elif isinstance(message, NluTrainSuccess):
-                    # NLU training success
-                    assert siteId, "Missing siteId"
                     self.handle_message(topic, message)
                 elif isinstance(message, HotwordDetected):
                     # Hotword detected
@@ -1007,6 +1015,39 @@ class RhasspyCore:
                         _LOGGER.warning(
                             "Dialogue management is disabled. ASR will NOT be automatically enabled."
                         )
+                elif isinstance(message, NluError):
+                    # NLU service error
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluIntent):
+                    # Successful intent recognition
+                    self.handle_message(topic, message)
+
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        self.loop.call_soon_threadsafe(
+                            queue.put_nowait, ("intent", message)
+                        )
+                elif isinstance(message, NluIntentNotRecognized):
+                    # Failed intent recognition
+                    self.handle_message(topic, message)
+
+                    # Report to websockets
+                    for queue in self.message_queues:
+                        queue.put_nowait(("intent", message))
+                elif isinstance(message, TtsSayFinished):
+                    # Text to speech complete
+                    self.handle_message(topic, message)
+                elif isinstance(message, AsrTrainSuccess):
+                    # ASR training success
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, NluTrainSuccess):
+                    # NLU training success
+                    assert siteId, "Missing siteId"
+                    self.handle_message(topic, message)
+                elif isinstance(message, TtsError):
+                    # Error during text to speech
+                    self.handle_message(topic, message)
                 elif isinstance(message, Voices):
                     # Text to speech voices
                     self.handle_message(topic, message)

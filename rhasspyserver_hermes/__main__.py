@@ -54,7 +54,12 @@ from rhasspyhermes.audioserver import (
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
-from rhasspyhermes.wake import HotwordDetected, HotwordToggleOff, HotwordToggleOn
+from rhasspyhermes.wake import (
+    HotwordDetected,
+    HotwordToggleOff,
+    HotwordToggleOn,
+    HotwordToggleReason,
+)
 from rhasspyprofile import Profile, human_size
 from swagger_ui import quart_api_doc
 from wsproto.utilities import LocalProtocolError
@@ -741,15 +746,16 @@ async def api_wake_words() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
+    reason = request.args.get("reason", HotwordToggleReason.UNKNOWN)
     toggle_off = (await request.data).decode().lower() in ["false", "off"]
 
     if toggle_off:
         # Disable
-        core.publish(HotwordToggleOff(siteId=core.siteId))
+        core.publish(HotwordToggleOff(siteId=core.siteId, reason=reason))
         return "off"
 
     # Enable
-    core.publish(HotwordToggleOn(siteId=core.siteId))
+    core.publish(HotwordToggleOn(siteId=core.siteId, reason=reason))
     return "on"
 
 
@@ -1485,6 +1491,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
             sentence,
             language=(language or voice),
             capture_audio=True,
+            wait_play_finished=play,
             siteId=siteId,
             sessionId=sessionId,
         )

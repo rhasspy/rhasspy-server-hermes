@@ -138,6 +138,10 @@ class RhasspyCore:
 
         # Message types that are we are subscribed to
         self.subscribed_types: typing.Set[typing.Type[Message]] = set()
+        self.subscribed_topics: typing.Set[str] = set()
+
+        # Cache of all MQTT topics in case we get disconnected
+        self.all_mqtt_topics: typing.Set[str] = set()
 
         # Default timeout for response messages
         self.message_timeout_seconds = message_timeout_seconds
@@ -924,6 +928,11 @@ class RhasspyCore:
                 AudioSummary,
             )
 
+            # Re-subscribe to everything
+            for topic in self.all_mqtt_topics:
+                self.subscribe(topic)
+                _LOGGER.debug("Subscribed to %s", topic)
+
             self.connected_event.set()
         except Exception:
             _LOGGER.exception("on_connect")
@@ -934,6 +943,11 @@ class RhasspyCore:
             self.connected_event.clear()
             self.is_connected = False
             _LOGGER.warning("Disconnected. Trying to reconnect...")
+
+            # Clear type/topic caches
+            self.subscribed_types.clear()
+            self.subscribed_topics.clear()
+
             self.client.reconnect()
         except Exception:
             _LOGGER.exception("on_disconnect")
@@ -1085,8 +1099,13 @@ class RhasspyCore:
                 self.subscribed_types.add(message_type)
 
         for topic in topics:
-            self.client.subscribe(topic)
-            _LOGGER.debug("Subscribed to %s", topic)
+            self.all_mqtt_topics.add(topic)
+
+            # Don't re-subscribe
+            if topic not in self.subscribed_topics:
+                self.client.subscribe(topic)
+                self.subscribed_topics.add(topic)
+                _LOGGER.debug("Subscribed to %s", topic)
 
     def publish(self, message: Message, **topic_args):
         """Publish a Hermes message to MQTT."""

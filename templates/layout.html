@@ -343,6 +343,7 @@
 
              // Display an alert message at the bottom of the screen for 20 seconds
              alert: (message, level) => {
+                 level = (level === undefined) ? 'info' : level;
                  $('#alert').addClass('alert-' + level)
                  $('#alertText').text(message)
                  $('#alert').show()
@@ -352,7 +353,7 @@
              },
 
              // Hide the alert message
-             clearAlert: (message, level) => {
+             clearAlert: () => {
                  $('#alert').removeClass('alert-info')
                  $('#alert').removeClass('alert-danger')
                  $('#alert').removeClass('alert-warning')
@@ -409,7 +410,7 @@
              restart: () => {
                  return rhasspy.postBusy('Restarting Rhasspy', '/api/restart')
                             .done((r) => {
-                                rhasspy.alert(r.responseText || r);
+                                rhasspy.alert(r.responseText || r, 'success');
                                 rhasspy.init();
                             });
              },

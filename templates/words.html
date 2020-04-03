@@ -75,57 +75,58 @@
             <button onclick="saveWords()" x-bind:class="{ 'btn-danger': words.isDirty.value }" class="btn btn-primary">Save Custom Words</button>
         </div>
     </div>
-</div>
-<!-- End Custom Words -->
 
-<!-- Phoneme Table -->
-<div id="phonemesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="phonemesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 id="phonemesModalLabel" class="modal-title">Available Phonemes (<span x-text="profile.speech_to_text.system"></span>)</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <table class="table">
-                    <thead class="thead-light">
-                        <th scope="col">Phoneme</th>
-                        <th scope="col">Example</th>
-                        <th scope="col">Translation</th>
-                        <th scope="col"></th>
-                    </thead>
-                    <tbody>
-                        <template x-for="p in Object.keys(phonemes)" :key="p">
-                            <tr>
-                                <td x-text="p">{{ phoneme }}</td>
-                                <td x-text="phonemes[p].word"></td>
-                                <td x-text="phonemes[p].phonemes"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
+    <!-- Phoneme Table -->
+    <div id="phonemesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="phonemesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="phonemesModalLabel" class="modal-title">Available Phonemes (<span x-text="profile.speech_to_text.system"></span>)</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead class="thead-light">
+                            <th scope="col">Phoneme</th>
+                            <th scope="col">Example</th>
+                            <th scope="col">Translation</th>
+                            <th scope="col"></th>
+                        </thead>
+                        <tbody>
+                            <template x-for="p in Object.keys(words.phonemes.value)" :key="p">
+                                <tr>
+                                    <td x-text="p">{{ phoneme }}</td>
+                                    <td x-text="words.phonemes.value[p].word"></td>
+                                    <td x-text="words.phonemes.value[p].phonemes"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
-<!-- End Phoneme Table -->
+<!-- End Custom Words -->
+
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript">
  var words = {
      isDirty: { value: false },
-     customWords: { value: '' }
+     customWords: { value: '' },
+     phonemes: { value: {} }
  }
-
- var phonemes = {}
 
  // Displays dialog with phoneme table
  function showPhonemes() {
      $.get('/api/phonemes', (r) => {
-         phonemes = r;
+         console.log(r)
+         words.phonemes.value = r;
          $('#phonemesModal').modal('show');
      })
  }

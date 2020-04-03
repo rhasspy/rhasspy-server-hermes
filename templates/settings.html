@@ -118,7 +118,7 @@
                     <div class="form-row mt-2">
                         <div class="col">
                             <select id="microphone-pyaudio-devices" x-model="profile.microphone.pyaudio.device" class="form-control">
-                                <option value="" selected>Default Input Device</option>
+                                <option value="" selected>Default Device</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
@@ -173,7 +173,7 @@
                     <div class="form-row mt-2">
                         <div class="col">
                             <select id="microphone-arecord-devices" x-model="profile.microphone.arecord.device" class="form-control">
-                                <option value="" selected>Default Input Device</option>
+                                <option value="" selected>Default Device</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
@@ -1840,7 +1840,7 @@
                     </div>
                     <div class="col">
                         <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
-                            <option value="" selected>Default Output Device</option>
+                            <option value="" selected>Default Device</option>
                         </select>
                     </div>
                     <div class="col-xs-auto">
@@ -2096,7 +2096,7 @@
          success: (r) => {
              Object.entries(r).forEach((kv) => {
                  $('#' + selectId)
-                     .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+                     .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
              });
          }
      });
@@ -2112,7 +2112,7 @@
             .done((r) => {
                 Object.entries(r).forEach((kv) => {
                     $('#' + selectId)
-                        .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+                        .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
                 });
             });
  }
@@ -2128,7 +2128,7 @@
          success: (r) => {
              Object.entries(r).forEach((kv) => {
                  $('#' + selectId)
-                     .append('<option value="' + kv[0] + '">' + kv[1] + '</option>');
+                     .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
              });
          }
      });

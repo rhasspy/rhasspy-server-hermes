@@ -746,16 +746,17 @@ async def api_wake_words() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
+    siteId = request.args.get("siteId", core.siteId)
     reason = request.args.get("reason", HotwordToggleReason.UNKNOWN)
     toggle_off = (await request.data).decode().lower() in ["false", "off"]
 
     if toggle_off:
         # Disable
-        core.publish(HotwordToggleOff(siteId=core.siteId, reason=reason))
+        core.publish(HotwordToggleOff(siteId=siteId, reason=reason))
         return "off"
 
     # Enable
-    core.publish(HotwordToggleOn(siteId=core.siteId, reason=reason))
+    core.publish(HotwordToggleOn(siteId=siteId, reason=reason))
     return "on"
 
 

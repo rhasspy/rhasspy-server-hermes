@@ -1017,6 +1017,8 @@ class RhasspyCore:
                     # Hotword list
                     self.handle_message(topic, message)
                 elif isinstance(message, HotwordDetected):
+                    _LOGGER.debug("<- %s", message)
+
                     # Hotword detected
                     wakewordId = HotwordDetected.get_wakewordId(topic)
                     self.handle_message(topic, message)
@@ -1038,6 +1040,8 @@ class RhasspyCore:
                     # NLU service error
                     self.handle_message(topic, message)
                 elif isinstance(message, NluIntent):
+                    _LOGGER.debug("<- %s", message)
+
                     # Successful intent recognition
                     self.handle_message(topic, message)
 
@@ -1047,6 +1051,8 @@ class RhasspyCore:
                             queue.put_nowait, ("intent", message)
                         )
                 elif isinstance(message, NluIntentNotRecognized):
+                    _LOGGER.debug("<- %s", message)
+
                     # Failed intent recognition
                     self.handle_message(topic, message)
 

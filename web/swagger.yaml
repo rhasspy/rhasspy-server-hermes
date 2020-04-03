@@ -131,6 +131,12 @@ paths:
       summary: 'Enable or disable wake word system'
       produces:
         - text/plain
+      parameters:
+        - in: query
+          name: siteId
+          description: 'Hermes siteId (default: local siteId)'
+          schema:
+            type: string
       requestBody:
         description: 'Enable or disable'
         required: true

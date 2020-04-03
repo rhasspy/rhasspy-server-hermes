@@ -930,7 +930,7 @@ class RhasspyCore:
 
             # Re-subscribe to everything
             for topic in self.all_mqtt_topics:
-                self.subscribe(topic)
+                self.client.subscribe(topic)
                 _LOGGER.debug("Subscribed to %s", topic)
 
             self.connected_event.set()

@@ -768,6 +768,11 @@ async def api_listen_for_command() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+
+    # Key/value to set in recognized intent
+    entity = request.args.get("entity")
+    value = request.args.get("value")
+
     sessionId = str(uuid4())
 
     messages: typing.List[typing.Any] = []
@@ -844,6 +849,13 @@ async def api_listen_for_command() -> Response:
             raise RuntimeError(nlu_intent.error)
 
         assert isinstance(nlu_intent, (NluIntent, NluIntentNotRecognized))
+
+        # Add user-defined entities
+        if entity and isinstance(nlu_intent, NluIntent):
+            nlu_intent.slots.append(
+                rhasspyhermes.intent.Slot(entity=entity, value=value)
+            )
+
         if output_format == "hermes":
             if isinstance(nlu_intent, NluIntent):
                 intent_dict = {
@@ -1301,13 +1313,24 @@ async def api_text_to_intent():
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
 
+    # Key/value to set in recognized intent
+    entity = request.args.get("entity")
+    value = request.args.get("value")
+
+    if entity:
+        user_entities = [(entity, value)]
+    else:
+        user_entities = []
+
     if no_hass:
         # Temporarily disable intent handling
         core.publish(HandleToggleOff(siteId=core.siteId))
 
     try:
         # Convert text to intent
-        intent_dict = await text_to_intent_dict(text, output_format=output_format)
+        intent_dict = await text_to_intent_dict(
+            text, output_format=output_format, user_entities=user_entities
+        )
         return jsonify(intent_dict)
     finally:
         if no_hass:
@@ -1327,6 +1350,15 @@ async def api_speech_to_intent() -> Response:
     detect_silence = (
         request.args.get("detect_silence", "false").strip().lower() == "true"
     )
+
+    # Key/value to set in recognized intent
+    entity = request.args.get("entity")
+    value = request.args.get("value")
+
+    if entity:
+        user_entities = [(entity, value)]
+    else:
+        user_entities = []
 
     if no_hass:
         # Temporarily disable intent handling
@@ -1348,7 +1380,9 @@ async def api_speech_to_intent() -> Response:
 
         # text -> intent
         _LOGGER.debug("Waiting for intent")
-        intent_dict = await text_to_intent_dict(text, output_format=output_format)
+        intent_dict = await text_to_intent_dict(
+            text, output_format=output_format, user_entities=user_entities
+        )
 
         if output_format == "rhasspy":
             intent_dict["raw_text"] = transcription.text
@@ -1396,6 +1430,15 @@ async def api_stop_recording() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
 
+    # Key/value to set in recognized intent
+    entity = request.args.get("entity")
+    value = request.args.get("value")
+
+    if entity:
+        user_entities = [(entity, value)]
+    else:
+        user_entities = []
+
     if no_hass:
         # Temporarily disable intent handling
         core.publish(HandleToggleOff(siteId=core.siteId))
@@ -1428,7 +1471,9 @@ async def api_stop_recording() -> Response:
 
         assert isinstance(text_captured, AsrTextCaptured)
         text = text_captured.text
-        intent_dict = await text_to_intent_dict(text, output_format=output_format)
+        intent_dict = await text_to_intent_dict(
+            text, output_format=output_format, user_entities=user_entities
+        )
         return jsonify(intent_dict)
     finally:
         if no_hass:
@@ -2357,15 +2402,24 @@ def prefers_json() -> bool:
     ) > request.accept_mimetypes.quality("text/plain")
 
 
-async def text_to_intent_dict(text, output_format="rhasspy"):
+async def text_to_intent_dict(
+    text,
+    output_format="rhasspy",
+    user_entities=typing.Optional[typing.List[typing.Tuple[str, str]]],
+):
     """Convert transcription to either Rhasspy or Hermes JSON format."""
     assert core is not None
     start_time = time.perf_counter()
     result = await core.recognize_intent(text)
 
+    # Add user-defined entities
+    if user_entities and isinstance(result, NluIntent):
+        for entity, value in user_entities:
+            result.slots.append(rhasspyhermes.intent.Slot(entity=entity, value=value))
+
     if output_format == "hermes":
         if isinstance(result, NluIntent):
-            intent_dict = {"type": "intent", "value": dataclasses.asdict(result)}
+            intent_dict = {"type": "intent", "value": result.asdict()}
         else:
             intent_dict = {
                 "type": "intentNotRecognized",

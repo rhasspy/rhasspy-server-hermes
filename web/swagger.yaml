@@ -111,6 +111,16 @@ paths:
           schema:
             type: string
             enum: [rhasspy, hermes]
+        - in: query
+          name: entity
+          description: 'User-defined entity to add to recognized intent'
+          schema:
+            type: string
+        - in: query
+          name: value
+          description: 'Value for user-defined entity'
+          schema:
+            type: string
       responses:
         '200':
           description: Intent
@@ -425,6 +435,16 @@ paths:
           schema:
             type: string
             enum: [rhasspy, hermes]
+        - in: query
+          name: entity
+          description: 'User-defined entity to add to recognized intent'
+          schema:
+            type: string
+        - in: query
+          name: value
+          description: 'Value for user-defined entity'
+          schema:
+            type: string
       responses:
         '200':
           description: 'Intent JSON'
@@ -456,6 +476,16 @@ paths:
           schema:
             type: string
             enum: [rhasspy, hermes]
+        - in: query
+          name: entity
+          description: 'User-defined entity to add to recognized intent'
+          schema:
+            type: string
+        - in: query
+          name: value
+          description: 'Value for user-defined entity'
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -514,6 +544,16 @@ paths:
           schema:
             type: string
             enum: [rhasspy, hermes]
+        - in: query
+          name: entity
+          description: 'User-defined entity to add to recognized intent'
+          schema:
+            type: string
+        - in: query
+          name: value
+          description: 'Value for user-defined entity'
+          schema:
+            type: string
       responses:
         '200':
           description: 'Intent JSON'

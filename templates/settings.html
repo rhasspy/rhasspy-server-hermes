@@ -3,6 +3,31 @@
 <!-- Simplified view of Rhasspy profile -->
 
 {% block body %}
+
+<style>
+	.rhasspy-settings-header{
+		font-size: 1.25rem;
+	}
+
+	.rhasspy-settings-header > :nth-child(1n) { 
+		vertical-align: middle;
+	}
+
+	.rhasspy-settings-header > :nth-child(1) { 
+		width : 2rem;
+	}
+
+	.rhasspy-settings-header > :nth-child(2) { 
+		width : 13rem;
+		text-align: left!important;
+	}
+
+	.rhasspy-settings-header > :nth-child(3) { 
+		width : 12rem;
+	}
+</style>
+
+
 <div class="form-group mb-3">
     <div class="form-row">
         <div class="col-auto">
@@ -14,1892 +39,1803 @@
     </div>
 </div>
 
-<!-- siteId -->
-<div class="form-group">
-    <div class="form-row">
-        <div class="col-auto">
-            <label for="mqtt-siteid" class="col-form-label">siteId:</label>
-        </div>
-        <div class="col-6">
-            <input id="mqtt-siteid" type="text" class="form-control" x-model="profile.mqtt.site_id" placeholder="default">
-        </div>
-    </div>
+<div class="mx-xl-5 mx-lg-4 mx-md-3 mx-sm-1">
+	<!-- siteId -->
+	<div>
+		<div class="form-group">
+			<div class="form-row">
+				<div class="col-auto">
+					<label for="mqtt-siteid" class="col-form-label">siteId:</label>
+				</div>
+				<div class="col-6">
+					<input id="mqtt-siteid" type="text" class="form-control" x-model="profile.mqtt.site_id" placeholder="default">
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End siteId -->
+
+	<!-- MQTT -->
+	<div class="card mt-3" id="mqtt">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingMqtt">
+			<i class="fas fa-inverse fa-network-wired"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
+				<i class="fas fa-sort-down"></i>MQTT
+			</button>
+			<select class="ml-2" x-model="profile.mqtt.enabled">
+				<option value="">Internal</option>
+				<option value="true">External</option>
+			</select>		
+
+			<!--
+			<h5 class="mb-0">
+				<i class="fas fa-inverse fa-network-wired"></i>
+				<button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
+					<i class="fas fa-sort-down"></i>MQTT
+				</button>
+
+				<select class="ml-2" x-model="profile.mqtt.enabled">
+					<option value="">Internal</option>
+					<option value="true">External</option>
+				</select>
+			</h5>-->
+		</div>
+		<div id="mqtt-collapse" class="card-body hide collapse" aria-labelledby="headingMqtt" x-show="profile.mqtt.enabled">
+			<div class="container">
+				<div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="mqtt-host" class="col-form-label">Host</label>
+						</div>                    
+						<div class="col-sm-6">
+							<input id="mqtt-host" type="text" class="form-control" x-model="profile.mqtt.host" :disabled="!profile.mqtt.enabled">
+						</div>
+
+						<div class="col-sm-1">
+							<label for="mqtt-port" class="col-form-label">Port</label>
+						</div>                    
+						<div class="col-sm-3">
+							<input id="mqtt-port" type="text" class="form-control" x-model="profile.mqtt.port" :disabled="!profile.mqtt.enabled">
+						</div>
+					</div>
+
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="mqtt-username" class="col-form-label">Username</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="mqtt-username" type="text" class="form-control" x-model="profile.mqtt.username" :disabled="!profile.mqtt.enabled">
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="mqtt-password" class="col-form-label">Password</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="mqtt-password" type="password" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
+						</div>
+					</div>
+				</div>        
+			</div>
+		</div>
+	</div>
+	<!-- End MQTT -->
+
+	<!-- Audio Recording -->
+	<div class="card mt-3" id="microphone">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingMicrophone">
+			<i class="fas fa-inverse fa-microphone"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system === 'dummy', 'btn-success': profile.microphone.system !== 'dummy' }" data-toggle="collapse" data-target="#microphone-collapse" aria-expanded="true" aria-controls="microphone-collapse" :disabled="profile.microphone.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Audio Recording
+			</button>
+			<select class="ml-2" x-model="profile.microphone.system">
+				<option value="dummy">Disabled</option>
+				<option value="pyaudio">PyAudio</option>
+				<option value="arecord">arecord</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+		</div>
+
+		<div id="microphone-collapse" class="card-body collapse hide" aria-labelledby="headingMicrophone" x-show="profile.microphone.system !== 'dummy'">
+			<div class="container">
+				<!-- PyAudio -->
+				<div x-show="profile.microphone.system === 'pyaudio'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/audio-input/#pyaudio">Documentation</a>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-pyaudio-device" class="col-form-label">Device</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-pyaudio-device" x-model="profile.microphone.pyaudio.device" type="text" class="form-control" placeholder="default">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-pyaudio-devices" class="col-form-label">Available Devices</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="microphone-pyaudio-devices" x-model="profile.microphone.pyaudio.device" class="form-control">
+									<option value="" selected>Default Input Device</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshInputDevices('pyaudio')" class="btn btn-primary form-control">Refresh</button>
+									<button onclick="testInputDevices('pyaudio')" class="btn btn-secondary form-control">Test</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-pyaudio-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-pyaudio-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.pyaudio.udp_audio_port" :disabled="profile.microphone.system !== 'pyaudio'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-pyaudio-siteid" class="col-form-label">Output siteId</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-pyaudio-siteid" type="text" class="form-control" x-model="profile.microphone.pyaudio.siteId" :disabled="profile.microphone.system !== 'pyaudio'">
+							<small class="form-text text-muted">output to different siteId</small>
+						</div>
+					</div>
+				</div>
+				<!-- End PyAudio -->
+
+				<!-- arecord -->
+				<div x-show="profile.microphone.system === 'arecord'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/audio-input/#alsa">Documentation</a>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-arecord-device" class="col-form-label">Device</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-arecord-device" x-model="profile.microphone.arecord.device" type="text" class="form-control" placeholder="default">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-arecord-devices" class="col-form-label">Available Device</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="microphone-arecord-devices" x-model="profile.microphone.arecord.device" class="form-control">
+									<option value="" selected>Default Input Device</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshInputDevices('arecord')" class="btn btn-primary form-control">Refresh</button>
+									<button onclick="testInputDevices('arecord')" class="btn btn-secondary form-control">Test</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-arecord-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-arecord-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.arecord.udp_audio_port" :disabled="profile.microphone.system !== 'arecord'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-arecord-siteid" class="col-form-label">Output siteId</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-arecord-siteid" type="text" class="form-control" x-model="profile.microphone.arecord.siteId" :disabled="profile.microphone.system !== 'arecord'">
+						</div>
+					</div>
+				</div>
+				<!-- End arecord -->
+
+				<!-- Command -->
+				<div x-show="profile.microphone.system === 'command'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/audio-input/#command">Documentation</a>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system !== 'command'">
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system !== 'command'">
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.microphone.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#audio-input">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>			
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Audio Recording -->
+
+	<!-- Intent Handling -->
+	<div class="card mt-3" id="handle">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingHandle">
+			<i class="fas fa-inverse fa-home"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy' }" data-toggle="collapse" data-target="#handle-collapse" aria-expanded="true" aria-controls="handle-collapse" :disabled="profile.handle.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Intent Handling
+			</button>
+			<select class="ml-2" x-model="profile.handle.system">
+				<option value="dummy">Disabled</option>
+				<option value="hass">Home Assistant</option>
+				<option value="remote">Remote HTTP</option>
+				<option value="command">Local Command</option>
+			</select>
+		</div>
+		<div id="handle-collapse" class="card-body collapse hide" aria-labelledby="headingHandle" x-show="profile.handle.system !== 'dummy'">
+			<div class="container">
+				<!-- Home Assistant -->
+				<div x-show="profile.handle.system === 'hass'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-hass-url" class="col-form-label">Hass URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-hass-url" type="text" class="form-control" x-model="profile.home_assistant.url" :disabled="profile.handle.system !== 'hass'">
+							<small class="form-text text-muted">Address of your Home Assistant server</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-hass-token" class="col-form-label">Access Token</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-hass-token" type="password" class="form-control" x-model="profile.home_assistant.access_token" :disabled="profile.handle.system !== 'hass'">
+							<small class="form-text text-muted">Long-lived access token (automatically filled in Hass.IO)</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-hass-password" class="col-form-label">API Password</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-hass-password" type="password" class="form-control" x-model="profile.home_assistant.api_password" :disabled="profile.handle.system !== 'hass'">
+							<small class="form-text text-muted">Home Assistant password <strong>(deprecated)</strong></small>
+						</div>
+					</div>
+
+					<div class="form-group row pt-3">
+						<div class="col-sm-2">
+						</div>
+						<div class="col-sm-10">
+							<div class="form-check">
+								<input class="form-check-input" type="radio" id="handle-hass-type-event" value="event" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system !== 'hass'">
+								<label class="form-check-label" for="handle-hass-type-event">
+									Send <strong>events</strong> to Home Assistant (<var>/api/events</var>)
+								</label>
+								<small class="form-text text-muted">
+									Events will be named <var x-html="profile.home_assistant.event_type_format.replace('{0}', 'INTENT_NAME')"></var>
+								</small>
+							</div>
+						</div>
+					</div>
+					<div class="form-group row pt-1">
+						<div class="col-sm-2">
+						</div>
+						<div class="col-sm-10">
+							<div class="form-check">
+								<input class="form-check-input" type="radio" id="handle-hass-type-intent" value="intent" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system !== 'hass'">
+								<label class="form-check-label" for="handle-hass-type-intent">
+									Send <strong>intents</strong> to Home Assistant (<var>/api/intent/handle</var>)
+								</label>
+
+								<small class="form-text text-muted">
+								  Requires the <var>intent</var> component and <a href="https://www.home-assistant.io/integrations/intent_script">intent scripts</a> in your <var>configuration.yaml</var>
+								</small>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End Home Assistant -->
+
+				<!-- Remote -->
+				<div x-show="profile.handle.system === 'remote'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-remote-url" class="col-form-label">Remote URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-remote-url" type="text" class="form-control" 
+								x-model="profile.handle.remote.url" :disabled="profile.handle.system !== 'remote'">
+						</div>
+					</div>
+				</div>
+				<!-- End Remote -->
+
+				<!-- Command -->
+				<div x-show="profile.handle.system === 'command'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/intent-handling/#command">Documentation</a>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-cmd-program" type="text" class="form-control" x-model="profile.handle.command.program" :disabled="profile.handle.system !== 'command'">
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="handle-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="handle-cmd-arguments" type="text" class="form-control" x-model="profile.handle.command.arguments" :disabled="profile.handle.system !== 'command'">
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Intent Handling -->
+
+	<!-- Wake Word -->
+	<div class="card mt-3" id="wake">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingWake">
+			<i class="fas fa-inverse fa-exclamation-circle"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#wake-collapse" aria-expanded="true" aria-controls="wake-collapse" :disabled="profile.wake.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Wake Word
+			</button>
+			<select class="ml-2" x-model="profile.wake.system">
+				<option value="dummy">Disabled</option>
+				<option value="porcupine">Porcupine</option>
+				<option value="snowboy">Snowboy</option>
+				<option value="precise">Mycroft Precise</option>
+				<option value="pocketsphinx">Pocketsphinx</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+
+			<span title="Wake system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
+				Not compatible
+			</span>
+		</div>
+
+		<div id="wake-collapse" class="card-body collapse hide" aria-labelledby="headingWake" x-show="profile.wake.system !== 'dummy'">
+			<div class="container">
+
+				<!-- Pocketsphinx -->
+				<div x-show="profile.wake.system === 'pocketsphinx'">
+					<div class="form-group row">
+						<a target="_blank" href="docs/wake-word/#pocketsphinx">Documentation</a>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-pocketsphinx-keyphrase" class="col-form-label">Wake Keyphrase</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-pocketsphinx-keyphrase" type="text" class="form-control" x-model="profile.wake.pocketsphinx.keyphrase" :disabled="profile.wake.system !== 'pocketsphinx'">
+							<small class="form-text text-muted">3-4 syllables recommended</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-pocketsphinx-sensitivity" class="col-form-label">Sensitivity</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-pocketsphinx-sensitivity" type="number" min="0" max="1" step="0.1" class="form-control" x-model="pocketsphinxWakeSensitivity" :disabled="profile.wake.system !== 'pocketsphinx'">
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-pocketsphinx-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-pocketsphinx-udp-audio-port" type="text" class="form-control" x-model="profile.wake.pocketsphinx.udp_audio_port" :disabled="profile.wake.system !== 'pocketsphinx'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Pocketsphinx -->
+
+				<!-- Snowboy -->
+				<div x-show="profile.wake.system === 'snowboy'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/wake-word/#snowboy">Documentation</a>
+							<p class="form-text text-muted">Put models in the <var>snowboy</var> directory in your profile</p>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							  <label for="wake-snowboy-model" class="col-form-label">Model:</label>
+						  </div>
+						  <div class="col-sm-10">
+							  <input id="wake-snowboy-model" x-model="profile.wake.snowboy.model" type="text" class="form-control">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-snowboy-hotwords" class="col-form-label">Available Models:</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="wake-snowboy-hotwords" x-model="profile.wake.snowboy.model" class="form-control">
+									<option value="" disabled>Select model</option>
+								</select>
+								
+								<div class="input-group-append">
+									<button onclick="refreshHotwords('snowboy')" class="btn btn-primary form-control" title="Refresh snowboy models">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-snowboy-sensitivity" class="col-form-label">Sensitivity</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-snowboy-sensitivity" type="text" class="form-control" x-model="profile.wake.snowboy.sensitivity" :disabled="profile.wake.system !== 'snowboy'"> 
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+						</div>
+						<div class="col-sm-10">
+							<div class="form-check">
+								<input type="checkbox" id="wake-snowboy-applyfrontend" class="form-check-input" x-model="profile.wake.snowboy.apply_frontend" :disabled="profile.wake.system !== 'snowboy'">
+								<label for="wake-snowboy-applyfrontend" class="form-check-label">Apply Frontend (<a href="https://github.com/kitt-ai/snowboy#pretrained-universal-models" title="Parameters for pre-trained models">more info</a>)</label>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-12">
+							See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-snowboy-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-snowboy-udp-audio-port" type="text" class="form-control" x-model="profile.wake.snowboy.udp_audio_port" :disabled="profile.wake.system !== 'snowboy'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Snowboy -->
+
+				<!-- Porcupine -->
+				<div x-show="profile.wake.system === 'porcupine'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/wake-word/#porcupine">Documentation</a>
+							<p class="form-text text-muted">Put models in the <var>porcupine</var> directory in your profile</p>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-porcupine-keyword-file" class="col-form-label">Keyword File</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-porcupine-keyword-file" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-porcupine-hotwords" class="col-form-label">Available Keywords</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="wake-porcupine-hotwords" x-model="profile.wake.porcupine.keyword_path" class="form-control">
+									<option value="" disabled>Select keyword</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshHotwords('porcupine')" class="btn btn-primary form-control" title="Refresh porcupine keywords">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-porcupine-sensitivity" class="col-form-label">Sensitivity</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-porcupine-sensitivity" type="text" class="form-control" x-model="profile.wake.porcupine.sensitivity" :disabled="profile.wake.system !== 'porcupine'"> 
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-porcupine-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-porcupine-udp-audio-port" type="text" class="form-control" x-model="profile.wake.porcupine.udp_audio_port" :disabled="profile.wake.system !== 'porcupine'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Porcupine -->
+
+				<!-- Mycroft Precise -->
+				<div x-show="profile.wake.system === 'precise'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/wake-word/#precise">Documentation</a>
+							<p class="form-text text-muted">Put models in the <var>precise</var> directory in your profile</p>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-precise-model-file" class="col-form-label">Model File</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-precise-model-file" x-model="profile.wake.precise.model" type="text" class="form-control">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-precise-hotwords" class="col-form-label">Available Models</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="wake-precise-hotwords" x-model="profile.wake.precise.model" class="form-control">
+									<option value="" disabled>Select model</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshHotwords('precise')" class="btn btn-primary form-control" title="Refresh Mycroft Precise models">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-precise-sensitivity" class="col-form-label">Sensitivity</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-precise-sensitivity" type="text" class="form-control" x-model="profile.wake.precise.sensitivity" :disabled="profile.wake.system !== 'precise'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-precise-trigger-level" class="col-form-label">Trigger Level</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-precise-trigger-level" type="text" class="form-control" x-model="profile.wake.precise.trigger_level" :disabled="profile.wake.system !== 'precise'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-precise-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+						</div>
+
+						<div class="col-sm-10">
+							<input id="wake-precise-udp-audio-port" type="text" class="form-control" x-model="profile.wake.precise.udp_audio_port" :disabled="profile.wake.system !== 'precise'">
+							<small class="form-text text-muted">outside ASR listening</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Mycroft Precise -->
+
+
+				<!-- Command -->
+				<div x-show="profile.wake.system === 'command'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/wake-word/#command">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-cmd-program" type="text" class="form-control" x-model="profile.wake.command.program" :disabled="profile.wake.system !== 'command'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="wake-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="wake-cmd-arguments" type="text" class="form-control" x-model="profile.wake.command.arguments" :disabled="profile.wake.system !== 'command'">
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.wake.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#wake-word">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Wake Word -->
+
+	<!-- Speech to Text -->
+	<div class="card mt-3" id="speech">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingSpeech">
+			<i class="fas fa-inverse fa-phone-volume"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#speech-collapse" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Speech to Text
+			</button>
+			<select class="ml-2" x-model="profile.speech_to_text.system">
+				<option value="dummy">Disabled</option>
+				<option value="pocketsphinx">Pocketsphinx</option>
+				<option value="kaldi">Kaldi</option>
+				<option value="remote">Remote HTTP</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+
+			<span title="Speech system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
+				Not compatible
+			</span>
+		</div>
+		<div id="speech-collapse" class="card-body collapse hide" aria-labelledby="headingSpeech" x-show="profile.speech_to_text.system !== 'dummy'">
+			<div class="container">
+
+				<!-- Pocketsphinx -->
+				<div x-show="profile.speech_to_text.system === 'pocketsphinx'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/speech-to-text/#pocketsphinx">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Acoustic Model: <var>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.acoustic_model")) }}</var> </li>
+								<li>Dictionary: <var>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.dictionary")) }}</var> </li>
+								<li>Language Model: <var>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.language_model")) }}</var> </li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<input type="checkbox" class="form-check-input" id="speech-pocketsphinx-open" x-model="profile.speech_to_text.pocketsphinx.open_transcription">
+							<label for="speech-pocketsphinx-open" class="form-check-label">Open transcription mode (no custom voice commands)</label>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Base Dictionary: <var>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_dictionary")) }}</var> </li>
+								<li>Base Language Model: <var>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model")) }}</var> </li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+
+					<h5>Voice Command Settings</h5>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-speech-sec" class="col-form-label">Speech Before</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-silence-sec" class="col-form-label">Silence After</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-silence-sec" class="col-form-label">Record Before</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
+							<small class="form-text text-muted">1-3</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Pocketsphinx -->
+
+				<!-- Kaldi -->
+				<div x-show="profile.speech_to_text.system === 'kaldi'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/speech-to-text/#kaldi">Documentation</a>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Model Root: <var>{{ profile.read_path(profile.get("speech_to_text.kaldi.model_dir")) }}</var> </li>
+								<li>Graph Directory: <var>&lt;model_root&gt;/{{ profile.get("speech_to_text.kaldi.graph") }}</var> </li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<input type="checkbox" id="speech-kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
+							<label for="speech-kaldi-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Base Dictionary: <var>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_dictionary")) }}</var> </li>
+								<li>Base Graph Directory: <var>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_graph")) }}</var> </li>
+								<li>Base Language Model: <var>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model")) }}</var> </li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-kaldi-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-kaldi-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+
+					<h5 class="row col-sm-auto">Voice Command Settings</h5>
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech--min-sec" class="col-form-label">Minimum Duration:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-kaldi-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-kaldi-speech-sec" class="col-form-label">Speech Before</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-kaldi-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-kaldi-silence-sec" class="col-form-label">Silence After:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-kaldi-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-kaldi-silence-sec" class="col-form-label">Record Before:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-kaldi-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
+							<small class="form-text text-muted">seconds</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-kaldi-vad-mode" class="col-form-label">VAD Sensitivity:</label>
+						</div>
+
+						<div class="col-sm-10">
+							<input id="speech-kaldi-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
+							<small class="form-text text-muted">1-3</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Kaldi -->
+
+				<!-- Remote -->
+				<div x-show="profile.speech_to_text.system === 'remote'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/speech-to-text/#remote">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-remote-url" class="col-form-label">Speech to Text URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-remote-url" type="text" class="form-control" x-model="profile.speech_to_text.remote.url" :disabled="profile.speech_to_text.system !== 'remote'">
+							<small class="form-text text-muted">Example: http://localhost:12101/api/speech-to-text</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-remote-train-url" class="col-form-label">Training URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-remote-train-url" type="text" class="form-control" x-model="profile.training.speech_to_text.remote.url" :disabled="profile.speech_to_text.system !== 'remote'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-remote-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col">
+							<input id="speech-remote-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Remote -->
+
+				<!-- Command -->
+				<div x-show="profile.speech_to_text.system === 'command'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/speech-to-text/#command">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-cmd-program" type="text" class="form-control" x-model="profile.speech_to_text.command.program" :disabled="profile.speech_to_text.system !== 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+
+						<div class="col-sm-10">
+							<input id="speech-cmd-arguments" type="text" class="form-control" x-model="profile.speech_to_text.command.arguments" :disabled="profile.speech_to_text.system !== 'command'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="speech-cmd-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="speech-cmd-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.speech_to_text.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#speech-to-text">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Speech to Text -->
+
+	<!-- Intent Recognition -->
+	<div class="card mt-3" id="intent">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingIntent">
+			<i class="fas fa-inverse fa-comment"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }" data-toggle="collapse" data-target="#intent-collapse" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Intent Recognition
+			</button>
+			<select class="ml-2" x-model="profile.intent.system">
+				<option value="dummy">Disabled</option>
+				<option value="fsticuffs">Fsticuffs</option>
+				<option value="fuzzywuzzy">Fuzzywuzzy</option>
+				<option value="rasa">Rasa NLU</option>
+				<option value="remote">Remote HTTP</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+		</div>
+		<div id="intent-collapse" class="card-body collapse hide" aria-labelledby="headingIntent" x-show="profile.intent.system !== 'dummy'">
+			<div class="container">
+
+				<!-- Fsticuffs -->
+				<div x-show="profile.intent.system === 'fsticuffs'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/intent-recognition/#fsticuffs">Documentation</a>
+						</div>
+					</div>			
+
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Intent Graph: <var>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</var> </li>
+								<li>Stop Words: <var>{{ profile.read_path(profile.get("intent.adapt.stop_words")) }}</var> </li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+						</div>
+						<div class="col-sm-10">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="intent-fsticuffs-fuzzy" x-model="profile.intent.fsticuffs.fuzzy" :disabled="profile.intent.system !== 'fsticuffs'">
+								<label for="intent-fsticuffs-fuzzy" class="form-check-label">Fuzzy text matching</label>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-fsticuffs-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-fsticuffs-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Fsticuffs -->
+
+				<!-- Fuzzywuzzy -->
+				<div x-show="profile.intent.system === 'fuzzywuzzy'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/intent-recognition/#fuzzywuzzy">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-fuzzywuzzy-min-confidence" class="col-form-label">Minimum Confidence</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-fuzzywuzzy-min-confidence" type="text" class="form-control" x-model="profile.intent.fuzzywuzzy.min_confidence">
+							<small class="form-text text-muted">0-1, 1 is most strict</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-fuzzywuzzy-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-fuzzywuzzy-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Fuzzywuzzy -->
+
+				<!-- Rasa NLU -->
+				<div x-show="profile.intent.system === 'rasa'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/intent-recognition/#rasanlu">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<ul>
+								<li>Examples File: <var>{{ profile.read_path(profile.get("intent.rasa.examples_markdown")) }}</var> </li>
+								<li>Intent Graph: <var>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</var> </li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-rasa-url" class="col-form-label">Server URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-rasa-url" type="text" class="form-control" x-model="profile.intent.rasa.url">
+							<small class="form-text text-muted">Example: http://localhost:5005</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-rasa-project" class="col-form-label">Project Name</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-rasa-project" type="text" class="form-control" x-model="profile.intent.rasa.project_name">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-rasa-config" class="col-form-label">YAML Config</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-rasa-config" type="text" class="form-control" x-model="profile.intent.rasa.config_yaml" placeholder="(auto-generated)">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-rasa-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-rasa-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Rasa NLU -->
+
+
+				<!-- Remote -->
+				<div x-show="profile.intent.system === 'remote'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/intent-recognition/#remote">Documentation</a>
+						</div>
+					</div>			
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-remote-url" class="col-form-label">Rhasspy Text-to-Intent URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-remote-url" type="text" class="form-control" x-model="profile.intent.remote.url" :disabled="profile.intent.system !== 'remote'">
+							<small class="form-text text-muted">Example: http://localhost:12101/api/text-to-intent</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-remote-train-url" class="col-form-label">Training URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-remote-train-url" type="text" class="form-control" x-model="profile.training.intent.remote.url" :disabled="profile.intent.system !== 'remote'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-remote-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-remote-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Remote -->
+
+				<!-- Command -->
+				<div x-show="profile.intent.system === 'command'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/intent-recognition/#command">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-cmd-program" type="text" class="form-control" x-model="profile.intent.command.program" :disabled="profile.intent.system !== 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="intent-cmd-arguments" type="text" class="form-control" x-model="profile.intent.command.arguments" :disabled="profile.intent.system !== 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="intent-cmd-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col">
+							<input id="intent-cmd-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.intent.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#intent-recognition">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Intent Recognition -->
+
+	<!-- Text to Speech -->
+	<div class="card mt-3" id="tts">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingTTS">
+			<i class="fas fa-inverse fa-paper-plane"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }" data-toggle="collapse" data-target="#tts-collapse" aria-expanded="true" aria-controls="tts-collapse" :disabled="profile.text_to_speech.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Text to Speech
+			</button>
+			<select class="ml-2" x-model="profile.text_to_speech.system">
+				<option value="dummy">Disabled</option>
+				<option value="espeak">Espeak</option>
+				<option value="picotts">PicoTTS</option>
+				<option value="flite">Flite</option>
+				<option value="marytts">MaryTTS</option>
+				<option value="remote">Remote HTTP</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+		</div>
+		<div id="tts-collapse" class="card-body collapse hide" aria-labelledby="headingTTS" x-show="profile.text_to_speech.system !== 'dummy'">
+			<div class="container">
+
+				<!-- Espeak -->
+				<div x-show="profile.text_to_speech.system === 'espeak'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#espeak">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-espeak-voice">Voice</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control" placeholder="default">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-espeak-voices">Available Voices</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="tts-espeak-voices" x-model="profile.text_to_speech.espeak.voice" class="form-control">
+									<option value="" selected>Default Voice</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshVoices('espeak')" class="btn btn-primary form-control" title="Refresh espeak voices">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-espeak-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-espeak-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Espeak -->
+
+				<!-- PicoTTS -->
+				<div x-show="profile.text_to_speech.system === 'picotts'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#picotts">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-picotts-language" class="col-form-label">Language</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-picotts-language" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system !== 'picotts'" placeholder="default">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-picotts-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-picotts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End PicoTTS -->
+
+				<!-- Flite -->
+				<div x-show="profile.text_to_speech.system === 'flite'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#flite">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-flite-voice">Voice</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control" placeholder="default">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-flite-voices">Available Voices:</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="tts-flite-voices" x-model="profile.text_to_speech.flite.voice" class="form-control">
+									<option value="" selected>Default Voice</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshVoices('flite')" class="btn btn-primary form-control" title="Refresh flite voices">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-flite-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-flite-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Flite -->
+
+				<!-- MaryTTS -->
+				<div x-show="profile.text_to_speech.system === 'marytts'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#marytts">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="tts-system" id="tts-system-marytts" value="marytts" x-model="profile.text_to_speech.system">
+								<label class="form-check-label" for="tts-system-marytts">
+									Use marytts <a href="http://mary.dfki.de">MaryTTS</a> server
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-marytts-url" class="col-form-label">URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system !== 'marytts'">
+							<small class="form-text text-muted">Example: http://localhost:59125/process</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-marytts-locale" class="col-form-label">Locale:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-marytts-locale" type="text" class="form-control" x-model="profile.text_to_speech.marytts.locale" :disabled="profile.text_to_speech.system !== 'marytts'" placeholder="default">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-marytts-voice" class="col-form-label">Voice</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system !== 'marytts'" placeholder="default">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-marytts-voices">Available Voices</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="tts-marytts-voices" x-model="profile.text_to_speech.marytts.voice" class="form-control">
+									<option value="" selected>Default Voice</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshVoices('marytts')" class="btn btn-primary form-control" title="Refresh marytts voices">Refresh</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-marytts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-marytts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End MaryTTS -->
+
+				<!-- Remote -->
+				<div x-show="profile.text_to_speech.system === 'remote'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#remote">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-remote-url" class="col-form-label">Rhasspy Text-to-Speech URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-remote-url" type="text" class="form-control" x-model="profile.text_to_speech.remote.url" :disabled="profile.text_to_speech.system !== 'remote'">
+							<small class="form-text text-muted">Example: http://localhost:12101/api/text-to-speech</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-remote-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-remote-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Remote -->
+
+				<!-- Command -->
+				<div x-show="profile.text_to_speech.system === 'command'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/text-to-speech/#command">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-program" type="text" class="form-control" x-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system !== 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-cmd-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.arguments" :disabled="profile.text_to_speech.system !== 'command'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-cmd-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-cmd-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.text_to_speech.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#text-to-speech">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Audio Recording -->
+
+	<!-- Audio Playing -->
+	<div class="card mt-3" id="sounds">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingSounds">
+			<i class="fas fa-inverse fa-volume-up"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }" data-toggle="collapse" data-target="#sounds-collapse" aria-expanded="true" aria-controls="sounds-collapse" :disabled="profile.sounds.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Audio Playing
+			</button>
+			<select class="ml-2" x-model="profile.sounds.system">
+				<option value="dummy">Disabled</option>
+				<option value="aplay">aplay</option>
+				<option value="remote">Remote HTTP</option>
+				<option value="command">Local Command</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+		</div>
+
+		<div id="sounds-collapse" class="card-body collapse hide" aria-labelledby="headingSounds" x-show="profile.sounds.system !== 'dummy'">
+			<div class="container">
+
+				<!-- aplay -->
+				<div x-show="profile.sounds.system === 'aplay'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/audio-output/#alsa">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="sounds-aplay-device">Device</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="sounds-aplay-devices">Available Devices</label>
+						</div>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
+									<option value="" selected>Default Output Device</option>
+								</select>
+								<div class="input-group-append">
+									<button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control" placeholder="Refresh aplay devices">Refresh</button>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+				<!-- End aplay -->
+
+				<!-- Remote -->
+				<div x-show="profile.sounds.system === 'remote'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/audio-output/#remote">Documentation</a>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="sounds-remote-url" class="col-form-label">Audio Output URL</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="sounds-remote-url" type="text" class="form-control" x-model="profile.sounds.remote.url" :disabled="profile.sounds.system !== 'remote'">
+						</div>
+					</div>
+				</div>
+				<!-- End Remote -->
+
+				<!-- Command -->
+				<div x-show="profile.sounds.system === 'command'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/audio-output/#command">Documentation</a>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="sounds-cmd-program" class="col-form-label">Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="sounds-cmd-program" type="text" class="form-control" x-model="profile.sounds.command.play_program" :disabled="profile.sounds.system !== 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="sounds-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="sounds-arguments" type="text" class="form-control" x-model="profile.sounds.command.play_arguments" :disabled="profile.sounds.system !== 'command'">
+						</div>
+					</div>
+				</div>
+				<!-- End Command -->
+
+				<!-- Hermes -->
+				<div x-show="profile.sounds.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#audio-output">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Audio Recording -->
+
+	<!-- Dialogue Management -->
+	<div class="card mt-3" id="dialogue">
+		<div class="card-header bg-dark rhasspy-settings-header" id="headingDialogue">
+			<i class="fas fa-inverse fa-tasks"></i>
+			<button class="btn" x-bind:class="{ 'btn-danger': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }" data-toggle="collapse" data-target="#dialogue-collapse" aria-expanded="true" aria-controls="dialogue-collapse" :disabled="profile.dialogue.system === 'dummy'">
+				<i class="fas fa-sort-down"></i>Dialogue Management
+			</button>
+			<select class="ml-2" x-model="profile.dialogue.system">
+				<option value="dummy">Disabled</option>
+				<option value="rhasspy">Rhasspy</option>
+				<option value="hermes">Hermes MQTT</option>
+			</select>
+		</div>
+
+		<div id="dialogue-collapse" class="card-body collapse hide" aria-labelledby="headingDialogue" x-show="profile.dialogue.system !== 'dummy'">
+			<div class="container">
+
+				<!-- Rhasspy -->
+				<div x-show="profile.dialogue.system === 'rhasspy'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
+							<p class="form-text text-muted">
+								Uses <a href="https://github.com/rhasspy/rhasspy-dialogue-hermes">rhasspy-dialogue-hermes</a> service
+							</p>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="dialogue-satellite-siteids" class="col-form-label">Satellite siteIds</label>
+						</div>
+						<div class="col">
+							<input id="dialogue-satellite-siteids" type="text" class="form-control" x-model="profile.dialogue.satellite_site_ids">
+							<small class="form-text text-muted">comma-separated</small>
+						</div>
+					</div>
+				</div>
+				<!-- End Rhasspy -->
+
+				<!-- Hermes -->
+				<div x-show="profile.dialogue.system === 'hermes'">
+					<div class="form-group row">
+						<div class="col-sm-auto">
+							<a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
+							<p class="form-text text-muted">
+								External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- End Hermes -->
+
+			</div>
+		</div>
+	</div>
+	<!-- End Audio Playing -->
+
+	<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
+
+	<!-- Sounds -->
+	<div class="card mt-3" id="sounds">
+		<div class="card-header">
+			<h5>Sounds</h5>
+		</div>
+		<div class="card-body">
+			<div>
+				<p class="text-muted">WAV files to play when Rhasspy wakes up and is finished recording a voice command.</p>
+				<p class="text-muted">Use <var>${RHASSPY_PROFILE_DIR}</var> for your profile directory.</p>
+
+				<div class="form-group row">
+					<div class="col-sm-2">
+						<label for="sounds-wake" class="col-form-label">Wake WAV</label>
+					</div>
+					<div class="col-sm-10">
+						<input id="sounds-wake" type="text" class="form-control" x-model="profile.sounds.wake">
+					</div>
+				</div>
+				
+				<div class="form-group row">
+					<div class="col-sm-2">
+						<label for="sounds-recorded" class="col-form-label">Recorded WAV</label>
+					</div>
+					<div class="col-sm-10">
+						<input id="sounds-recorded" type="text" class="form-control" x-model="profile.sounds.recorded">
+					</div>
+				</div>
+				
+				<div class="form-group row">
+					<div class="col-sm-2">
+						<label for="sounds-error" class="col-form-label">Error WAV</label>
+					</div>
+					<div class="col-sm-10">
+						<input id="sounds-error" type="text" class="form-control" x-model="profile.sounds.error">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Sounds -->
+
+	<!-- SSL -->
+	<div class="card mt-3" id="ssl">
+		<div class="card-header">
+			<h5>Certificates</h5>
+		</div>
+		<div class="card-body">
+			
+			<div class="form-group row">
+				<div class="col-sm-2">
+					<label for="certfile" class="col-form-label col">Certificate Path</label>
+				</div>
+				<div class="col-sm-10">
+					<input id="certfile" type="text" class="form-control" x-model="profile.home_assistant.pem_file" placeholder="certfile">
+					<p class="form-text text-muted">
+						<a href="https://docs.python.org/3/library/ssl.html#combined-key-and-certificate">PEM certificate file</a> (required)
+					</p>
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<div class="col-sm-2">
+					<label for="keyfile" class="col-form-label col">Key Path</label>
+				</div>
+				<div class="col-sm-10">
+					<input id="keyfile" type="text" class="form-control" x-model="profile.home_assistant.key_file" placeholder="keyfile">
+					<p class="form-text text-muted">
+						<a href="https://docs.python.org/3/library/ssl.html#ssl-certificates">Private key file</a> (optional)
+					</p>
+				</div>
+			</div>
+
+			<p class="muted">Paths should be absolute.</p>
+			<p class="muted">Use <var>$RHASSPY_PROFILE_DIR</var> environment variable for the directory of this profile (<var>{{ profile_dir }}</var>)</p>
+		</div>
+	</div>
+	<!-- End SSL -->
+	
+	<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 </div>
-<!-- End siteId -->
-
-<!-- MQTT -->
-<div class="card" id="mqtt">
-    <div class="card-header bg-dark" id="headingMqtt">
-        <i class="fas fa-inverse fa-network-wired"></i>
-        <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
-            <i class="fas fa-sort-down"></i>MQTT
-        </button>
-
-        <select class="ml-2" x-model="profile.mqtt.enabled">
-            <option value="">Internal</option>
-            <option value="true">External</option>
-        </select>
-    </div>
-    <div id="mqtt-collapse" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
-        <div class="card-body">
-            <div class="form-group">
-                <div class="form-row">
-                    <label for="mqtt-host" class="col-form-label">Host</label>
-                    <div class="col-sm-auto">
-                        <input id="mqtt-host" type="text" class="form-control" x-model="profile.mqtt.host" :disabled="!profile.mqtt.enabled">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="form-row">
-                    <label for="mqtt-port" class="col-form-label">Port</label>
-                    <div class="col-sm-auto">
-                        <input id="mqtt-port" type="text" class="form-control" x-model="profile.mqtt.port" :disabled="!profile.mqtt.enabled">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="form-row">
-                    <label for="mqtt-username" class="col-form-label">Username</label>
-                    <div class="col-sm-auto">
-                        <input id="mqtt-username" type="text" class="form-control" x-model="profile.mqtt.username" :disabled="!profile.mqtt.enabled">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="form-row">
-                    <label for="mqtt-password" class="col-form-label">Password</label>
-                    <div class="col-sm-auto">
-                        <input id="mqtt-password" type="password" class="form-control" x-model="profile.mqtt.password" :disabled="!profile.mqtt.enabled">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End MQTT -->
-
-<!-- Audio Recording -->
-<div class="card" id="microphone">
-    <div class="card-header bg-dark" id="headingMicrophone">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-microphone"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#microphone-collapse" aria-expanded="true" aria-controls="microphone-collapse" :disabled="profile.microphone.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Audio Recording
-            </button>
-            <select class="ml-2" x-model="profile.microphone.system">
-                <option value="dummy">Disabled</option>
-                <option value="pyaudio">PyAudio</option>
-                <option value="arecord">arecord</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-        </h5>
-    </div>
-    <div id="microphone-collapse" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- PyAudio -->
-            <div x-show="profile.microphone.system == 'pyaudio'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#pyaudio">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="microphone-pyaudio-device">Device:</label>
-                        </div>
-                        <div class="col">
-                            <input id="microphone-pyaudio-device" x-model="profile.microphone.pyaudio.device" type="text" class="form-control" placeholder="default">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col">
-                            <select id="microphone-pyaudio-devices" x-model="profile.microphone.pyaudio.device" class="form-control">
-                                <option value="" selected>Default Input Device</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshInputDevices('pyaudio')" class="btn btn-primary form-control">Refresh</button>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="testInputDevices('pyaudio')" class="btn btn-secondary form-control">Test</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-pyaudio-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="microphone-pyaudio-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.pyaudio.udp_audio_port" :disabled="profile.microphone.system != 'pyaudio'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-pyaudio-siteid" class="col-form-label">Output siteId</label>
-                        <div class="col">
-                            <input id="microphone-pyaudio-siteid" type="text" class="form-control" x-model="profile.microphone.pyaudio.siteId" :disabled="profile.microphone.system != 'pyaudio'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (output to different siteId)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End PyAudio -->
-
-            <!-- arecord -->
-            <div x-show="profile.microphone.system == 'arecord'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#alsa">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="microphone-arecord-device">Device:</label>
-                        </div>
-                        <div class="col">
-                            <input id="microphone-arecord-device" x-model="profile.microphone.arecord.device" type="text" class="form-control" placeholder="default">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col">
-                            <select id="microphone-arecord-devices" x-model="profile.microphone.arecord.device" class="form-control">
-                                <option value="" selected>Default Input Device</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshInputDevices('arecord')" class="btn btn-primary form-control">Refresh</button>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="testInputDevices('arecord')" class="btn btn-secondary form-control">Test</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-arecord-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="microphone-arecord-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.arecord.udp_audio_port" :disabled="profile.microphone.system != 'arecord'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-arecord-siteid" class="col-form-label">Output siteId</label>
-                        <div class="col">
-                            <input id="microphone-arecord-siteid" type="text" class="form-control" x-model="profile.microphone.arecord.siteId" :disabled="profile.microphone.system != 'arecord'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End arecord -->
-
-            <!-- Command -->
-            <div x-show="profile.microphone.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="microphone-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="microphone-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="microphone-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.microphone.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#audio-input">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Audio Recording -->
-
-<!-- Intent Handling -->
-<div class="card" id="handle">
-    <div class="card-header bg-dark" id="headingHandle">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-home"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#handle-collapse" aria-expanded="true" aria-controls="handle-collapse" :disabled="profile.handle.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Intent Handling
-            </button>
-            <select class="ml-2" x-model="profile.handle.system">
-                <option value="dummy">Disabled</option>
-                <option value="hass">Home Assistant</option>
-                <option value="remote">Remote HTTP</option>
-                <option value="command">Local Command</option>
-            </select>
-        </h5>
-    </div>
-    <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
-        <div class="card-body">
-            <!-- Home Assistant -->
-            <div x-show="profile.handle.system == 'hass'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-url" class="col-form-label">Hass URL</label>
-                        <div class="col">
-                            <input id="hass-url" type="text" class="form-control" x-model="profile.home_assistant.url"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Address of your Home Assistant server
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-token" class="col-form-label">Access Token</label>
-                        <div class="col">
-                            <input id="hass-token" type="password" class="form-control" x-model="profile.home_assistant.access_token"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Long-lived access token (automatically filled in Hass.IO)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-password" class="col-form-label">API Password</label>
-                        <div class="col">
-                            <input id="hass-password" type="password" class="form-control" x-model="profile.home_assistant.api_password"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Home Assistant password (deprecated)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" id="hass-handle-type-event" value="event" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
-                            <label class="form-check-label" for="hass-handle-type-event">
-                                Send <strong>events</strong> to Home Assistant (<tt>/api/events</tt>)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col">
-                            <p class="text-muted">
-                                Events will be named <tt x-html="profile.home_assistant.event_type_format.replace('{0}', 'INTENT_NAME')"></tt>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" id="hass-handle-type-intent" value="intent" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
-                            <label class="form-check-label" for="hass-handle-type-intent">
-                                Send <strong>intents</strong> to Home Assistant (<tt>/api/intent/handle</tt>)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col">
-                            <p class="text-muted">
-                                Requires the <tt>intent</tt> component and <a href="https://www.home-assistant.io/integrations/intent_script">intent scripts</a> in your <tt>configuration.yaml</tt>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Home Assistant -->
-
-            <!-- Remote -->
-            <div x-show="profile.handle.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="remote-handle-url" class="col-form-label">Remote URL</label>
-                        <div class="col">
-                            <input id="remote-handle-url" type="text" class="form-control" x-model="profile.handle.remote.url" :disabled="profile.handle.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.handle.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="handle-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="handle-program" type="text" class="form-control" x-model="profile.handle.command.program" :disabled="profile.handle.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="handle-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="handle-arguments" type="text" class="form-control" x-model="profile.handle.command.arguments" :disabled="profile.handle.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-        </div>
-    </div>
-</div>
-<!-- End Intent Handling -->
-
-<!-- Wake Word -->
-<div class="card" id="wake">
-    <div class="card-header bg-dark" id="headingWake">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-exclamation-circle"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#wake-collapse" aria-expanded="true" aria-controls="wake-collapse" :disabled="profile.wake.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Wake Word
-            </button>
-            <select class="ml-2" x-model="profile.wake.system">
-                <option value="dummy">Disabled</option>
-                <option value="porcupine">Porcupine</option>
-                <option value="snowboy">Snowboy</option>
-                <option value="precise">Mycroft Precise</option>
-                <option value="pocketsphinx">Pocketsphinx</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-
-            <span title="Wake system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
-                Not compatible
-            </span>
-        </h5>
-    </div>
-    <div id="wake-collapse" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- Pocketsphinx -->
-            <div x-show="profile.wake.system == 'pocketsphinx'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#pocketsphinx">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-pocketsphinx-keyphrase" class="col-form-label">Wake Keyphrase</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-pocketsphinx-keyphrase" type="text" class="form-control" x-model="profile.wake.pocketsphinx.keyphrase" :disabled="profile.wake.system != 'pocketsphinx'">
-                        </div>
-                        <div class="col text-muted">
-                            3-4 syllables recommended
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-pocketsphinx-sensitivity" class="col-form-label">Sensitivity</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-pocketsphinx-sensitivity" type="number" min="0" max="1" step="0.1" class="form-control" x-model="pocketsphinxWakeSensitivity" :disabled="profile.wake.system != 'pocketsphinx'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-pocketsphinx-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="wake-pocketsphinx-udp-audio-port" type="text" class="form-control" x-model="profile.wake.pocketsphinx.udp_audio_port" :disabled="profile.wake.system != 'pocketsphinx'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Pocketsphinx -->
-
-            <!-- Snowboy -->
-            <div x-show="profile.wake.system == 'snowboy'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#snowboy">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Put models in the <tt>snowboy</tt> directory in your profile
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="wake-snowboy-model">Model:</label>
-                        </div>
-                        <div class="col">
-                            <input id="wake-snowboy-model" x-model="profile.wake.snowboy.model" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="wake-snowboy-hotwords">Available Models:</label>
-                        </div>
-                        <div class="col">
-                            <select id="wake-snowboy-hotwords" x-model="profile.wake.snowboy.model" class="form-control">
-                                <option value="" disabled>Select model</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('snowboy')" class="btn btn-primary form-control" title="Refresh snowboy models">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-snowboy-sensitivity" class="col-form-label">Sensitivity</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-snowboy-sensitivity" type="text" class="form-control" x-model="profile.wake.snowboy.sensitivity" :disabled="profile.wake.system != 'snowboy'"> <span class="text-muted">(comma-separated)</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <input type="checkbox" id="wake-snowboy-applyfrontend" x-model="profile.wake.snowboy.apply_frontend" :disabled="profile.wake.system != 'snowboy'">
-                        <label for="wake-snowboy-applyfrontend" class="col-form-label">Apply Frontend (<a href="https://github.com/kitt-ai/snowboy#pretrained-universal-models" title="Parameters for pre-trained models">more info</a>)</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <p>
-                        See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
-                    </p>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-snowboy-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="wake-snowboy-udp-audio-port" type="text" class="form-control" x-model="profile.wake.snowboy.udp_audio_port" :disabled="profile.wake.system != 'snowboy'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Snowboy -->
-
-            <!-- Porcupine -->
-            <div x-show="profile.wake.system == 'porcupine'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#porcupine">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Put models in the <tt>porcupine</tt> directory in your profile
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="wake-porcupine-keyword-file">Keyword File:</label>
-                        </div>
-                        <div class="col">
-                            <input id="wake-porcupine-keyword-file" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="wake-porcupine-hotwords">Available Keywords:</label>
-                        </div>
-                        <div class="col">
-                            <select id="wake-porcupine-hotwords" x-model="profile.wake.porcupine.keyword_path" class="form-control">
-                                <option value="" disabled>Select keyword</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('porcupine')" class="btn btn-primary form-control" title="Refresh porcupine keywords">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-porcupine-sensitivity" class="col-form-label">Sensitivity</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-porcupine-sensitivity" type="text" class="form-control" x-model="profile.wake.porcupine.sensitivity" :disabled="profile.wake.system != 'porcupine'"> <span class="text-muted">(comma-separated)</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-porcupine-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="wake-porcupine-udp-audio-port" type="text" class="form-control" x-model="profile.wake.porcupine.udp_audio_port" :disabled="profile.wake.system != 'porcupine'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Porcupine -->
-
-            <!-- Mycroft Precise -->
-            <div x-show="profile.wake.system == 'precise'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#precise">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Put models in the <tt>precise</tt> directory in your profile
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="wake-precise-model-file">Model File:</label>
-                        </div>
-                        <div class="col">
-                            <input id="wake-precise-model-file" x-model="profile.wake.precise.model" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="wake-precise-hotwords">Available Models:</label>
-                        </div>
-                        <div class="col">
-                            <select id="wake-precise-hotwords" x-model="profile.wake.precise.model" class="form-control">
-                                <option value="" disabled>Select model</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('precise')" class="btn btn-primary form-control" title="Refresh Mycroft Precise models">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-precise-sensitivity" class="col-form-label">Sensitivity</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-precise-sensitivity" type="text" class="form-control" x-model="profile.wake.precise.sensitivity" :disabled="profile.wake.system != 'precise'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-precise-trigger-level" class="col-form-label">Trigger Level</label>
-                        <div class="col-sm-auto">
-                            <input id="wake-precise-trigger-level" type="text" class="form-control" x-model="profile.wake.precise.trigger_level" :disabled="profile.wake.system != 'precise'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-precise-udp-audio-port" class="col-form-label">UDP Audio Port</label>
-                        <div class="col">
-                            <input id="wake-precise-udp-audio-port" type="text" class="form-control" x-model="profile.wake.precise.udp_audio_port" :disabled="profile.wake.system != 'precise'">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (outside ASR listening)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Mycroft Precise -->
-
-
-            <!-- Command -->
-            <div x-show="profile.wake.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="wake-program" type="text" class="form-control" x-model="profile.wake.command.program" :disabled="profile.wake.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="wake-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="wake-arguments" type="text" class="form-control" x-model="profile.wake.command.arguments" :disabled="profile.wake.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.wake.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#wake-word">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Wake Word -->
-
-<!-- Speech to Text -->
-<div class="card" id="speech">
-    <div class="card-header bg-dark" id="headingSpeech">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-phone-volume"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#speech-collapse" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Speech to Text
-            </button>
-            <select class="ml-2" x-model="profile.speech_to_text.system">
-                <option value="dummy">Disabled</option>
-                <option value="pocketsphinx">Pocketsphinx</option>
-                <option value="kaldi">Kaldi</option>
-                <option value="remote">Remote HTTP</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-
-            <span title="Speech system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
-                Not compatible
-            </span>
-        </h5>
-    </div>
-    <div id="speech-collapse" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- Pocketsphinx -->
-            <div x-show="profile.speech_to_text.system == 'pocketsphinx'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#pocketsphinx">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Acoustic Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.acoustic_model")) }}</tt> </li>
-                            <li>Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.dictionary")) }}</tt> </li>
-                            <li>Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.language_model")) }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <input type="checkbox" id="pocketsphinx-open" x-model="profile.speech_to_text.pocketsphinx.open_transcription">
-                        <label for="pocketsphinx-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_dictionary")) }}</tt> </li>
-                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model")) }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Pocketsphinx -->
-
-            <!-- Kaldi -->
-            <div x-show="profile.speech_to_text.system == 'kaldi'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#kaldi">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Model Root: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.model_dir")) }}</tt> </li>
-                            <li>Graph Directory: <tt>&lt;model_root&gt;/{{ profile.get("speech_to_text.kaldi.graph") }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
-                        <label for="kaldi-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_dictionary")) }}</tt> </li>
-                            <li>Base Graph Directory: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_graph")) }}</tt> </li>
-                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model")) }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Kaldi -->
-
-            <!-- Remote -->
-            <div x-show="profile.speech_to_text.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#remote">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="stt-url" class="col-form-label">Speech to Text URL</label>
-                        <div class="col">
-                            <input id="stt-url" type="text" class="form-control" x-model="profile.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:12101/api/speech-to-text
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="stt-train-url" class="col-form-label">Training URL</label>
-                        <div class="col">
-                            <input id="stt-train-url" type="text" class="form-control" x-model="profile.training.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.speech_to_text.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="stt-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="stt-program" type="text" class="form-control" x-model="profile.speech_to_text.command.program" :disabled="profile.speech_to_text.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="stt-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="stt-arguments" type="text" class="form-control" x-model="profile.speech_to_text.command.arguments" :disabled="profile.speech_to_text.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.speech_to_text.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#speech-to-text">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Speech to Text -->
-
-<!-- Intent Recognition -->
-<div class="card" id="intent">
-    <div class="card-header bg-dark" id="headingIntent">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-comment"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#intent-collapse" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Intent Recognition
-            </button>
-            <select class="ml-2" x-model="profile.intent.system">
-                <option value="dummy">Disabled</option>
-                <option value="fsticuffs">Fsticuffs</option>
-                <option value="fuzzywuzzy">Fuzzywuzzy</option>
-                <option value="rasa">Rasa NLU</option>
-                <option value="remote">Remote HTTP</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-        </h5>
-    </div>
-    <div id="intent-collapse" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- Fsticuffs -->
-            <div x-show="profile.intent.system == 'fsticuffs'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#fsticuffs">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
-                            <li>Stop Words: <tt>{{ profile.read_path(profile.get("intent.adapt.stop_words")) }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <input type="checkbox" id="fsticuffs-fuzzy" x-model="profile.intent.fsticuffs.fuzzy" :disabled="profile.intent.system != 'fsticuffs'">
-
-                        <label for="fsticuffs-fuzzy" class="col-form-label">Fuzzy text matching</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Fsticuffs -->
-
-            <!-- Fuzzywuzzy -->
-            <div x-show="profile.intent.system == 'fuzzywuzzy'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#fuzzywuzzy">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-fuzzywuzzy-min-confidence" class="col-form-label">Minimum Confidence:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-fuzzywuzzy-min-confidence" type="text" class="form-control" x-model="profile.intent.fuzzywuzzy.min_confidence">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (0-1, 1 is most strict)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Fuzzywuzzy -->
-
-            <!-- Rasa NLU -->
-            <div x-show="profile.intent.system == 'rasa'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#rasanlu">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-rasa-url" class="col-form-label">Server URL:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-rasa-url" type="text" class="form-control" x-model="profile.intent.rasa.url">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:5005
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <ul>
-                            <li>Examples File: <tt>{{ profile.read_path(profile.get("intent.rasa.examples_markdown")) }}</tt> </li>
-                            <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-rasa-project" class="col-form-label">Project Name:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-rasa-project" type="text" class="form-control" x-model="profile.intent.rasa.project_name">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-rasa-config" class="col-form-label">YAML Config:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-rasa-config" type="text" class="form-control" x-model="profile.intent.rasa.config_yaml" placeholder="(auto-generated)">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Fsticuffs -->
-
-
-            <!-- Remote -->
-            <div x-show="profile.intent.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#remote">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="intent-url" class="col-form-label">Rhasspy Text-to-Intent URL</label>
-                        <div class="col">
-                            <input id="intent-url" type="text" class="form-control" x-model="profile.intent.remote.url" :disabled="profile.intent.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:12101/api/text-to-intent
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="intent-train-url" class="col-form-label">Training URL</label>
-                        <div class="col">
-                            <input id="intent-train-url" type="text" class="form-control" x-model="profile.training.intent.remote.url" :disabled="profile.intent.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.intent.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="intent-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="intent-program" type="text" class="form-control" x-model="profile.intent.command.program" :disabled="profile.intent.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="intent-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="intent-arguments" type="text" class="form-control" x-model="profile.intent.command.arguments" :disabled="profile.intent.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.intent.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#intent-recognition">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Intent Recognition -->
-
-<!-- Text to Speech -->
-<div class="card" id="tts">
-    <div class="card-header bg-dark" id="headingTTS">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-paper-plane"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#tts-collapse" aria-expanded="true" aria-controls="tts-collapse" :disabled="profile.text_to_speech.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Text to Speech
-            </button>
-            <select class="ml-2" x-model="profile.text_to_speech.system">
-                <option value="dummy">Disabled</option>
-                <option value="espeak">Espeak</option>
-                <option value="picotts">PicoTTS</option>
-                <option value="flite">Flite</option>
-                <option value="marytts">MaryTTS</option>
-                <option value="remote">Remote HTTP</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-        </h5>
-    </div>
-    <div id="tts-collapse" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- Espeak -->
-            <div x-show="profile.text_to_speech.system == 'espeak'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#espeak">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="tts-espeak-voice">Voice:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control" placeholder="default">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="tts-espeak-voices">Available Voices:</label>
-                        </div>
-                        <div class="col">
-                            <select id="tts-espeak-voices" x-model="profile.text_to_speech.espeak.voice" class="form-control">
-                                <option value="" selected>Default Voice</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshVoices('espeak')" class="btn btn-primary form-control" title="Refresh espeak voices">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Espeak -->
-
-            <!-- PicoTTS -->
-            <div x-show="profile.text_to_speech.system == 'picotts'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#picotts">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="picotts-language" class="col-form-label">Language:</label>
-                        <div class="col">
-                            <input id="picotts-language" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End PicoTTS -->
-
-            <!-- Flite -->
-            <div x-show="profile.text_to_speech.system == 'flite'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#flite">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="tts-flite-voice">Voice:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control" placeholder="default">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="tts-flite-voices">Available Voices:</label>
-                        </div>
-                        <div class="col">
-                            <select id="tts-flite-voices" x-model="profile.text_to_speech.flite.voice" class="form-control">
-                                <option value="" selected>Default Voice</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshVoices('flite')" class="btn btn-primary form-control" title="Refresh flite voices">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Flite -->
-
-            <!-- MaryTTS -->
-            <div x-show="profile.text_to_speech.system == 'marytts'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#marytts">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tts-system" id="tts-system-marytts" value="marytts" x-model="profile.text_to_speech.system">
-                            <label class="form-check-label" for="tts-system-marytts">
-                                Use marytts <a href="http://mary.dfki.de">MaryTTS</a> server
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="marytts-url" class="col-form-label">URL:</label>
-                        <div class="col">
-                            <input id="marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:59125/process
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="marytts-locale" class="col-form-label">Locale:</label>
-                        <div class="col">
-                            <input id="marytts-locale" type="text" class="form-control" x-model="profile.text_to_speech.marytts.locale" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="marytts-voice" class="col-form-label">Voice:</label>
-                        <div class="col">
-                            <input id="marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="col-xs-auto">
-                            <label for="tts-marytts-voices">Available Voices:</label>
-                        </div>
-                        <div class="col">
-                            <select id="tts-marytts-voices" x-model="profile.text_to_speech.marytts.voice" class="form-control">
-                                <option value="" selected>Default Voice</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshVoices('marytts')" class="btn btn-primary form-control" title="Refresh marytts voices">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End MaryTTS -->
-
-            <!-- Remote -->
-            <div x-show="profile.text_to_speech.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#remote">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="tts-url" class="col-form-label">Rhasspy Text-to-Speech URL</label>
-                        <div class="col">
-                            <input id="tts-url" type="text" class="form-control" x-model="profile.text_to_speech.remote.url" :disabled="profile.text_to_speech.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:12101/api/text-to-speech
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.text_to_speech.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="tts-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="tts-program" type="text" class="form-control" x-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="tts-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="tts-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.arguments" :disabled="profile.text_to_speech.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.text_to_speech.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#text-to-speech">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Audio Recording -->
-
-<!-- Audio Playing -->
-<div class="card" id="sounds">
-    <div class="card-header bg-dark" id="headingSounds">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-volume-up"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#sounds-collapse" aria-expanded="true" aria-controls="sounds-collapse" :disabled="profile.sounds.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Audio Playing
-            </button>
-            <select class="ml-2" x-model="profile.sounds.system">
-                <option value="dummy">Disabled</option>
-                <option value="aplay">aplay</option>
-                <option value="remote">Remote</option>
-                <option value="command">Local Command</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-        </h5>
-    </div>
-    <div id="sounds-collapse" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- aplay -->
-            <div x-show="profile.sounds.system == 'aplay'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#alsa">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="col-xs-auto">
-                        <label for="sounds-aplay-device">Device:</label>
-                    </div>
-                    <div class="col">
-                        <input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
-                    </div>
-                </div>
-                <div class="form-row mt-2">
-                    <div class="col-xs-auto">
-                        <label for="sounds-aplay-devices">Available Devices:</label>
-                    </div>
-                    <div class="col">
-                        <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
-                            <option value="" selected>Default Output Device</option>
-                        </select>
-                    </div>
-                    <div class="col-xs-auto">
-                        <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control" placeholder="Refresh aplay devices">Refresh</button>
-                    </div>
-                </div>
-            </div>
-            <!-- End aplay -->
-
-            <!-- Remote -->
-            <div x-show="profile.sounds.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#remote">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="tts-url" class="col-form-label">Audio Output URL</label>
-                        <div class="col">
-                            <input id="tts-url" type="text" class="form-control" x-model="profile.sounds.remote.url" :disabled="profile.sounds.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.sounds.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="sounds-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="sounds-program" type="text" class="form-control" x-model="profile.sounds.command.play_program" :disabled="profile.sounds.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="sounds-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="sounds-arguments" type="text" class="form-control" x-model="profile.sounds.command.play_arguments" :disabled="profile.sounds.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-            <!-- Hermes -->
-            <div x-show="profile.sounds.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#audio-output">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Audio Recording -->
-
-<!-- Dialogue Management -->
-<div class="card" id="dialogue">
-    <div class="card-header bg-dark" id="headingDialogue">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-tasks"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.dialogue.system == 'dummy', 'btn-success': profile.dialogue.system != 'dummy' }" data-toggle="collapse" data-target="#dialogue-collapse" aria-expanded="true" aria-controls="dialogue-collapse" :disabled="profile.dialogue.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Dialogue Management
-            </button>
-            <select class="ml-2" x-model="profile.dialogue.system">
-                <option value="dummy">Disabled</option>
-                <option value="rhasspy">Rhasspy</option>
-                <option value="hermes">Hermes MQTT</option>
-            </select>
-        </h5>
-    </div>
-    <div id="dialogue-collapse" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
-        <div class="card-body">
-
-            <!-- Rhasspy -->
-            <div x-show="profile.dialogue.system == 'rhasspy'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            Uses <a href="https://github.com/rhasspy/rhasspy-dialogue-hermes">rhasspy-dialogue-hermes</a> service
-                        </p>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="dialogue-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="dialogue-satellite-siteids" type="text" class="form-control" x-model="profile.dialogue.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Rhasspy -->
-
-            <!-- Hermes -->
-            <div x-show="profile.dialogue.system == 'hermes'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
-                    </div>
-                    <div class="form-row">
-                        <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <!-- End Hermes -->
-
-        </div>
-    </div>
-</div>
-<!-- End Audio Playing -->
-
-<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
-
-<!-- Sounds -->
-<div class="card mt-3">
-    <div class="card-header">
-        <h5>Sounds</h5>
-    </div>
-    <div class="card-body">
-        <div class="form-group">
-            <div class="form-row">
-                <p class="text-muted">WAV files to play when Rhasspy wakes up and is finished recording a voice command.</p>
-            </div>
-            <div class="form-row">
-                <p class="text-muted">Use <tt>${RHASSPY_PROFILE_DIR}</tt> for your profile directory.</p>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <label for="sounds-wake" class="col-form-label">Wake WAV</label>
-                <div class="col">
-                    <input id="sounds-wake" type="text" class="form-control" x-model="profile.sounds.wake">
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <label for="sounds-recorded" class="col-form-label">Recorded WAV</label>
-                <div class="col">
-                    <input id="sounds-recorded" type="text" class="form-control" x-model="profile.sounds.recorded">
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <label for="sounds-error" class="col-form-label">Error WAV</label>
-                <div class="col">
-                    <input id="sounds-error" type="text" class="form-control" x-model="profile.sounds.error">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End Sounds -->
-
-<!-- SSL -->
-<div class="card mt-3" id="ssl">
-    <div class="card-header">
-        <h5>Certificates</h5>
-    </div>
-    <div class="card-body">
-        <div class="form-group">
-            <div class="form-row">
-                <div class="col-auto">
-                    <label for="certfile" class="col-form-label col">Certificate Path:</label>
-                </div>
-                <div class="col">
-                    <input id="certfile" type="text" class="form-control" x-model="profile.home_assistant.pem_file" placeholder="certfile">
-                </div>
-                <div class="col-auto">
-                    <p class="muted"><a href="https://docs.python.org/3/library/ssl.html#combined-key-and-certificate">PEM certificate file</a> (required)</p>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <div class="col-auto">
-                    <label for="keyfile" class="col-form-label col">Key Path:</label>
-                </div>
-                <div class="col">
-                    <input id="keyfile" type="text" class="form-control" x-model="profile.home_assistant.key_file" placeholder="keyfile">
-                </div>
-                <div class="col-auto">
-                    <p class="muted"><a href="https://docs.python.org/3/library/ssl.html#ssl-certificates">Private key file</a> (optional)</p>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="form-row">
-                <p class="muted">Paths should be absolute.</p>
-                <p class="mited">Use <tt>$RHASSPY_PROFILE_DIR</tt> environment variable for the directory of this profile (<tt>{{ profile_dir }}</tt>)</p>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End SSL -->
-
-<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
 
 {% endblock %}

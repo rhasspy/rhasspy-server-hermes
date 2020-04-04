@@ -252,20 +252,88 @@
 					</div>
 					<div class="form-group row">
 						<div class="col-sm-2">
-							<label for="microphone-cmd-program" class="col-form-label">Program</label>
+							<label for="microphone-cmd-record-program" class="col-form-label">Record Program</label>
 						</div>
 						<div class="col-sm-10">
-							<input id="microphone-cmd-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system !== 'command'">
+							<input id="microphone-cmd-record-program" type="text" class="form-control" x-model="profile.microphone.command.record_program" :disabled="profile.microphone.system !== 'command'">
 						</div>
 					</div>
 					<div class="form-group row">
 						<div class="col-sm-2">
-							<label for="microphone-cmd-arguments" class="col-form-label">Arguments</label>
+							<label for="microphone-cmd-record-arguments" class="col-form-label">Record Arguments</label>
 						</div>
 						<div class="col-sm-10">
-							<input id="microphone-cmd-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system !== 'command'">
+							<input id="microphone-cmd-record-arguments" type="text" class="form-control" x-model="profile.microphone.command.record_arguments" :disabled="profile.microphone.system !== 'command'">
 						</div>
 					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-sample-rate" class="col-form-label">Sample Rate</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-sample-rate" type="text" class="form-control" x-model="profile.microphone.command.sample_rate" :disabled="profile.microphone.system != 'command'">
+							<small class="form-text text-muted">Hertz</small>
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-sample-width" class="col-form-label">Sample Width</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-sample-width" type="text" class="form-control" x-model="profile.microphone.command.sample_width" :disabled="profile.microphone.system != 'command'">
+							<small class="form-text text-muted">bytes</small>
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-channels" class="col-form-label">Channels</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-channels" type="text" class="form-control" x-model="profile.microphone.command.channels" :disabled="profile.microphone.system != 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-list-program" class="col-form-label">List Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-list-program" type="text" class="form-control" x-model="profile.microphone.command.list_program" :disabled="profile.microphone.system != 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-list-arguments" class="col-form-label">List Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-list-arguments" type="text" class="form-control" x-model="profile.microphone.command.list_arguments" :disabled="profile.microphone.system != 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-test-program" class="col-form-label">Test Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-test-program" type="text" class="form-control" x-model="profile.microphone.command.test_program" :disabled="profile.microphone.system != 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="microphone-cmd-test-arguments" class="col-form-label">Test Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="microphone-cmd-test-arguments" type="text" class="form-control" x-model="profile.microphone.command.test_arguments" :disabled="profile.microphone.system != 'command'">
+						</div>
+					</div>
+				
+				
+				
 				</div>
 				<!-- End Command -->
 
@@ -1530,19 +1598,46 @@
 
 					<div class="form-group row">
 						<div class="col-sm-2">
-							<label for="tts-cmd-program" class="col-form-label">Program</label>
+							<label for="tts-cmd-say-program" class="col-form-label">Say Program</label>
 						</div>
 						<div class="col-sm-10">
-							<input id="tts-program" type="text" class="form-control" x-model="profile.text_to_speech.command.program" :disabled="profile.text_to_speech.system !== 'command'">
+							<input id="tts-cmd-say-program" type="text" class="form-control" x-model="profile.text_to_speech.command.say_program" :disabled="profile.text_to_speech.system !== 'command'">
 						</div>
 					</div>
 
 					<div class="form-group row">
 						<div class="col-sm-2">
-							<label for="tts-cmd-arguments" class="col-form-label">Arguments</label>
+							<label for="tts-cmd-say-arguments" class="col-form-label">Arguments</label>
 						</div>
 						<div class="col-sm-10">
-							<input id="tts-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.arguments" :disabled="profile.text_to_speech.system !== 'command'">
+							<input id="tts-cmd-say-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.say_arguments" :disabled="profile.text_to_speech.system !== 'command'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-command-language" class="col-form-label">Default Language</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-command-language" type="text" class="form-control" x-model="profile.text_to_speech.command.language" :disabled="profile.text_to_speech.system != 'command'">
+						</div>
+					</div>
+
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-voices-program" class="col-form-label">Voices Program</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-voices-program" type="text" class="form-control" x-model="profile.text_to_speech.command.voices_program" :disabled="profile.text_to_speech.system != 'command'">
+						</div>
+					</div>
+					
+					<div class="form-group row">
+						<div class="col-sm-2">
+							<label for="tts-voices-arguments" class="col-form-label">Arguments</label>
+						</div>
+						<div class="col-sm-10">
+							<input id="tts-voices-arguments" type="text" class="form-control" x-model="profile.text_to_speech.command.voices_arguments" :disabled="profile.text_to_speech.system != 'command'">
 						</div>
 					</div>
 					
@@ -1962,6 +2057,12 @@
 
          // Expand section
          $(hash + '-collapse').addClass('show');
+
+         // Account for fixed header top
+         // See: https://stackoverflow.com/questions/4086107/fixed-page-header-overlaps-in-page-anchors
+         var offset = $(':target').offset();
+         var scrollTo = offset.top - 70;
+         $('html, body').animate({ scrollTop: scrollTo}, 0);		 
      }
  })
 

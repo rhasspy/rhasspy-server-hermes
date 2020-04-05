@@ -474,8 +474,6 @@ class RhasspyCore:
                         play_bytes = message
                 elif isinstance(message, AudioPlayError):
                     play_bytes = message
-                elif isinstance(message, AudioPlayFinished):
-                    play_finished = True
 
                 if say_finished and play_bytes and play_finished:
                     return (say_finished, play_bytes)
@@ -489,7 +487,6 @@ class RhasspyCore:
             TtsSayFinished,
             TtsError,
             AudioPlayBytes,
-            AudioPlayFinished,
             AudioPlayError,
         ]
 

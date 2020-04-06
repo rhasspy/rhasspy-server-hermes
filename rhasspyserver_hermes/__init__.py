@@ -463,6 +463,7 @@ class RhasspyCore:
 
                 if isinstance(message, TtsSayFinished) and (message.id == tts_id):
                     say_finished = message
+                    play_finished = True
                 elif isinstance(message, TtsError):
                     # Assume audio playback didn't happen
                     say_finished = message

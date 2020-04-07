@@ -854,19 +854,16 @@ async def api_listen_for_command() -> Response:
         # Add user-defined entities
         if entity and isinstance(nlu_intent, NluIntent):
             nlu_intent.slots.append(
-                rhasspyhermes.intent.Slot(entity=entity, value=value)
+                rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
             )
 
         if output_format == "hermes":
             if isinstance(nlu_intent, NluIntent):
-                intent_dict = {
-                    "type": "intent",
-                    "value": dataclasses.asdict(nlu_intent),
-                }
+                intent_dict = {"type": "intent", "value": nlu_intent.asdict()}
             else:
                 intent_dict = {
                     "type": "intentNotRecognized",
-                    "value": dataclasses.asdict(nlu_intent),
+                    "value": nlu_intent.asdict(),
                 }
         else:
             # Rhasspy format
@@ -2416,7 +2413,9 @@ async def text_to_intent_dict(
     # Add user-defined entities
     if user_entities and isinstance(result, NluIntent):
         for entity, value in user_entities:
-            result.slots.append(rhasspyhermes.intent.Slot(entity=entity, value=value))
+            result.slots.append(
+                rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
+            )
 
     if output_format == "hermes":
         if isinstance(result, NluIntent):

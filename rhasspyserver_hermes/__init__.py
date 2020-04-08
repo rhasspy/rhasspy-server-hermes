@@ -118,14 +118,14 @@ class RhasspyCore:
 
         self.defaults = Profile.load_defaults(self.profile.system_profiles_dir)
 
-        # Look up siteId(s) in profile
-        siteIds = str(self.profile.get("mqtt.site_id", "")).split(",")
-        self.siteIds = set(siteIds)
+        # Look up site_id(s) in profile
+        site_ids = str(self.profile.get("mqtt.site_id", "")).split(",")
+        self.site_ids = set(site_ids)
 
-        if siteIds:
-            self.siteId = siteIds[0]
+        if site_ids:
+            self.site_id = site_ids[0]
         else:
-            self.siteId = "default"
+            self.site_id = "default"
 
         # MQTT client
         self.client = mqtt.Client()
@@ -321,11 +321,11 @@ class RhasspyCore:
                     ):
                         asr_response = message
                     if isinstance(message, NluError) and (
-                        message.sessionId == request_id
+                        message.session_id == request_id
                     ):
                         nlu_response = message
                     elif isinstance(message, AsrError) and (
-                        message.sessionId == request_id
+                        message.session_id == request_id
                     ):
                         asr_response = message
 
@@ -345,7 +345,7 @@ class RhasspyCore:
                 messages.append(
                     (
                         AsrTrain(id=request_id, graph_path=str(graph_path.absolute())),
-                        {"siteId": self.siteId},
+                        {"site_id": self.site_id},
                     )
                 )
                 message_types.extend([AsrTrainSuccess, AsrError])
@@ -355,7 +355,7 @@ class RhasspyCore:
                 messages.append(
                     (
                         NluTrain(id=request_id, graph_path=str(graph_path.absolute())),
-                        {"siteId": self.siteId},
+                        {"site_id": self.site_id},
                     )
                 )
                 message_types.extend([NluTrainSuccess, NluError])
@@ -389,7 +389,7 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def recognize_intent(
-        self, text: str
+        self, text: str, intent_filter: typing.Optional[typing.List[str]] = None
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
         if self.profile.get("intent.system", "dummy") == "dummy":
@@ -397,7 +397,13 @@ class RhasspyCore:
             return NluIntentNotRecognized(input="")
 
         nlu_id = str(uuid4())
-        query = NluQuery(id=nlu_id, input=text, siteId=self.siteId, sessionId=nlu_id)
+        query = NluQuery(
+            id=nlu_id,
+            input=text,
+            intent_filter=intent_filter,
+            site_id=self.site_id,
+            session_id=nlu_id,
+        )
 
         def handle_intent():
             while True:
@@ -405,7 +411,7 @@ class RhasspyCore:
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.sessionId == nlu_id):
+                ) and (message.session_id == nlu_id):
                     return message
 
         messages = [query]
@@ -437,14 +443,14 @@ class RhasspyCore:
         language: typing.Optional[str] = None,
         capture_audio: bool = False,
         wait_play_finished: bool = True,
-        siteId: typing.Optional[str] = None,
-        sessionId: str = "",
+        site_id: typing.Optional[str] = None,
+        session_id: str = "",
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
             raise RuntimeError("No text to speech system configured")
 
-        siteId = siteId or self.siteId
+        site_id = site_id or self.site_id
         tts_id = str(uuid4())
 
         if self.sound_system == "dummy":
@@ -470,8 +476,8 @@ class RhasspyCore:
                     play_bytes = True
                     play_finished = True
                 elif isinstance(message, AudioPlayBytes):
-                    requestId = AudioPlayBytes.get_requestId(topic)
-                    if requestId == tts_id:
+                    request_id = AudioPlayBytes.get_request_id(topic)
+                    if request_id == tts_id:
                         play_bytes = message
                 elif isinstance(message, AudioPlayError):
                     play_bytes = message
@@ -479,7 +485,7 @@ class RhasspyCore:
                 if say_finished and play_bytes and play_finished:
                     return (say_finished, play_bytes)
 
-        say = TtsSay(id=tts_id, text=sentence, siteId=siteId, sessionId=sessionId)
+        say = TtsSay(id=tts_id, text=sentence, site_id=site_id, session_id=session_id)
         if language:
             say.lang = language
 
@@ -524,31 +530,31 @@ class RhasspyCore:
         self,
         wav_bytes: bytes,
         frames_per_chunk: int = 4096,
-        sendAudioCaptured=True,
-        stopOnSilence=False,
+        send_audio_captured=True,
+        stop_on_silence=False,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
         if self.profile.get("speech_to_text.system", "dummy") == "dummy":
             _LOGGER.debug("No speech to text system configured")
             return AsrTextCaptured(text="", likelihood=0, seconds=0)
 
-        sessionId = str(uuid4())
+        session_id = str(uuid4())
 
         def handle_captured():
             while True:
                 _, message = yield
 
                 if isinstance(message, (AsrTextCaptured, AsrError)) and (
-                    message.sessionId == sessionId
+                    message.session_id == session_id
                 ):
                     return message
 
         def messages():
             yield AsrStartListening(
-                siteId=self.siteId,
-                sessionId=sessionId,
-                stopOnSilence=stopOnSilence,
-                sendAudioCaptured=sendAudioCaptured,
+                site_id=self.site_id,
+                session_id=session_id,
+                stop_on_silence=stop_on_silence,
+                send_audio_captured=send_audio_captured,
             )
 
             # Break WAV into chunks
@@ -560,11 +566,11 @@ class RhasspyCore:
                     num_bytes_sent += len(wav_chunk)
                     yield (
                         AudioSessionFrame(wav_bytes=wav_chunk),
-                        {"siteId": self.siteId, "sessionId": sessionId},
+                        {"site_id": self.site_id, "session_id": session_id},
                     )
 
             _LOGGER.debug("Sent %s byte(s) of WAV data", num_bytes_sent)
-            yield AsrStopListening(siteId=self.siteId, sessionId=sessionId)
+            yield AsrStopListening(site_id=self.site_id, session_id=session_id)
 
         message_types: typing.List[typing.Type[Message]] = [AsrTextCaptured, AsrError]
 
@@ -585,28 +591,29 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def play_wav_data(
-        self, wav_bytes: bytes, siteId: typing.Optional[str] = None
+        self, wav_bytes: bytes, site_id: typing.Optional[str] = None
     ) -> AudioPlayFinished:
         """Play WAV data through speakers."""
         if self.sound_system == "dummy":
             raise RuntimeError("No audio output system configured")
 
-        siteId = siteId or self.siteId
-        requestId = str(uuid4())
+        site_id = site_id or self.site_id
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
                 if (
-                    isinstance(message, AudioPlayFinished) and (message.id == requestId)
+                    isinstance(message, AudioPlayFinished)
+                    and (message.id == request_id)
                 ) or isinstance(message, AudioPlayError):
                     return message
 
         def messages():
             yield (
                 AudioPlayBytes(wav_bytes=wav_bytes),
-                {"siteId": siteId, "requestId": requestId},
+                {"site_id": site_id, "request_id": request_id},
             )
 
         message_types: typing.List[typing.Type[Message]] = [
@@ -616,9 +623,9 @@ class RhasspyCore:
 
         # Disable hotword/ASR
         self.publish(
-            HotwordToggleOff(siteId=siteId, reason=HotwordToggleReason.PLAY_AUDIO)
+            HotwordToggleOff(site_id=site_id, reason=HotwordToggleReason.PLAY_AUDIO)
         )
-        self.publish(AsrToggleOff(siteId=siteId, reason=AsrToggleReason.PLAY_AUDIO))
+        self.publish(AsrToggleOff(site_id=site_id, reason=AsrToggleReason.PLAY_AUDIO))
 
         try:
             # Expecting only a single result
@@ -637,9 +644,11 @@ class RhasspyCore:
         finally:
             # Enable hotword/ASR
             self.publish(
-                HotwordToggleOn(siteId=siteId, reason=HotwordToggleReason.PLAY_AUDIO)
+                HotwordToggleOn(site_id=site_id, reason=HotwordToggleReason.PLAY_AUDIO)
             )
-            self.publish(AsrToggleOn(siteId=siteId, reason=AsrToggleReason.PLAY_AUDIO))
+            self.publish(
+                AsrToggleOn(site_id=site_id, reason=AsrToggleReason.PLAY_AUDIO)
+            )
 
     # -------------------------------------------------------------------------
 
@@ -647,21 +656,21 @@ class RhasspyCore:
         self, words: typing.Iterable[str], num_guesses: int = 5
     ) -> G2pPhonemes:
         """Look up or guess word phonetic pronunciations."""
-        requestId = str(uuid4())
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, G2pPhonemes) and (message.id == requestId):
+                if isinstance(message, G2pPhonemes) and (message.id == request_id):
                     return message
 
         messages = [
             G2pPronounce(
                 words=list(words),
-                numGuesses=num_guesses,
-                id=requestId,
-                siteId=self.siteId,
+                num_guesses=num_guesses,
+                id=request_id,
+                site_id=self.site_id,
             )
         ]
         message_types: typing.List[typing.Type[Message]] = [G2pPhonemes]
@@ -684,19 +693,19 @@ class RhasspyCore:
             _LOGGER.warning("Microphone disabled. Cannot get available input devices.")
             return AudioDevices()
 
-        requestId = str(uuid4())
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, AudioDevices) and (message.id == requestId):
+                if isinstance(message, AudioDevices) and (message.id == request_id):
                     return message
 
         messages = [
             AudioGetDevices(
-                id=requestId,
-                siteId=self.siteId,
+                id=request_id,
+                site_id=self.site_id,
                 modes=[AudioDeviceMode.INPUT],
                 test=test,
             )
@@ -719,18 +728,18 @@ class RhasspyCore:
             _LOGGER.warning("Speakers disabled. Cannot get available output devices.")
             return AudioDevices()
 
-        requestId = str(uuid4())
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, AudioDevices) and (message.id == requestId):
+                if isinstance(message, AudioDevices) and (message.id == request_id):
                     return message
 
         messages = [
             AudioGetDevices(
-                id=requestId, siteId=self.siteId, modes=[AudioDeviceMode.OUTPUT]
+                id=request_id, site_id=self.site_id, modes=[AudioDeviceMode.OUTPUT]
             )
         ]
         message_types: typing.List[typing.Type[Message]] = [AudioDevices]
@@ -751,18 +760,18 @@ class RhasspyCore:
             _LOGGER.warning(
                 "Wake word detection disabled. Cannot get available wake words."
             )
-            return Hotwords()
+            return Hotwords(models={})
 
-        requestId = str(uuid4())
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, Hotwords) and (message.id == requestId):
+                if isinstance(message, Hotwords) and (message.id == request_id):
                     return message
 
-        messages = [GetHotwords(id=requestId, siteId=self.siteId)]
+        messages = [GetHotwords(id=request_id, site_id=self.site_id)]
         message_types: typing.List[typing.Type[Message]] = [Hotwords]
 
         # Expecting only a single result
@@ -779,18 +788,18 @@ class RhasspyCore:
         """Get available voices for text to speech system."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
             _LOGGER.warning("Text to speech disabled. Cannot get available voices.")
-            return Voices()
+            return Voices(voices={})
 
-        requestId = str(uuid4())
+        request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, Voices) and (message.id == requestId):
+                if isinstance(message, Voices) and (message.id == request_id):
                     return message
 
-        messages = [GetVoices(id=requestId, siteId=self.siteId)]
+        messages = [GetVoices(id=request_id, site_id=self.site_id)]
         message_types: typing.List[typing.Type[Message]] = [Voices]
 
         # Expecting only a single result
@@ -955,16 +964,16 @@ class RhasspyCore:
         try:
             topic, payload = msg.topic, msg.payload
 
-            for message, siteId, _ in HermesClient.parse_mqtt_message(
+            for message, site_id, _ in HermesClient.parse_mqtt_message(
                 topic, payload, self.subscribed_types
             ):
-                if siteId and self.siteIds and (siteId not in self.siteIds):
-                    # Invalid siteId
+                if site_id and self.site_ids and (site_id not in self.site_ids):
+                    # Invalid site_id
                     continue
 
                 if isinstance(message, AsrAudioCaptured):
                     # Audio data from ASR session
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
                     self.last_audio_captured = message
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrError):
@@ -984,21 +993,21 @@ class RhasspyCore:
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayBytes):
                     # Request to play audio
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayError):
                     # Error playing audio
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayFinished):
                     # Audio finished playing
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioRecordError):
                     # Error recording audio
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioSummary):
                     # Audio summary statistics
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
 
                     # Report to websockets
                     for queue in self.message_queues:
@@ -1018,13 +1027,13 @@ class RhasspyCore:
                     _LOGGER.debug("<- %s", message)
 
                     # Hotword detected
-                    wakewordId = HotwordDetected.get_wakewordId(topic)
+                    wakeword_id = HotwordDetected.get_wakeword_id(topic)
                     self.handle_message(topic, message)
 
                     # Report to websockets
                     for queue in self.message_queues:
                         self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("wake", message, wakewordId)
+                            queue.put_nowait, ("wake", message, wakeword_id)
                         )
 
                     # Warn user if they're expected wake -> ASR -> NLU workflow
@@ -1062,11 +1071,11 @@ class RhasspyCore:
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrTrainSuccess):
                     # ASR training success
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
                     self.handle_message(topic, message)
                 elif isinstance(message, NluTrainSuccess):
                     # NLU training success
-                    assert siteId, "Missing siteId"
+                    assert site_id, "Missing site_id"
                     self.handle_message(topic, message)
                 elif isinstance(message, TtsError):
                     # Error during text to speech
@@ -1090,14 +1099,14 @@ class RhasspyCore:
         """Subscribe to one or more Hermes messages."""
         topics: typing.List[str] = []
 
-        if self.siteIds:
-            # Specific siteIds
-            for siteId in self.siteIds:
+        if self.site_ids:
+            # Specific site_ids
+            for site_id in self.site_ids:
                 for message_type in message_types:
-                    topics.append(message_type.topic(siteId=siteId))
+                    topics.append(message_type.topic(site_id=site_id))
                     self.subscribed_types.add(message_type)
         else:
-            # All siteIds
+            # All site_ids
             for message_type in message_types:
                 topics.append(message_type.topic())
                 self.subscribed_types.add(message_type)

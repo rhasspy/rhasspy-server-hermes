@@ -100,7 +100,7 @@
      );
 
      rhasspy.postBusy('Saving slots',
-                      '/api/slots?overwrite_all=true',
+                      '/api/slots?overwriteAll=true',
                       JSON.stringify(slotsLists),
                       false)
             .done(function() {

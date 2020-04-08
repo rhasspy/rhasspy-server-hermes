@@ -284,13 +284,6 @@ paths:
               type: string
       parameters:
         - in: query
-          name: pronounce_type
-          description: 'Input type'
-          required: true
-          schema:
-            type: string
-            enum: [word, phonemes]
-        - in: query
           name: download
           description: 'Return WAV file instead of using speakers'
           schema:
@@ -403,7 +396,7 @@ paths:
               type: object
       parameters:
         - in: query
-          name: overwrite_all
+          name: overwriteAll
           description: 'True if slots in JSON should be overwritten'
           schema:
             type: boolean
@@ -558,6 +551,11 @@ paths:
         - in: query
           name: value
           description: 'Value for user-defined entity'
+          schema:
+            type: string
+        - in: query
+          name: intentFilter
+          description: 'Comma-separated list of intent names'
           schema:
             type: string
       responses:

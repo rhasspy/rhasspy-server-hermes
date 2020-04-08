@@ -285,7 +285,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "profile_json": json.dumps(core.profile.json, indent=4),
         "profile_dir": core.profile.write_path(""),
         "version": version,
-        "siteId": core.siteId,
+        "site_id": core.site_id,
     }
 
 
@@ -678,7 +678,10 @@ async def api_microphones() -> Response:
         microphones = await core.get_microphones()
 
         return jsonify(
-            {mic.id: mic.description.strip() or mic.name for mic in microphones.devices}
+            {
+                mic.id: (mic.description or mic.name or mic.id).strip()
+                for mic in microphones.devices
+            }
         )
     except Exception:
         _LOGGER.exception("api_microphones")
@@ -697,7 +700,7 @@ async def api_test_microphones() -> Response:
 
     return jsonify(
         {
-            mic.id: (mic.description.strip() or mic.name)
+            mic.id: (mic.description or mic.name or mic.id).strip()
             + (" (working!)" if mic.working else "")
             for mic in microphones.devices
         }
@@ -715,7 +718,10 @@ async def api_speakers() -> Response:
     try:
         speakers = await core.get_speakers()
         return jsonify(
-            {speaker.name: speaker.description for speaker in speakers.devices}
+            {
+                speaker.id: (speaker.description or speaker.name or speaker.id).strip()
+                for speaker in speakers.devices
+            }
         )
     except Exception:
         _LOGGER.exception("api_speakers")
@@ -746,17 +752,17 @@ async def api_wake_words() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
-    siteId = request.args.get("siteId", core.siteId)
+    site_id = request.args.get("siteId", core.site_id)
     reason = request.args.get("reason", HotwordToggleReason.UNKNOWN)
     toggle_off = (await request.data).decode().lower() in ["false", "off"]
 
     if toggle_off:
         # Disable
-        core.publish(HotwordToggleOff(siteId=siteId, reason=reason))
+        core.publish(HotwordToggleOff(site_id=site_id, reason=reason))
         return "off"
 
     # Enable
-    core.publish(HotwordToggleOn(siteId=siteId, reason=reason))
+    core.publish(HotwordToggleOn(site_id=site_id, reason=reason))
     return "on"
 
 
@@ -774,14 +780,14 @@ async def api_listen_for_command() -> Response:
     entity = request.args.get("entity")
     value = request.args.get("value")
 
-    sessionId = str(uuid4())
+    session_id = str(uuid4())
 
     messages: typing.List[typing.Any] = []
     message_types: typing.List[typing.Type[Message]] = []
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(site_id=core.site_id))
 
     try:
         # Start listening and wait for text captured
@@ -790,22 +796,22 @@ async def api_listen_for_command() -> Response:
                 _, message = yield
 
                 if isinstance(message, (AsrTextCaptured, AsrError)) and (
-                    message.sessionId == sessionId
+                    message.session_id == session_id
                 ):
                     return message
 
         message_types = [AsrTextCaptured, AsrError]
         messages = [
             AsrStartListening(
-                siteId=core.siteId,
-                sessionId=sessionId,
-                stopOnSilence=True,
-                sendAudioCaptured=True,
+                site_id=core.site_id,
+                session_id=session_id,
+                stop_on_silence=True,
+                send_audio_captured=True,
             )
         ]
 
         # Expecting only a single result
-        _LOGGER.debug("Waiting for transcription (sessionId=%s)", sessionId)
+        _LOGGER.debug("Waiting for transcription (session_id=%s)", session_id)
         text_captured = None
         async for response in core.publish_wait(
             handle_captured(), messages, message_types
@@ -824,22 +830,22 @@ async def api_listen_for_command() -> Response:
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.sessionId == sessionId):
+                ) and (message.session_id == session_id):
                     return message
 
         message_types = [NluIntent, NluIntentNotRecognized, NluError]
         messages = [
-            AsrStopListening(siteId=core.siteId, sessionId=sessionId),
+            AsrStopListening(site_id=core.site_id, session_id=session_id),
             NluQuery(
-                id=sessionId,
+                id=session_id,
                 input=text_captured.text,
-                siteId=core.siteId,
-                sessionId=sessionId,
+                site_id=core.site_id,
+                session_id=session_id,
             ),
         ]
 
         # Expecting only a single result
-        _LOGGER.debug("Waiting for intent (sessionId=%s)", sessionId)
+        _LOGGER.debug("Waiting for intent (session_id=%s)", session_id)
         nlu_intent = None
         async for response in core.publish_wait(
             handle_intent(), messages, message_types
@@ -853,17 +859,18 @@ async def api_listen_for_command() -> Response:
 
         # Add user-defined entities
         if entity and isinstance(nlu_intent, NluIntent):
+            nlu_intent.slots = nlu_intent.slots or []
             nlu_intent.slots.append(
                 rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
             )
 
         if output_format == "hermes":
             if isinstance(nlu_intent, NluIntent):
-                intent_dict = {"type": "intent", "value": nlu_intent.asdict()}
+                intent_dict = {"type": "intent", "value": nlu_intent.to_dict()}
             else:
                 intent_dict = {
                     "type": "intentNotRecognized",
-                    "value": nlu_intent.asdict(),
+                    "value": nlu_intent.to_dict(),
                 }
         else:
             # Rhasspy format
@@ -873,7 +880,7 @@ async def api_listen_for_command() -> Response:
     finally:
         if no_hass:
             # Re-enable intent handling
-            core.publish(HandleToggleOn(siteId=core.siteId))
+            core.publish(HandleToggleOn(site_id=core.site_id))
 
 
 # -----------------------------------------------------------------------------
@@ -927,16 +934,16 @@ async def api_lookup() -> Response:
 
     # Convert to Rhasspy format
     pronunciation_dict: typing.Dict[str, typing.Any] = {}
-    for pron_word in result.wordPhonemes:
+    for pron_word in result.word_phonemes:
         if pron_word == word:
             pronunciation_dict = {
                 "in_dictionary": any(
                     not word_pron.guessed
-                    for word_pron in result.wordPhonemes[pron_word]
+                    for word_pron in result.word_phonemes[pron_word]
                 ),
                 "pronunciations": [
                     " ".join(word_pron.phonemes)
-                    for word_pron in result.wordPhonemes[pron_word]
+                    for word_pron in result.word_phonemes[pron_word]
                 ],
                 "phonemes": get_espeak_phonemes(pron_word),
             }
@@ -1008,7 +1015,7 @@ async def api_pronounce() -> typing.Union[Response, str]:
 @app.route("/api/play-wav", methods=["POST"])
 async def api_play_wav() -> str:
     """Play WAV data through the configured audio output system"""
-    siteId = request.args.get("siteId", None)
+    site_id = request.args.get("siteId", None)
     assert core is not None
 
     if request.content_type == "audio/wav":
@@ -1024,7 +1031,7 @@ async def api_play_wav() -> str:
 
     # Play through speakers
     _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
-    await core.play_wav_data(wav_bytes, siteId=siteId)
+    await core.play_wav_data(wav_bytes, site_id=site_id)
 
     return "OK"
 
@@ -1265,7 +1272,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
     no_header = request.args.get("noheader", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
     detect_silence = (
-        request.args.get("detect_silence", "false").strip().lower() == "true"
+        request.args.get("detectSilence", "false").strip().lower() == "true"
     )
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
@@ -1279,7 +1286,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
 
     # Transcribe
     start_time = time.perf_counter()
-    result = await core.transcribe_wav(wav_bytes, stopOnSilence=detect_silence)
+    result = await core.transcribe_wav(wav_bytes, stop_on_silence=detect_silence)
     end_time = time.perf_counter()
 
     if output_format == "hermes":
@@ -1304,12 +1311,18 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
 
 @app.route("/api/text-to-intent", methods=["POST"])
 async def api_text_to_intent():
-    """Recgonize intent from text and optionally handle."""
+    """Recognize intent from text and optionally handle."""
     assert core is not None
     data = await request.data
     text = data.decode()
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+
+    intent_filter = request.args.get("intentFilter")
+    if intent_filter:
+        intent_filter = intent_filter.split(",")
+    else:
+        intent_filter = None
 
     # Key/value to set in recognized intent
     entity = request.args.get("entity")
@@ -1322,18 +1335,21 @@ async def api_text_to_intent():
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(site_id=core.site_id))
 
     try:
         # Convert text to intent
         intent_dict = await text_to_intent_dict(
-            text, output_format=output_format, user_entities=user_entities
+            text,
+            intent_filter=intent_filter,
+            output_format=output_format,
+            user_entities=user_entities,
         )
         return jsonify(intent_dict)
     finally:
         if no_hass:
             # Re-enable intent handling
-            core.publish(HandleToggleOn(siteId=core.siteId))
+            core.publish(HandleToggleOn(site_id=core.site_id))
 
 
 # -----------------------------------------------------------------------------
@@ -1346,8 +1362,13 @@ async def api_speech_to_intent() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
     detect_silence = (
-        request.args.get("detect_silence", "false").strip().lower() == "true"
+        request.args.get("detectSilence", "false").strip().lower() == "true"
     )
+    intent_filter = request.args.get("intentFilter")
+    if intent_filter:
+        intent_filter = intent_filter.split(",")
+    else:
+        intent_filter = None
 
     # Key/value to set in recognized intent
     entity = request.args.get("entity")
@@ -1360,7 +1381,7 @@ async def api_speech_to_intent() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(site_id=core.site_id))
 
     try:
         # Prefer 16-bit 16Khz mono, but will convert with sox if needed
@@ -1372,14 +1393,17 @@ async def api_speech_to_intent() -> Response:
         # speech -> text
         _LOGGER.debug("Waiting for transcription")
         transcription = await core.transcribe_wav(
-            wav_bytes, stopOnSilence=detect_silence
+            wav_bytes, stop_on_silence=detect_silence
         )
         text = transcription.text
 
         # text -> intent
         _LOGGER.debug("Waiting for intent")
         intent_dict = await text_to_intent_dict(
-            text, output_format=output_format, user_entities=user_entities
+            text,
+            intent_filter=intent_filter,
+            output_format=output_format,
+            user_entities=user_entities,
         )
 
         if output_format == "rhasspy":
@@ -1390,7 +1414,7 @@ async def api_speech_to_intent() -> Response:
     finally:
         if no_hass:
             # Re-enable intent handling
-            core.publish(HandleToggleOn(siteId=core.siteId))
+            core.publish(HandleToggleOn(site_id=core.site_id))
 
 
 # -----------------------------------------------------------------------------
@@ -1405,20 +1429,20 @@ async def api_start_recording() -> str:
     name = str(request.args.get("name", ""))
 
     # Start new ASR session
-    sessionId = str(uuid4())
+    session_id = str(uuid4())
     core.publish(
         AsrStartListening(
-            siteId=core.siteId,
-            sessionId=sessionId,
-            stopOnSilence=False,
-            sendAudioCaptured=True,
+            site_id=core.site_id,
+            session_id=session_id,
+            stop_on_silence=False,
+            send_audio_captured=True,
         )
     )
 
     # Map to user provided name
-    session_names[name] = sessionId
+    session_names[name] = session_id
 
-    return sessionId
+    return session_id
 
 
 @app.route("/api/stop-recording", methods=["POST"])
@@ -1439,28 +1463,28 @@ async def api_stop_recording() -> Response:
 
     if no_hass:
         # Temporarily disable intent handling
-        core.publish(HandleToggleOff(siteId=core.siteId))
+        core.publish(HandleToggleOff(site_id=core.site_id))
 
     try:
         # End session
         name = request.args.get("name", "")
         assert name in session_names, f"No session for name: {name}"
-        sessionId = session_names.pop(name)
+        session_id = session_names.pop(name)
 
         def handle_captured():
             while True:
                 _, message = yield
 
                 if isinstance(message, AsrTextCaptured) and (
-                    message.sessionId == sessionId
+                    message.session_id == session_id
                 ):
                     return message
 
         message_types: typing.List[typing.Type[Message]] = [AsrTextCaptured]
-        messages = [AsrStopListening(siteId=core.siteId, sessionId=sessionId)]
+        messages = [AsrStopListening(site_id=core.site_id, session_id=session_id)]
 
         # Expecting only a single result
-        _LOGGER.debug("Waiting for text captured (sessionId=%s)", sessionId)
+        _LOGGER.debug("Waiting for text captured (session_id=%s)", session_id)
         text_captured = None
         async for response in core.publish_wait(
             handle_captured(), messages, message_types
@@ -1476,7 +1500,7 @@ async def api_stop_recording() -> Response:
     finally:
         if no_hass:
             # Re-enable intent handling
-            core.publish(HandleToggleOn(siteId=core.siteId))
+            core.publish(HandleToggleOn(site_id=core.site_id))
 
 
 @app.route("/api/play-recording", methods=["POST"])
@@ -1516,8 +1540,8 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     play = request.args.get("play", "true").strip().lower() == "true"
     language = request.args.get("language")
     voice = request.args.get("voice")
-    siteId = request.args.get("siteId", None)
-    sessionId = request.args.get("sessionId", "")
+    site_id = request.args.get("siteId", None)
+    session_id = request.args.get("sessionId", "")
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
@@ -1527,7 +1551,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
 
     if not play:
         # Disable audio output
-        core.publish(AudioToggleOff(siteId=core.siteId))
+        core.publish(AudioToggleOff(site_id=core.site_id))
 
     try:
         _, play_bytes = await core.speak_sentence(
@@ -1535,8 +1559,8 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
             language=(language or voice),
             capture_audio=True,
             wait_play_finished=play,
-            siteId=siteId,
-            sessionId=sessionId,
+            site_id=site_id,
+            session_id=session_id,
         )
 
         # Cache last sentence spoken
@@ -1549,7 +1573,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     finally:
         if not play:
             # Re-enable audio output
-            core.publish(AudioToggleOn(siteId=core.siteId))
+            core.publish(AudioToggleOn(site_id=core.site_id))
 
 
 @app.route("/api/tts-voices", methods=["GET"])
@@ -1580,7 +1604,7 @@ async def api_slots() -> typing.Union[str, Response]:
         )
 
         # Write slots on POST
-        overwrite_all = request.args.get("overwrite_all", "false").lower() == "true"
+        overwrite_all = request.args.get("overwriteAll", "false").lower() == "true"
         new_slot_values = await request.json
 
         save_slots(slots_dir, new_slot_values, overwrite_all=overwrite_all)
@@ -1610,7 +1634,7 @@ async def api_slots() -> typing.Union[str, Response]:
 async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
     """Get or set the values of a slot list."""
     assert core is not None
-    overwrite_all = request.args.get("overwrite_all", "false").lower() == "true"
+    overwrite_all = request.args.get("overwriteAll", "false").lower() == "true"
 
     slots_dir = Path(
         core.profile.read_path(core.profile.get("speech_to_text.slots_dir", "slots"))
@@ -1768,14 +1792,14 @@ async def api_evaluate() -> Response:
 
     # Crop audio with speech/silence detection
     detect_silence = (
-        request.args.get("detect_silence", "false").strip().lower() == "true"
+        request.args.get("detectSilence", "false").strip().lower() == "true"
     )
 
     # Terminate evaluation if intent recognition fails
-    stop_on_error = request.args.get("stop_on_error", "false").strip().lower() == "true"
+    stop_on_error = request.args.get("stopOnError", "false").strip().lower() == "true"
 
     # Number of times to retry transcription/recognition if timeout
-    timeout_retries = int(request.args.get("timeout_retries", "0"))
+    timeout_retries = int(request.args.get("timeoutRetries", "0"))
 
     temp_dir = None
 
@@ -1845,7 +1869,9 @@ async def api_evaluate() -> Response:
                 transcribe_retries -= 1
                 try:
                     text_captured = await core.transcribe_wav(
-                        wav_bytes, sendAudioCaptured=False, stopOnSilence=detect_silence
+                        wav_bytes,
+                        send_audio_captured=False,
+                        stop_on_silence=detect_silence,
                     )
                 except asyncio.TimeoutError as e:
                     if transcribe_retries > 0:
@@ -1895,11 +1921,11 @@ async def api_evaluate() -> Response:
                 nlu_intent = NluIntent(
                     input=text_captured.text,
                     intent=rhasspyhermes.intent.Intent(
-                        intentName="", confidenceScore=0
+                        intent_name="", confidence_score=0
                     ),
                 )
 
-            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intentName)
+            _LOGGER.debug("%s -> %s", text_captured.text, nlu_intent.intent.intent_name)
 
             # Convert to Recognition
             actual_intent = rhasspynlu.intent.Recognition.from_dict(
@@ -1953,11 +1979,11 @@ async def api_audio_summaries() -> str:
 
     if toggle_off:
         # Disable
-        core.publish(SummaryToggleOff(siteId=core.siteId))
+        core.publish(SummaryToggleOff(site_id=core.site_id))
         return "off"
 
     # Enable
-    core.publish(SummaryToggleOn(siteId=core.siteId))
+    core.publish(SummaryToggleOn(site_id=core.site_id))
     return "on"
 
 
@@ -2190,10 +2216,10 @@ async def api_ws_wake(queue) -> None:
             message = await queue.get()
             if message[0] == "wake":
                 hotword_detected: HotwordDetected = message[1]
-                wakewordId: str = message[2]
+                wakeword_id: str = message[2]
 
                 ws_message = json.dumps(
-                    {"wakewordId": wakewordId, "siteId": hotword_detected.siteId}
+                    {"wakeword_id": wakeword_id, "site_id": hotword_detected.site_id}
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2218,8 +2244,8 @@ async def api_ws_text(queue) -> None:
                 ws_message = json.dumps(
                     {
                         "text": text_captured.text,
-                        "siteId": text_captured.siteId,
-                        "wakewordId": text_captured.wakewordId,
+                        "site_id": text_captured.site_id,
+                        "wakeword_id": text_captured.wakeword_id,
                     }
                 )
                 await websocket.send(ws_message)
@@ -2402,13 +2428,14 @@ def prefers_json() -> bool:
 
 async def text_to_intent_dict(
     text,
+    intent_filter: typing.Optional[typing.List[str]] = None,
     output_format="rhasspy",
     user_entities=typing.Optional[typing.List[typing.Tuple[str, str]]],
 ):
     """Convert transcription to either Rhasspy or Hermes JSON format."""
     assert core is not None
     start_time = time.perf_counter()
-    result = await core.recognize_intent(text)
+    result = await core.recognize_intent(text, intent_filter=intent_filter)
 
     # Add user-defined entities
     if user_entities and isinstance(result, NluIntent):

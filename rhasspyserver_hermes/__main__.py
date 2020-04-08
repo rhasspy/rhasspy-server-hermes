@@ -738,7 +738,7 @@ async def api_wake_words() -> Response:
     assert core is not None
     try:
         hotwords = await core.get_hotwords()
-        return jsonify(dataclasses.asdict(hotwords)["models"])
+        return jsonify(hotwords.to_dict()["models"])
     except Exception:
         _LOGGER.exception("api_wake_words")
 
@@ -930,7 +930,7 @@ async def api_lookup() -> Response:
     result = await core.get_word_pronunciations([word], n)
 
     if output_format == "hermes":
-        return jsonify({"type": "phonemes", "value": dataclasses.asdict(result)})
+        return jsonify({"type": "phonemes", "value": result.to_dict()})
 
     # Convert to Rhasspy format
     pronunciation_dict: typing.Dict[str, typing.Any] = {}
@@ -1290,7 +1290,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
     end_time = time.perf_counter()
 
     if output_format == "hermes":
-        return jsonify({"type": "textCaptured", "value": dataclasses.asdict(result)})
+        return jsonify({"type": "textCaptured", "value": result.to_dict()})
 
     if prefers_json():
         # Return extra info in JSON
@@ -1583,7 +1583,7 @@ async def api_tts_voices() -> Response:
 
     try:
         voices = await core.get_voices()
-        return jsonify(dataclasses.asdict(voices)["voices"])
+        return jsonify(voices.to_dict()["voices"])
     except Exception:
         _LOGGER.exception("api_wake_words")
 
@@ -1604,7 +1604,12 @@ async def api_slots() -> typing.Union[str, Response]:
         )
 
         # Write slots on POST
-        overwrite_all = request.args.get("overwriteAll", "false").lower() == "true"
+        overwrite_all = (
+            request.args.get(
+                "overwriteAll", request.args.get("overwrite_all", "false")
+            ).lower()
+            == "true"
+        )
         new_slot_values = await request.json
 
         save_slots(slots_dir, new_slot_values, overwrite_all=overwrite_all)
@@ -1634,7 +1639,12 @@ async def api_slots() -> typing.Union[str, Response]:
 async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
     """Get or set the values of a slot list."""
     assert core is not None
-    overwrite_all = request.args.get("overwriteAll", "false").lower() == "true"
+    overwrite_all = (
+        request.args.get(
+            "overwriteAll", request.args.get("overwrite_all", "false")
+        ).lower()
+        == "true"
+    )
 
     slots_dir = Path(
         core.profile.read_path(core.profile.get("speech_to_text.slots_dir", "slots"))
@@ -2219,7 +2229,7 @@ async def api_ws_wake(queue) -> None:
                 wakeword_id: str = message[2]
 
                 ws_message = json.dumps(
-                    {"wakeword_id": wakeword_id, "site_id": hotword_detected.site_id}
+                    {"wakewordId": wakeword_id, "siteId": hotword_detected.site_id}
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2244,8 +2254,8 @@ async def api_ws_text(queue) -> None:
                 ws_message = json.dumps(
                     {
                         "text": text_captured.text,
-                        "site_id": text_captured.site_id,
-                        "wakeword_id": text_captured.wakeword_id,
+                        "siteId": text_captured.site_id,
+                        "wakewordId": text_captured.wakeword_id,
                     }
                 )
                 await websocket.send(ws_message)
@@ -2267,7 +2277,7 @@ async def api_ws_audiosummary(queue) -> None:
             message = await queue.get()
             if message[0] == "audiosummary":
                 audio_summary: AudioSummary = message[1]
-                ws_message = json.dumps(dataclasses.asdict(audio_summary))
+                ws_message = audio_summary.to_json()
                 await websocket.send(ws_message)
     except CancelledError:
         pass
@@ -2446,12 +2456,9 @@ async def text_to_intent_dict(
 
     if output_format == "hermes":
         if isinstance(result, NluIntent):
-            intent_dict = {"type": "intent", "value": result.asdict()}
+            intent_dict = {"type": "intent", "value": result.to_dict()}
         else:
-            intent_dict = {
-                "type": "intentNotRecognized",
-                "value": dataclasses.asdict(result),
-            }
+            intent_dict = {"type": "intentNotRecognized", "value": result.to_dict()}
     else:
         # Rhasspy format
         intent_dict = result.to_rhasspy_dict()

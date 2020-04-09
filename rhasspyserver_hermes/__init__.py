@@ -698,7 +698,7 @@ class RhasspyCore:
         """Get available microphones and optionally test them."""
         if self.profile.get("microphone.system", "dummy") == "dummy":
             raise AudioServerException(
-                "Microphone disabled. Cannot get available input devices."
+                "Microphone disabled. Make sure to save settings and restart."
             )
 
         request_id = str(uuid4())
@@ -734,7 +734,7 @@ class RhasspyCore:
         """Get available speakers."""
         if self.profile.get("sounds.system", "dummy") == "dummy":
             raise AudioServerException(
-                "Audio output disabled. Cannot get available output devices."
+                "Audio output disabled. Make sure to save settings and restart."
             )
 
         request_id = str(uuid4())
@@ -767,7 +767,7 @@ class RhasspyCore:
         """Get available hotwords."""
         if self.profile.get("wake.system", "dummy") == "dummy":
             raise HotwordException(
-                "Wake word detection disabled. Cannot get available wake words."
+                "Wake word detection disabled. Make sure to save settings and restart."
             )
 
         request_id = str(uuid4())
@@ -795,7 +795,9 @@ class RhasspyCore:
     async def get_voices(self) -> Voices:
         """Get available voices for text to speech system."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
-            raise TtsException("Text to speech disabled. Cannot get available voices.")
+            raise TtsException(
+                "Text to speech disabled. Make sure to save settings and restart."
+            )
 
         request_id = str(uuid4())
 

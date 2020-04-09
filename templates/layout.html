@@ -343,6 +343,8 @@
 
              // Display an alert message at the bottom of the screen for 20 seconds
              alert: (message, level) => {
+                 rhasspy.clearAlert()
+
                  level = (level === undefined) ? 'info' : level;
                  $('#alert').addClass('alert-' + level)
                  $('#alertText').text(message)

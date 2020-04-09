@@ -2143,31 +2143,29 @@
 
  // Load available audio input devices
  function refreshInputDevices(micSystem) {
-     var selectId = 'microphone-' + micSystem + '-devices';
-     $('#' + selectId + ' option:not(:first)').remove();
+     var selectId = '#microphone-' + micSystem + '-devices';
+     $(selectId + ' option:not(:first)').remove();
 
-     $.get({
-         url:'/api/microphones',
-         dataType: 'json',
-         success: (r) => {
-             Object.entries(r).forEach((kv) => {
-                 $('#' + selectId)
-                     .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
-             });
-         }
-     });
+     rhasspy.getBusy('Refreshing microphones',
+                     '/api/microphones')
+            .done((r) => {
+                Object.entries(r).forEach((kv) => {
+                    $(selectId)
+                        .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
+                });
+            });
  }
 
  // Test available audio input devices
  function testInputDevices(micSystem) {
-     var selectId = 'microphone-' + micSystem + '-devices';
-     $('#' + selectId + ' option:not(:first)').remove();
+     var selectId = '#microphone-' + micSystem + '-devices';
+     $(selectId + ' option:not(:first)').remove();
 
      rhasspy.getBusy('Testing microphones',
                      '/api/test-microphones')
             .done((r) => {
                 Object.entries(r).forEach((kv) => {
-                    $('#' + selectId)
+                    $(selectId)
                         .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
                 });
             });
@@ -2175,19 +2173,17 @@
 
  // Load available audio output devices
  function refreshOutputDevices(soundSystem) {
-     var selectId = 'sounds-' + soundSystem + '-devices';
-     $('#' + selectId + ' option:not(:first)').remove();
+     var selectId = '#sounds-' + soundSystem + '-devices';
+     $(selectId + ' option:not(:first)').remove();
 
-     $.get({
-         url:'/api/speakers',
-         dataType: 'json',
-         success: (r) => {
-             Object.entries(r).forEach((kv) => {
-                 $('#' + selectId)
-                     .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
-             });
-         }
-     });
+     rhasspy.getBusy('Refreshing speakers',
+                     '/api/speakers')
+            .done((r) => {
+                Object.entries(r).forEach((kv) => {
+                    $(selectId)
+                        .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
+                });
+            });
  }
 
  // Load available hot words
@@ -2195,16 +2191,14 @@
      var selectId = '#wake-' + wakeSystem + '-hotwords';
      $(selectId + ' option').remove();
 
-     $.get({
-         url:'/api/wake-words',
-         dataType: 'json',
-         success: (r) => {
-             Object.entries(r).forEach((kv) => {
-                 $(selectId)
-                     .append('<option value="' + kv[0] + '">' + kv[1].modelWords + ' (' + kv[0] + ')</option>');
-             });
-         }
-     });
+     rhasspy.getBusy('Refreshing hotwords',
+                     '/api/wake-words')
+            .done((r) => {
+               r.forEach((hotword) => {
+                    $(selectId)
+                        .append('<option value="' + hotword.modelId + '">' + hotword.modelWords + ' (' + hotword.modelId + ')</option>');
+                });
+            });
  }
 
  // Load available TTS voices
@@ -2212,21 +2206,18 @@
      var selectId = '#tts-' + ttsSystem + '-voices';
      $(selectId + ' option:not(:first)').remove();
 
-     $.get({
-         url:'/api/tts-voices',
-         dataType: 'json',
-         success: (r) => {
-             Object.entries(r).forEach((kv) => {
-                 var description = kv[0];
-                 if (kv[1].description.length > 0) {
-                     description += ' (' + kv[1].description + ')';
-                 }
-
-                 $(selectId)
-                     .append('<option value="' + kv[0] + '">' + description + '</option>');
-             });
-         }
-     });
+     rhasspy.getBusy('Refreshing voices',
+                     '/api/tts-voices')
+            .done((r) => {
+                r.forEach((voice) => {
+                    var description = voice.voiceId;
+                    if (voice.description) {
+                        description += ' (' + voice.description + ')';
+                    }
+                    $(selectId)
+                        .append('<option value="' + voice.voiceId + '">' + description + '</option>');
+                });
+            });
  }
 
  function isSpeechCompatible() {

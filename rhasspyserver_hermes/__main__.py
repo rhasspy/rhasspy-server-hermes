@@ -673,20 +673,14 @@ async def api_problems() -> Response:
 async def api_microphones() -> Response:
     """Get a dictionary of available recording devices"""
     assert core is not None
+    microphones = await core.get_microphones()
 
-    try:
-        microphones = await core.get_microphones()
-
-        return jsonify(
-            {
-                mic.id: (mic.description or mic.name or mic.id).strip()
-                for mic in microphones.devices
-            }
-        )
-    except Exception:
-        _LOGGER.exception("api_microphones")
-
-    return jsonify({})
+    return jsonify(
+        {
+            mic.id: (mic.description or mic.name or mic.id).strip()
+            for mic in microphones.devices
+        }
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -714,19 +708,13 @@ async def api_test_microphones() -> Response:
 async def api_speakers() -> Response:
     """Get a dictionary of available playback devices"""
     assert core is not None
-
-    try:
-        speakers = await core.get_speakers()
-        return jsonify(
-            {
-                speaker.id: (speaker.description or speaker.name or speaker.id).strip()
-                for speaker in speakers.devices
-            }
-        )
-    except Exception:
-        _LOGGER.exception("api_speakers")
-
-    return jsonify({})
+    speakers = await core.get_speakers()
+    return jsonify(
+        {
+            speaker.id: (speaker.description or speaker.name or speaker.id).strip()
+            for speaker in speakers.devices
+        }
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -736,13 +724,8 @@ async def api_speakers() -> Response:
 async def api_wake_words() -> Response:
     """Get a dictionary of available wake words"""
     assert core is not None
-    try:
-        hotwords = await core.get_hotwords()
-        return jsonify(hotwords.to_dict()["models"])
-    except Exception:
-        _LOGGER.exception("api_wake_words")
-
-    return jsonify({})
+    hotwords = await core.get_hotwords()
+    return jsonify(hotwords.to_dict()["models"])
 
 
 # -----------------------------------------------------------------------------
@@ -1580,14 +1563,8 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
 async def api_tts_voices() -> Response:
     """Get available voices for text to speech system."""
     assert core is not None
-
-    try:
-        voices = await core.get_voices()
-        return jsonify(voices.to_dict()["voices"])
-    except Exception:
-        _LOGGER.exception("api_wake_words")
-
-    return jsonify({})
+    voices = await core.get_voices()
+    return jsonify(voices.to_dict()["voices"])
 
 
 # -----------------------------------------------------------------------------

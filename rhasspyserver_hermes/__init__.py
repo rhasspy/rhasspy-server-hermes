@@ -40,7 +40,7 @@ from rhasspyhermes.audioserver import (
 from rhasspyhermes.base import Message
 from rhasspyhermes.client import HermesClient
 from rhasspyhermes.dialogue import DialogueSessionStarted
-from rhasspyhermes.g2p import G2pPhonemes, G2pPronounce
+from rhasspyhermes.g2p import G2pError, G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
     NluError,
     NluIntent,
@@ -393,8 +393,7 @@ class RhasspyCore:
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
         if self.profile.get("intent.system", "dummy") == "dummy":
-            _LOGGER.debug("No intent system configured")
-            return NluIntentNotRecognized(input="")
+            raise NluException("No intent system configured")
 
         nlu_id = str(uuid4())
         query = NluQuery(
@@ -430,9 +429,9 @@ class RhasspyCore:
 
         if isinstance(result, NluError):
             _LOGGER.error(result)
-            raise RuntimeError(result.error)
+            raise NluException(result.error)
 
-        assert isinstance(result, (NluIntent, NluIntentNotRecognized))
+        assert isinstance(result, (NluIntent, NluIntentNotRecognized)), result
         return result
 
     # -------------------------------------------------------------------------
@@ -448,7 +447,7 @@ class RhasspyCore:
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
-            raise RuntimeError("No text to speech system configured")
+            raise TtsException("No text to speech system configured")
 
         site_id = site_id or self.site_id
         tts_id = str(uuid4())
@@ -509,16 +508,16 @@ class RhasspyCore:
 
         if isinstance(say_response, TtsError):
             _LOGGER.error(say_response)
-            raise RuntimeError(say_response.error)
+            raise TtsException(say_response.error)
 
-        assert isinstance(say_response, TtsSayFinished)
+        assert isinstance(say_response, TtsSayFinished), say_response
 
         if isinstance(play_response, AudioPlayError):
             _LOGGER.error(play_response)
-            raise RuntimeError(f"Audio: {play_response.error}")
+            raise AudioServerException(play_response.error)
 
         if capture_audio:
-            assert isinstance(play_response, AudioPlayBytes)
+            assert isinstance(play_response, AudioPlayBytes), play_response
 
         return typing.cast(
             typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]], result
@@ -534,9 +533,8 @@ class RhasspyCore:
         stop_on_silence=False,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
-        if self.profile.get("speech_to_text.system", "dummy") == "dummy":
-            _LOGGER.debug("No speech to text system configured")
-            return AsrTextCaptured(text="", likelihood=0, seconds=0)
+        if self.asr_system == "dummy":
+            raise AsrException("No speech to text system configured")
 
         session_id = str(uuid4())
 
@@ -583,9 +581,9 @@ class RhasspyCore:
 
         if isinstance(result, AsrError):
             _LOGGER.error(result)
-            raise RuntimeError(result.error)
+            raise AsrException(result.error)
 
-        assert isinstance(result, AsrTextCaptured)
+        assert isinstance(result, AsrTextCaptured), result
         return result
 
     # -------------------------------------------------------------------------
@@ -656,13 +654,18 @@ class RhasspyCore:
         self, words: typing.Iterable[str], num_guesses: int = 5
     ) -> G2pPhonemes:
         """Look up or guess word phonetic pronunciations."""
+        if self.asr_system == "dummy":
+            raise G2pException("No speech to text system configured")
+
         request_id = str(uuid4())
 
         def handle_finished():
             while True:
                 _, message = yield
 
-                if isinstance(message, G2pPhonemes) and (message.id == request_id):
+                if (
+                    isinstance(message, G2pPhonemes) and (message.id == request_id)
+                ) or isinstance(message, G2pError):
                     return message
 
         messages = [
@@ -673,7 +676,7 @@ class RhasspyCore:
                 site_id=self.site_id,
             )
         ]
-        message_types: typing.List[typing.Type[Message]] = [G2pPhonemes]
+        message_types: typing.List[typing.Type[Message]] = [G2pPhonemes, G2pError]
 
         # Expecting only a single result
         result = None
@@ -682,7 +685,11 @@ class RhasspyCore:
         ):
             result = response
 
-        assert isinstance(result, G2pPhonemes)
+        if isinstance(result, G2pError):
+            _LOGGER.error(result)
+            raise G2pException(result.error)
+
+        assert isinstance(result, G2pPhonemes), result
         return result
 
     # -------------------------------------------------------------------------
@@ -690,8 +697,9 @@ class RhasspyCore:
     async def get_microphones(self, test: bool = False) -> AudioDevices:
         """Get available microphones and optionally test them."""
         if self.profile.get("microphone.system", "dummy") == "dummy":
-            _LOGGER.warning("Microphone disabled. Cannot get available input devices.")
-            return AudioDevices()
+            raise AudioServerException(
+                "Microphone disabled. Cannot get available input devices."
+            )
 
         request_id = str(uuid4())
 
@@ -719,14 +727,15 @@ class RhasspyCore:
         ):
             result = response
 
-        assert isinstance(result, AudioDevices)
+        assert isinstance(result, AudioDevices), result
         return result
 
     async def get_speakers(self) -> AudioDevices:
         """Get available speakers."""
         if self.profile.get("sounds.system", "dummy") == "dummy":
-            _LOGGER.warning("Speakers disabled. Cannot get available output devices.")
-            return AudioDevices()
+            raise AudioServerException(
+                "Audio output disabled. Cannot get available output devices."
+            )
 
         request_id = str(uuid4())
 
@@ -751,16 +760,15 @@ class RhasspyCore:
         ):
             result = response
 
-        assert isinstance(result, AudioDevices)
+        assert isinstance(result, AudioDevices), result
         return result
 
     async def get_hotwords(self) -> Hotwords:
         """Get available hotwords."""
         if self.profile.get("wake.system", "dummy") == "dummy":
-            _LOGGER.warning(
+            raise HotwordException(
                 "Wake word detection disabled. Cannot get available wake words."
             )
-            return Hotwords(models={})
 
         request_id = str(uuid4())
 
@@ -781,14 +789,13 @@ class RhasspyCore:
         ):
             result = response
 
-        assert isinstance(result, Hotwords)
+        assert isinstance(result, Hotwords), result
         return result
 
     async def get_voices(self) -> Voices:
         """Get available voices for text to speech system."""
         if self.profile.get("text_to_speech.system", "dummy") == "dummy":
-            _LOGGER.warning("Text to speech disabled. Cannot get available voices.")
-            return Voices(voices={})
+            raise TtsException("Text to speech disabled. Cannot get available voices.")
 
         request_id = str(uuid4())
 
@@ -809,7 +816,7 @@ class RhasspyCore:
         ):
             result = response
 
-        assert isinstance(result, Voices)
+        assert isinstance(result, Voices), result
         return result
 
     # -------------------------------------------------------------------------
@@ -1141,3 +1148,30 @@ class RhasspyCore:
             self.client.publish(topic, payload)
         except Exception:
             _LOGGER.exception("publish")
+
+
+# -----------------------------------------------------------------------------
+
+
+class AsrException(Exception):
+    """Unexpected error in automated speech recognition."""
+
+
+class NluException(Exception):
+    """Unexpected error in natural language understanding."""
+
+
+class TtsException(Exception):
+    """Unexpected error in text to speech."""
+
+
+class HotwordException(Exception):
+    """Unexpected error in hotword detection."""
+
+
+class AudioServerException(Exception):
+    """Unexpected error in audio playback or recording."""
+
+
+class G2pException(Exception):
+    """Unexpected error in grapheme to phoneme component."""

@@ -2311,7 +2311,7 @@ async def api_ws_audiosummary(queue) -> None:
 async def handle_error(err) -> typing.Tuple[str, int]:
     """Return error as text."""
     _LOGGER.exception(err)
-    return (str(err), 500)
+    return (f"{err.__class__.__name__}: {err}", 500)
 
 
 # ---------------------------------------------------------------------
@@ -2449,10 +2449,14 @@ async def text_to_intent_dict(
 
     # Add user-defined entities
     if user_entities and isinstance(result, NluIntent):
+        result.slots = result.slots or []
         for entity, value in user_entities:
             result.slots.append(
                 rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
             )
+
+    # Convert to JSON
+    intent_dict: typing.Dict[str, typing.Any] = {}
 
     if output_format == "hermes":
         if isinstance(result, NluIntent):
@@ -2464,7 +2468,7 @@ async def text_to_intent_dict(
         intent_dict = result.to_rhasspy_dict()
 
         intent_dict["raw_text"] = text
-        intent_dict["speech_confidence"] = 1
+        intent_dict["speech_confidence"] = 1.0
 
         intent_sec = time.perf_counter() - start_time
         intent_dict["recognize_seconds"] = intent_sec

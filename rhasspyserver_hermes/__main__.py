@@ -2350,7 +2350,7 @@ async def docs(filename) -> Response:
 @app.route("/", methods=["GET"])
 async def page_index() -> str:
     """Render main web page."""
-    return await render_template("index.html", page="Test", **get_template_args())
+    return await render_template("index.html", page="Home", **get_template_args())
 
 
 @app.route("/sentences", methods=["GET", "POST"])

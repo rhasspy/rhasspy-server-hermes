@@ -21,11 +21,6 @@
             </a>
         </div>
         <div class="col">
-            <a class="btn btn-block btn-success" href="/settings#handle" x-bind:title="'Intent handling: ' + profile.handle.system" x-bind:class="{ 'btn-dark': profile.handle.system == 'dummy' }">
-                <i class="fas fa-inverse fa-home fa-lg"></i>
-            </a>
-        </div>
-        <div class="col">
             <a class="btn btn-block btn-success" href="/settings#wake" x-bind:title="'Wake word: ' + profile.wake.system" x-bind:class="{ 'btn-dark': profile.wake.system == 'dummy' }">
                 <i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
             </a>
@@ -51,7 +46,12 @@
             </a>
         </div>
         <div class="col">
-            <a class="btn btn-block btn-success" href="/settings#dialogue" x-bind:title="'Dialogue management: ' + profile.dialogue.system" x-bind:class="{ 'btn-dark': profile.dialogue.system == 'dummy' }">
+            <a class="btn btn-block btn-success" href="/settings#handle" x-bind:title="'Intent handling: ' + profile.handle.system" x-bind:class="{ 'btn-dark': profile.handle.system == 'dummy' }">
+                <i class="fas fa-inverse fa-bolt fa-lg"></i>
+            </a>
+        </div>
+        <div class="col">
+            <a class="btn btn-block btn-success" href="/settings#dialogue" x-bind:title="'Dialogue management: ' + profile.dialogue.system" x-bind:class="{ 'btn-danger': profile.dialogue.system == 'dummy' }">
                 <i class="fas fa-inverse fa-tasks fa-lg"></i>
             </a>
         </div>
@@ -60,7 +60,7 @@
 <!-- End Services Bar -->
 
 <!-- Microphone/STT Testing -->
-<div class="card-group">
+<div class="card-group mt-2">
     <div class="card test-card">
         <div class="card-body">
             <div class="container">
@@ -89,14 +89,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-auto">
-                        <i id="audio-websocket" class="fas fa-circle text-success" style="display: none; vertical-align:top;" title="Connected to audio summary websocket"></i>
-                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-footer">
-            Microphone
         </div>
     </div>
     <div class="card test-card">
@@ -107,48 +101,60 @@
             </button>
             <span>Upload WAV File</span>
         </div>
-        <div class="card-footer">
-            Speech to Text
-        </div>
     </div>
 </div>
 <!-- End Microphone/STT Testing -->
 
 <!-- Intent Recognition Testing -->
-<div class="card mt-3">
-    <div class="card-body">
-        <form onsubmit="recognize()">
-            <div class="input-group">
+<div class="container-fluid mt-3">
+    <form onsubmit="recognize()">
+        <div class="row">
+            <div class="col-xs-auto">
                 <button type="submit" id="intent-recognize" title="Recognize an intent from text" class="btn btn-primary">
                     <i class="fas fa-inverse fa-comment"></i>
                     Recognize
                 </button>
+            </div>
+            <div class="col">
                 <input type="text" id="intent-text" class="form-control ml-1" placeholder="Text to recognize">
-                <i id="intent-websocket" class="fas fa-circle text-success ml-2 pt-2" style="display: none;" title="Connected to intent websocket"></i>
             </div>
-            <div class="input-group">
+            <div class="col-xs-auto">
                 <input type="checkbox" class="mr-2" id="handle-intent">
-                <label for="handle-intent" class="col-form-label">Handle Intent</label>
+                <label for="handle-intent" class="col-form-label">Handle <i class="fas fa-bolt ml-1"></i> </label>
             </div>
-            <div id="intent-error" class="alert alert-danger mt-3 mb-0" style="display: none;">
-                No intent recognized
+        </div>
+        <div class="row">
+            <div class="col">
+                <div id="intent-error" class="col alert alert-danger mt-3 mb-0" style="display: none;">
+                    No intent recognized
+                </div>
+                <div id="intent-summary" style="display:none;" class="form-group mt-3 mb-0">
+                    <div class="form-row">
+                        <div id="intent-name" title="Intent name" class="badge badge-danger"></div>
+                    </div>
+                    <div class="form-row">
+                        <ul id="intent-slots" title="Intent slots" class="mt-1"></ul>
+                    </div>
+                    <div class="form-row">
+                        <button type="button" title="Show intent JSON" onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
+                    </div>
+                </div>
             </div>
-            <div id="intent-summary" style="display:none;" class="form-group mt-3 mb-0">
-                <div class="form-row">
-                    <div id="intent-name" title="Intent name" class="badge badge-danger"></div>
-                </div>
-                <div class="form-row">
-                    <ul id="intent-slots" title="Intent slots" class="mt-1"></ul>
-                </div>
-                <div class="form-row">
-                    <button type="button" title="Show intent JSON" onclick="$('#intentJSONModal').modal('show')" class="btn btn-secondary">Show JSON</button>
-                </div>
+        </div>
+    </form>
+    <form onsubmit="speak()" class="mt-3">
+        <div class="row">
+            <div class="col-xs-auto">
+                <button type="submit" id="tts-speak" title="Speak a sentence using text to speech" class="btn btn-primary">
+                    <i class="fas fa-inverse fa-paper-plane"></i>
+                    Speak
+                </button>
             </div>
-        </form>
-    </div>
-    <div class="card-footer">
-        Intent Recognition
-    </div>
+            <div class="col">
+                <input type="text" id="tts-text" class="form-control ml-1" placeholder="Text to speak">
+            </div>
+        </div>
+    </form>
 </div>
 <!-- End Intent Recognition Testing -->
 
@@ -169,25 +175,6 @@
     </div>
 </div>
 <!-- End Intent JSON Modal -->
-
-<!-- Text to Speech Testing -->
-<div class="card mt-3">
-    <div class="card-body">
-        <form onsubmit="speak()">
-            <div class="input-group">
-                <button type="submit" id="tts-speak" title="Speak a sentence using text to speech" class="btn btn-primary">
-                    <i class="fas fa-inverse fa-paper-plane"></i>
-                    Speak
-                </button>
-                <input type="text" id="tts-text" class="form-control ml-1" placeholder="Text to speak">
-            </div>
-        </form>
-    </div>
-    <div class="card-footer">
-        Text to Speech
-    </div>
-</div>
-<!-- End Text to Speech Testing -->
 
 {% endblock %}
 
@@ -333,8 +320,6 @@
      rhasspy.makeWebSocket(
          '/api/events/intent',
          (socket) => {
-             $('#intent-websocket').show();
-
              socket.onmessage = (e) => {
                  setIntent(JSON.parse(e.data));
              }
@@ -343,8 +328,6 @@
      rhasspy.makeWebSocket(
          '/api/events/audiosummary',
          (socket) => {
-             $('#audio-websocket').show();
-
              socket.onmessage = (e) => {
                  var summary = JSON.parse(e.data);
                  var progressPercent = summary.debiased_energy / 10;

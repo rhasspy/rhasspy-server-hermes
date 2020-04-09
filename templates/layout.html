@@ -49,7 +49,7 @@
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="/">
-                                <i class="fas fa-hammer mr-2"></i>Test
+                                <i class="fas fa-home mr-2"></i>Home
                             </a>
                             <a class="dropdown-item" href="/sentences">
                                 <i class="fas fa-align-left mr-2"></i>Sentences
@@ -61,10 +61,11 @@
                                 <i class="fas fa-quote-right mr-2"></i>Words
                             </a>
                             <a class="dropdown-item" href="/settings">
-                                <i class="fas fa-toolbox mr-2"></i>Settings
+                                <i class="fas fa-cogs mr-2"></i>Settings
                             </a>
+                            <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/advanced">
-                                <i class="fas fa-hat-wizard mr-2"></i>Advanced
+                                <i class="fas fa-skull-crossbones mr-2"></i>Advanced
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/docs/" target="_blank">
@@ -92,8 +93,8 @@
         <div>
             <div class="row">
                 <div class="col-xs-auto bg-dark p-0">
-                    <a href="/" title="Test" class="btn w-100  {{ "btn-light rounded-0" if page == "Test" else "btn-dark" }}">
-                        <i class="fas fa-hammer fa-lg ml-2"></i>
+                    <a href="/" title="Home" class="btn w-100  {{ "btn-light rounded-0" if page == "Home" else "btn-dark" }}">
+                        <i class="fas fa-home fa-lg ml-2"></i>
                     </a>
                     <br>
                     <a href="/sentences" title="Sentences" class="btn w-100 {{ "btn-light rounded-0" if page == "Sentences" else "btn-dark" }}">
@@ -109,11 +110,7 @@
                     </a>
                     <br>
                     <a href="/settings" title="Settings" class="btn w-100 {{ "btn-light rounded-0" if page == "Settings" else "btn-dark" }}">
-                        <i class="fas fa-toolbox fa-lg ml-2"></i>
-                    </a>
-                    <br>
-                    <a href="/advanced" title="Advanced" class="btn w-100 {{ "btn-light rounded-0" if page == "Advanced" else "btn-dark" }}">
-                        <i class="fas fa-hat-wizard fa-lg ml-2"></i>
+                        <i class="fas fa-cogs fa-lg ml-2"></i>
                     </a>
                     <br>
                     <a href="/docs/" target="_blank" title="Documentation" class="btn btn-info w-100 rounded-0">

@@ -31,7 +31,7 @@
 <div class="card" id="mqtt">
     <div class="card-header bg-dark" id="headingMqtt">
         <i class="fas fa-inverse fa-network-wired"></i>
-        <button class="btn" x-bind:class="{ 'btn-danger': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
+        <button class="btn" x-bind:class="{ 'btn-outline-light': !profile.mqtt.enabled, 'btn-success': profile.mqtt.enabled }" data-toggle="collapse" data-target="#mqtt-collapse" aria-expanded="true" aria-controls="mqtt-collapse" :disabled="!profile.mqtt.enabled">
             <i class="fas fa-sort-down"></i>MQTT
         </button>
 
@@ -84,7 +84,7 @@
     <div class="card-header bg-dark" id="headingMicrophone">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-microphone"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#microphone-collapse" aria-expanded="true" aria-controls="microphone-collapse" :disabled="profile.microphone.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.microphone.system == 'dummy', 'btn-success': profile.microphone.system != 'dummy' }" data-toggle="collapse" data-target="#microphone-collapse" aria-expanded="true" aria-controls="microphone-collapse" :disabled="profile.microphone.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Audio Recording
             </button>
             <select class="ml-2" x-model="profile.microphone.system">
@@ -339,157 +339,12 @@
 </div>
 <!-- End Audio Recording -->
 
-<!-- Intent Handling -->
-<div class="card" id="handle">
-    <div class="card-header bg-dark" id="headingHandle">
-        <h5 class="mb-0">
-            <i class="fas fa-inverse fa-home"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#handle-collapse" aria-expanded="true" aria-controls="handle-collapse" :disabled="profile.handle.system == 'dummy'">
-                <i class="fas fa-sort-down"></i>Intent Handling
-            </button>
-            <select class="ml-2" x-model="profile.handle.system">
-                <option value="dummy">Disabled</option>
-                <option value="hass">Home Assistant</option>
-                <option value="remote">Remote HTTP</option>
-                <option value="command">Local Command</option>
-            </select>
-        </h5>
-    </div>
-    <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
-        <div class="card-body">
-            <!-- Home Assistant -->
-            <div x-show="profile.handle.system == 'hass'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-url" class="col-form-label">Hass URL</label>
-                        <div class="col">
-                            <input id="hass-url" type="text" class="form-control" x-model="profile.home_assistant.url"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Address of your Home Assistant server
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-token" class="col-form-label">Access Token</label>
-                        <div class="col">
-                            <input id="hass-token" type="password" class="form-control" x-model="profile.home_assistant.access_token"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Long-lived access token (automatically filled in Hass.IO)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="hass-password" class="col-form-label">API Password</label>
-                        <div class="col">
-                            <input id="hass-password" type="password" class="form-control" x-model="profile.home_assistant.api_password"
-                                   :disabled="profile.handle.system != 'hass'">
-                        </div>
-                        <div class="col text-muted">
-                            Home Assistant password (deprecated)
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" id="hass-handle-type-event" value="event" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
-                            <label class="form-check-label" for="hass-handle-type-event">
-                                Send <strong>events</strong> to Home Assistant (<tt>/api/events</tt>)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col">
-                            <p class="text-muted">
-                                Events will be named <tt x-html="profile.home_assistant.event_type_format.replace('{0}', 'INTENT_NAME')"></tt>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" id="hass-handle-type-intent" value="intent" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
-                            <label class="form-check-label" for="hass-handle-type-intent">
-                                Send <strong>intents</strong> to Home Assistant (<tt>/api/intent/handle</tt>)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col">
-                            <p class="text-muted">
-                                Requires the <tt>intent</tt> component and <a href="https://www.home-assistant.io/integrations/intent_script">intent scripts</a> in your <tt>configuration.yaml</tt>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Home Assistant -->
-
-            <!-- Remote -->
-            <div x-show="profile.handle.system == 'remote'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="remote-handle-url" class="col-form-label">Remote URL</label>
-                        <div class="col">
-                            <input id="remote-handle-url" type="text" class="form-control" x-model="profile.handle.remote.url" :disabled="profile.handle.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Remote -->
-
-            <!-- Command -->
-            <div x-show="profile.handle.system == 'command'">
-                <div class="form-group">
-                    <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#command">Documentation</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="handle-program" class="col-form-label">Program</label>
-                        <div class="col">
-                            <input id="handle-program" type="text" class="form-control" x-model="profile.handle.command.program" :disabled="profile.handle.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <label for="handle-arguments" class="col-form-label">Arguments</label>
-                        <div class="col">
-                            <input id="handle-arguments" type="text" class="form-control" x-model="profile.handle.command.arguments" :disabled="profile.handle.system != 'command'">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End Command -->
-
-        </div>
-    </div>
-</div>
-<!-- End Intent Handling -->
-
 <!-- Wake Word -->
 <div class="card" id="wake">
     <div class="card-header bg-dark" id="headingWake">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-exclamation-circle"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#wake-collapse" aria-expanded="true" aria-controls="wake-collapse" :disabled="profile.wake.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.wake.system == 'dummy', 'btn-success': profile.wake.system != 'dummy', 'btn-warning': !isWakeCompatible() }" data-toggle="collapse" data-target="#wake-collapse" aria-expanded="true" aria-controls="wake-collapse" :disabled="profile.wake.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Wake Word
             </button>
             <select class="ml-2" x-model="profile.wake.system">
@@ -792,7 +647,7 @@
     <div class="card-header bg-dark" id="headingSpeech">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-phone-volume"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#speech-collapse" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.speech_to_text.system == 'dummy', 'btn-success': profile.speech_to_text.system != 'dummy', 'btn-warning': !isSpeechCompatible() }" data-toggle="collapse" data-target="#speech-collapse" aria-expanded="true" aria-controls="collapseSpeech" :disabled="profile.speech_to_text.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Speech to Text
             </button>
             <select class="ml-2" x-model="profile.speech_to_text.system">
@@ -1234,7 +1089,7 @@
     <div class="card-header bg-dark" id="headingIntent">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-comment"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#intent-collapse" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.intent.system == 'dummy', 'btn-success': profile.intent.system != 'dummy' }" data-toggle="collapse" data-target="#intent-collapse" aria-expanded="true" aria-controls="intent-collapse" :disabled="profile.intent.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Intent Recognition
             </button>
             <select class="ml-2" x-model="profile.intent.system">
@@ -1509,7 +1364,7 @@
     <div class="card-header bg-dark" id="headingTTS">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-paper-plane"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#tts-collapse" aria-expanded="true" aria-controls="tts-collapse" :disabled="profile.text_to_speech.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.text_to_speech.system == 'dummy', 'btn-success': profile.text_to_speech.system != 'dummy' }" data-toggle="collapse" data-target="#tts-collapse" aria-expanded="true" aria-controls="tts-collapse" :disabled="profile.text_to_speech.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Text to Speech
             </button>
             <select class="ml-2" x-model="profile.text_to_speech.system">
@@ -1860,7 +1715,7 @@
     <div class="card-header bg-dark" id="headingSounds">
         <h5 class="mb-0">
             <i class="fas fa-inverse fa-volume-up"></i>
-            <button class="btn" x-bind:class="{ 'btn-danger': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#sounds-collapse" aria-expanded="true" aria-controls="sounds-collapse" :disabled="profile.sounds.system == 'dummy'">
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.sounds.system == 'dummy', 'btn-success': profile.sounds.system != 'dummy' }" data-toggle="collapse" data-target="#sounds-collapse" aria-expanded="true" aria-controls="sounds-collapse" :disabled="profile.sounds.system == 'dummy'">
                 <i class="fas fa-sort-down"></i>Audio Playing
             </button>
             <select class="ml-2" x-model="profile.sounds.system">
@@ -2036,6 +1891,153 @@
 </div>
 <!-- End Audio Playing -->
 
+<!-- Intent Handling -->
+<div class="card" id="handle">
+    <div class="card-header bg-dark" id="headingHandle">
+        <h5 class="mb-0">
+            <i class="fas fa-inverse fa-bolt"></i>
+            <button class="btn" x-bind:class="{ 'btn-outline-light': profile.handle.system == 'dummy', 'btn-success': profile.handle.system != 'dummy' }" data-toggle="collapse" data-target="#handle-collapse" aria-expanded="true" aria-controls="handle-collapse" :disabled="profile.handle.system == 'dummy'">
+                <i class="fas fa-sort-down"></i>Intent Handling
+            </button>
+            <select class="ml-2" x-model="profile.handle.system">
+                <option value="dummy">Disabled</option>
+                <option value="hass">Home Assistant</option>
+                <option value="remote">Remote HTTP</option>
+                <option value="command">Local Command</option>
+            </select>
+        </h5>
+    </div>
+    <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
+        <div class="card-body">
+            <!-- Home Assistant -->
+            <div x-show="profile.handle.system == 'hass'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="hass-url" class="col-form-label">Hass URL</label>
+                        <div class="col">
+                            <input id="hass-url" type="text" class="form-control" x-model="profile.home_assistant.url"
+                                   :disabled="profile.handle.system != 'hass'">
+                        </div>
+                        <div class="col text-muted">
+                            Address of your Home Assistant server
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="hass-token" class="col-form-label">Access Token</label>
+                        <div class="col">
+                            <input id="hass-token" type="password" class="form-control" x-model="profile.home_assistant.access_token"
+                                   :disabled="profile.handle.system != 'hass'">
+                        </div>
+                        <div class="col text-muted">
+                            Long-lived access token (automatically filled in Hass.IO)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="hass-password" class="col-form-label">API Password</label>
+                        <div class="col">
+                            <input id="hass-password" type="password" class="form-control" x-model="profile.home_assistant.api_password"
+                                   :disabled="profile.handle.system != 'hass'">
+                        </div>
+                        <div class="col text-muted">
+                            Home Assistant password (deprecated)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" id="hass-handle-type-event" value="event" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
+                            <label class="form-check-label" for="hass-handle-type-event">
+                                Send <strong>events</strong> to Home Assistant (<tt>/api/events</tt>)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <p class="text-muted">
+                                Events will be named <tt x-html="profile.home_assistant.event_type_format.replace('{0}', 'INTENT_NAME')"></tt>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" id="hass-handle-type-intent" value="intent" x-model="profile.home_assistant.handle_type" :disabled="profile.handle.system != 'hass'">
+                            <label class="form-check-label" for="hass-handle-type-intent">
+                                Send <strong>intents</strong> to Home Assistant (<tt>/api/intent/handle</tt>)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <p class="text-muted">
+                                Requires the <tt>intent</tt> component and <a href="https://www.home-assistant.io/integrations/intent_script">intent scripts</a> in your <tt>configuration.yaml</tt>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Home Assistant -->
+
+            <!-- Remote -->
+            <div x-show="profile.handle.system == 'remote'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="remote-handle-url" class="col-form-label">Remote URL</label>
+                        <div class="col">
+                            <input id="remote-handle-url" type="text" class="form-control" x-model="profile.handle.remote.url" :disabled="profile.handle.system != 'remote'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Remote -->
+
+            <!-- Command -->
+            <div x-show="profile.handle.system == 'command'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/intent-handling/#command">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="handle-program" class="col-form-label">Program</label>
+                        <div class="col">
+                            <input id="handle-program" type="text" class="form-control" x-model="profile.handle.command.program" :disabled="profile.handle.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="handle-arguments" class="col-form-label">Arguments</label>
+                        <div class="col">
+                            <input id="handle-arguments" type="text" class="form-control" x-model="profile.handle.command.arguments" :disabled="profile.handle.system != 'command'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Command -->
+
+        </div>
+    </div>
+</div>
+<!-- End Intent Handling -->
+
+
+
 <button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
 <!-- Sounds -->
@@ -2122,7 +2124,7 @@
 </div>
 <!-- End SSL -->
 
-<button onclick="saveProfile()" class="btn btn-primary mt-3" title="Save all settings and restart Rhasspy">Save Settings</button>
+<button onclick="saveProfile()" class="btn btn-primary mt-3 mb-3" title="Save all settings and restart Rhasspy">Save Settings</button>
 
 
 {% endblock %}

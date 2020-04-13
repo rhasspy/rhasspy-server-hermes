@@ -759,6 +759,12 @@ async def api_listen_for_command() -> Response:
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
 
+    intent_filter = request.args.get("intentFilter")
+    if intent_filter:
+        intent_filter = intent_filter.split(",")
+    else:
+        intent_filter = None
+
     # Key/value to set in recognized intent
     entity = request.args.get("entity")
     value = request.args.get("value")
@@ -790,6 +796,7 @@ async def api_listen_for_command() -> Response:
                 session_id=session_id,
                 stop_on_silence=True,
                 send_audio_captured=True,
+                intent_filter=intent_filter,
             )
         ]
 
@@ -824,6 +831,7 @@ async def api_listen_for_command() -> Response:
                 input=text_captured.text,
                 site_id=core.site_id,
                 session_id=session_id,
+                intent_filter=intent_filter,
             ),
         ]
 
@@ -1376,7 +1384,7 @@ async def api_speech_to_intent() -> Response:
         # speech -> text
         _LOGGER.debug("Waiting for transcription")
         transcription = await core.transcribe_wav(
-            wav_bytes, stop_on_silence=detect_silence
+            wav_bytes, stop_on_silence=detect_silence, intent_filter=intent_filter
         )
         text = transcription.text
 

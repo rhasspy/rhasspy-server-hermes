@@ -531,6 +531,7 @@ class RhasspyCore:
         frames_per_chunk: int = 4096,
         send_audio_captured=True,
         stop_on_silence=False,
+        intent_filter: typing.Optional[typing.List[str]] = None,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
         if self.asr_system == "dummy":
@@ -553,6 +554,7 @@ class RhasspyCore:
                 session_id=session_id,
                 stop_on_silence=stop_on_silence,
                 send_audio_captured=send_audio_captured,
+                intent_filter=intent_filter,
             )
 
             # Break WAV into chunks

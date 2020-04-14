@@ -719,6 +719,7 @@
                 <option value="dummy">Disabled</option>
                 <option value="pocketsphinx">Pocketsphinx</option>
                 <option value="kaldi">Kaldi</option>
+                <option value="deepspeech">Mozilla DeepSpeech</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -969,6 +970,125 @@
                 </div>
             </div>
             <!-- End Kaldi -->
+
+            <!-- DeepSpeech -->
+            <div x-show="profile.speech_to_text.system == 'deepspeech'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/speech-to-text/#deepspeech">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Acoustic Model: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.acoustic_model")) }}</tt> </li>
+                            <li>Language Model: <tt>{{ profile.read_path("speech_to_text.deepspeech.language_model") }}</tt> </li>
+                            <li>Trie: <tt>{{ profile.read_path("speech_to_text.deepspeech.trie") }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="checkbox" id="deepspeech-open" x-model="profile.speech_to_text.deepspeech.open_transcription">
+                        <label for="deepspeech-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_language_model")) }}</tt> </li>
+                            <li>Base Trie: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_trie")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <h5>Voice Command Settings</h5>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-skip-sec" class="col-form-label">Skip Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-min-sec" class="col-form-label">Minimum Duration:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-speech-sec" class="col-form-label">Speech Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-silence-sec" class="col-form-label">Silence After:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-silence-sec" class="col-form-label">Record Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-vad-mode" class="col-form-label">VAD Sensitivity:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (1-3)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End DeepSpeech -->
 
             <!-- Remote -->
             <div x-show="profile.speech_to_text.system == 'remote'">

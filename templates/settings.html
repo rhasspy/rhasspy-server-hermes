@@ -129,17 +129,22 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="microphone-pyaudio-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="microphone-pyaudio-udp-audio-port" class="col-form-label">UDP Audio (Output)</label>
                         <div class="col">
-                            <input id="microphone-pyaudio-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.pyaudio.udp_audio_port" :disabled="profile.microphone.system != 'pyaudio'">
+                            <input id="microphone-pyaudio-udp-audio-host" type="text" class="form-control" placeholder="host" x-model="profile.microphone.pyaudio.udp_audio_host" :disabled="profile.microphone.system != 'pyaudio'">
+                        </div>
+                        <div class="col">
+                            <input id="microphone-pyaudio-udp-audio-port" type="text" class="form-control" placeholder="port" x-model="profile.microphone.pyaudio.udp_audio_port" :disabled="profile.microphone.system != 'pyaudio'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
                         <label for="microphone-pyaudio-siteid" class="col-form-label">Output siteId</label>
@@ -391,14 +396,29 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wake-pocketsphinx-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="wake-pocketsphinx-udp-audio" class="col-form-label">UDP Audio (Input)</label>
                         <div class="col">
-                            <input id="wake-pocketsphinx-udp-audio-port" type="text" class="form-control" x-model="profile.wake.pocketsphinx.udp_audio_port" :disabled="profile.wake.system != 'pocketsphinx'">
+                            <input id="wake-pocketsphinx-udp-audio" type="text" class="form-control" placeholder="host1:port1:siteId1,host2:port2:siteId2" x-model="profile.wake.pocketsphinx.udp_audio" :disabled="profile.wake.system != 'pocketsphinx'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="wake-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-satellite-siteids" type="text" class="form-control" x-model="profile.wake.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -459,14 +479,29 @@
                         See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
                     </p>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wake-snowboy-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="wake-snowboy-udp-audio" class="col-form-label">UDP Audio (Input)</label>
                         <div class="col">
-                            <input id="wake-snowboy-udp-audio-port" type="text" class="form-control" x-model="profile.wake.snowboy.udp_audio_port" :disabled="profile.wake.system != 'snowboy'">
+                            <input id="wake-snowboy-udp-audio" type="text" class="form-control" placeholder="host1:port1:siteId1,host2:port2:siteId2" x-model="profile.wake.snowboy.udp_audio" :disabled="profile.wake.system != 'snowboy'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="wake-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-satellite-siteids" type="text" class="form-control" x-model="profile.wake.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -516,14 +551,29 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wake-porcupine-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="wake-porcupine-udp-audio" class="col-form-label">UDP Audio (Input)</label>
                         <div class="col">
-                            <input id="wake-porcupine-udp-audio-port" type="text" class="form-control" x-model="profile.wake.porcupine.udp_audio_port" :disabled="profile.wake.system != 'porcupine'">
+                            <input id="wake-porcupine-udp-audio" type="text" class="form-control" placeholder="host1:port1:siteId1,host2:port2:siteId2" x-model="profile.wake.porcupine.udp_audio" :disabled="profile.wake.system != 'porcupine'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="wake-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-satellite-siteids" type="text" class="form-control" x-model="profile.wake.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -581,14 +631,29 @@
                         </div>
                     </div>
                 </div>
+                <hr>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wake-precise-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="wake-precise-udp-audio" class="col-form-label">UDP Audio (Input)</label>
                         <div class="col">
-                            <input id="wake-precise-udp-audio-port" type="text" class="form-control" x-model="profile.wake.precise.udp_audio_port" :disabled="profile.wake.system != 'precise'">
+                            <input id="wake-precise-udp-audio" type="text" class="form-control" placeholder="host1:port1:siteId1,host2:port2:siteId2" x-model="profile.wake.precise.udp_audio" :disabled="profile.wake.system != 'precise'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="wake-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-satellite-siteids" type="text" class="form-control" x-model="profile.wake.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
                         </div>
                     </div>
                 </div>

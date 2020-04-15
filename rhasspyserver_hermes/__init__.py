@@ -277,13 +277,19 @@ class RhasspyCore:
         # Convert to graph
         _LOGGER.debug("Generating intent graph")
 
-        intent_graph = sentences_to_graph(
+        intent_graph, slot_replacements = sentences_to_graph(
             sentences_dict,
             slots_dirs=[slots_dir, system_slots_dir],
             slot_programs_dirs=[slot_programs_dir, system_slot_programs_dir],
             language=language,
             word_transform=word_transform,
         )
+
+        # Convert to dict for train messages
+        slots_dict = {
+            slot_name: [value.text for value in values]
+            for slot_name, values in slot_replacements.items()
+        }
 
         # Convert to gzipped pickle
         graph_path = self.profile.write_path(
@@ -344,7 +350,12 @@ class RhasspyCore:
                 # Request ASR training
                 messages.append(
                     (
-                        AsrTrain(id=request_id, graph_path=str(graph_path.absolute())),
+                        AsrTrain(
+                            id=request_id,
+                            graph_path=str(graph_path.absolute()),
+                            sentences=sentences_dict,
+                            slots=slots_dict,
+                        ),
                         {"site_id": self.site_id},
                     )
                 )
@@ -354,7 +365,12 @@ class RhasspyCore:
                 # Request NLU training
                 messages.append(
                     (
-                        NluTrain(id=request_id, graph_path=str(graph_path.absolute())),
+                        NluTrain(
+                            id=request_id,
+                            graph_path=str(graph_path.absolute()),
+                            sentences=sentences_dict,
+                            slots=slots_dict,
+                        ),
                         {"site_id": self.site_id},
                     )
                 )
@@ -1145,7 +1161,12 @@ class RhasspyCore:
                     )
             else:
                 # Log most JSON messages
-                if not isinstance(message, AudioSummary):
+                if isinstance(message, (AsrTrain, NluTrain)):
+                    # Just class name
+                    _LOGGER.debug("-> %s", message.__class__.__name__)
+                    _LOGGER.debug("Publishing %s bytes(s) to %s", len(payload), topic)
+                elif not isinstance(message, AudioSummary):
+                    # Entire message
                     _LOGGER.debug("-> %s", message)
                     _LOGGER.debug("Publishing %s bytes(s) to %s", len(payload), topic)
 

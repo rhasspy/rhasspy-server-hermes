@@ -106,4 +106,4 @@ def sentences_to_graph(
         sentences, replacements=replacements, add_intent_weights=add_intent_weights
     )
 
-    return intent_graph
+    return intent_graph, slot_replacements

@@ -1282,6 +1282,7 @@
                 <option value="fsticuffs">Fsticuffs</option>
                 <option value="fuzzywuzzy">Fuzzywuzzy</option>
                 <option value="rasa">Rasa NLU</option>
+                <option value="snips">Snips NLU</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1434,8 +1435,54 @@
                     </div>
                 </div>
             </div>
-            <!-- End Fsticuffs -->
+            <!-- End Rasa NLU -->
 
+            <!-- Snips NLU -->
+            <div x-show="profile.intent.system == 'snips'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/intent-recognition/#snips-nlu">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Engine: <tt>{{ profile.read_path(profile.get("intent.snips.engine_dir")) }}</tt> </li>
+                            <li>Dataset: <tt>{{ profile.read_path(profile.get("intent.snips.dataset_file")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-snips-language" class="col-form-label">Language:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-snips-language" type="text" class="form-control" placeholder="(profile language)" x-model="profile.intent.snips.language">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col text-muted">
+                            Supported Languages: de, en, es, fr, it, ja, ko, pt_br, pt_pt, zh
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="intent-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="intent-satellite-siteids" type="text" class="form-control" x-model="profile.intent.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Snips NLU -->
 
             <!-- Remote -->
             <div x-show="profile.intent.system == 'remote'">

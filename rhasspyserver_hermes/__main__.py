@@ -2063,12 +2063,6 @@ def mqtt_websocket(func):
     return wrapper
 
 
-# def broadcast_mqtt(topic: str, payload: typing.Union[str, bytes]):
-#     """Broadcasts an MQTT topic/payload to all MQTT websockets."""
-#     for queue in mqtt_websockets:
-#         queue.put_nowait((topic, payload))
-
-
 def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
     """Handle subscribe/publish MQTT requests from a websocket."""
     assert core is not None
@@ -2191,6 +2185,12 @@ async def api_ws_intent(queue) -> None:
                 )
                 intent_dict = intent.to_rhasspy_dict()
 
+                # Add extra info
+                intent_dict["siteId"] = intent.site_id
+                intent_dict["sessionId"] = intent.session_id
+                intent_dict["customData"] = intent.custom_data
+                intent_dict["wakewordId"] = getattr(intent, "wakeword_id", None)
+
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2214,7 +2214,11 @@ async def api_ws_wake(queue) -> None:
                 wakeword_id: str = message[2]
 
                 ws_message = json.dumps(
-                    {"wakewordId": wakeword_id, "siteId": hotword_detected.site_id}
+                    {
+                        "wakewordId": wakeword_id,
+                        "siteId": hotword_detected.site_id,
+                        "modelId": hotword_detected.model_id,
+                    }
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2240,6 +2244,7 @@ async def api_ws_text(queue) -> None:
                     {
                         "text": text_captured.text,
                         "siteId": text_captured.site_id,
+                        "sessionId": text_captured.session_id,
                         "wakewordId": text_captured.wakeword_id,
                     }
                 )

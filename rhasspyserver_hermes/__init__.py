@@ -1000,7 +1000,7 @@ class RhasspyCore:
 
                 if isinstance(message, AsrAudioCaptured):
                     # Audio data from ASR session
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
                     self.last_audio_captured = message
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrError):
@@ -1020,21 +1020,21 @@ class RhasspyCore:
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayBytes):
                     # Request to play audio
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayError):
                     # Error playing audio
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioPlayFinished):
                     # Audio finished playing
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioRecordError):
                     # Error recording audio
                     self.handle_message(topic, message)
                 elif isinstance(message, AudioSummary):
                     # Audio summary statistics
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
 
                     # Report to websockets
                     for queue in self.message_queues:
@@ -1098,11 +1098,11 @@ class RhasspyCore:
                     self.handle_message(topic, message)
                 elif isinstance(message, AsrTrainSuccess):
                     # ASR training success
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
                     self.handle_message(topic, message)
                 elif isinstance(message, NluTrainSuccess):
                     # NLU training success
-                    assert site_id, "Missing site_id"
+                    assert site_id, "Missing site id"
                     self.handle_message(topic, message)
                 elif isinstance(message, TtsError):
                     # Error during text to speech

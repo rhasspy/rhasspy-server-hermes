@@ -57,7 +57,7 @@ from rhasspyhermes.audioserver import (
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
-from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
+from rhasspyhermes.nlu import NluError, NluIntentParsed, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.wake import (
     HotwordDetected,
     HotwordToggleOff,
@@ -843,11 +843,11 @@ async def api_listen_for_command() -> Response:
                 _, message = yield
 
                 if isinstance(
-                    message, (NluIntent, NluIntentNotRecognized, NluError)
+                    message, (NluIntentParsed, NluIntentNotRecognized, NluError)
                 ) and (message.session_id == session_id):
                     return message
 
-        message_types = [NluIntent, NluIntentNotRecognized, NluError]
+        message_types = [NluIntentParsed, NluIntentNotRecognized, NluError]
         messages = [
             AsrStopListening(site_id=core.site_id, session_id=session_id),
             NluQuery(
@@ -870,17 +870,17 @@ async def api_listen_for_command() -> Response:
         if isinstance(nlu_intent, NluError):
             raise RuntimeError(nlu_intent.error)
 
-        assert isinstance(nlu_intent, (NluIntent, NluIntentNotRecognized))
+        assert isinstance(nlu_intent, (NluIntentParsed, NluIntentNotRecognized))
 
         # Add user-defined entities
-        if entity and isinstance(nlu_intent, NluIntent):
+        if entity and isinstance(nlu_intent, NluIntentParsed):
             nlu_intent.slots = nlu_intent.slots or []
             nlu_intent.slots.append(
                 rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
             )
 
         if output_format == "hermes":
-            if isinstance(nlu_intent, NluIntent):
+            if isinstance(nlu_intent, NluIntentParsed):
                 intent_dict = {"type": "intent", "value": nlu_intent.to_dict()}
             else:
                 intent_dict = {
@@ -1962,7 +1962,7 @@ async def api_evaluate() -> Response:
                         _LOGGER.debug("Exceeded total retries (%s)", timeout_retries)
                         raise e
 
-            if not isinstance(nlu_intent, NluIntent):
+            if not isinstance(nlu_intent, NluIntentParsed):
                 _LOGGER.warning("Recognition failed: %s", nlu_intent)
 
                 if stop_on_error:
@@ -1972,7 +1972,7 @@ async def api_evaluate() -> Response:
                     break
 
                 # Empty intent
-                nlu_intent = NluIntent(
+                nlu_intent = NluIntentParsed(
                     input=text_captured.text,
                     intent=rhasspyhermes.intent.Intent(
                         intent_name="", confidence_score=0
@@ -2016,7 +2016,7 @@ async def api_handle_intent():
     """Receive an intent via JSON and publish it."""
     assert core is not None
     intent_dict = await request.json
-    intent = NluIntent.from_dict(intent_dict)
+    intent = NluIntentParsed.from_dict(intent_dict)
     core.publish(intent)
 
     return "OK"
@@ -2240,14 +2240,14 @@ async def api_ws_intent(queue) -> None:
             message = await queue.get()
             if message[0] == "intent":
                 intent = typing.cast(
-                    typing.Union[NluIntent, NluIntentNotRecognized], message[1]
+                    typing.Union[NluIntentParsed, NluIntentParsed, NluIntentNotRecognized], message[1]
                 )
                 intent_dict = intent.to_rhasspy_dict()
 
                 # Add extra info
                 intent_dict["siteId"] = intent.site_id
                 intent_dict["sessionId"] = intent.session_id
-                intent_dict["customData"] = intent.custom_data
+                intent_dict["customData"] = getattr(intent, "custom_data", None)
                 intent_dict["wakewordId"] = getattr(intent, "wakeword_id", None)
                 intent_dict["lang"] = getattr(intent, "lang", None)
 
@@ -2500,7 +2500,7 @@ async def text_to_intent_dict(
     result = await core.recognize_intent(text, intent_filter=intent_filter)
 
     # Add user-defined entities
-    if user_entities and isinstance(result, NluIntent):
+    if user_entities and isinstance(result, NluIntentParsed):
         result.slots = result.slots or []
         for entity, value in user_entities:
             result.slots.append(
@@ -2511,7 +2511,7 @@ async def text_to_intent_dict(
     intent_dict: typing.Dict[str, typing.Any] = {}
 
     if output_format == "hermes":
-        if isinstance(result, NluIntent):
+        if isinstance(result, NluIntentParsed):
             intent_dict = {"type": "intent", "value": result.to_dict()}
         else:
             intent_dict = {"type": "intentNotRecognized", "value": result.to_dict()}

@@ -39,6 +39,8 @@
             <option value="">Internal</option>
             <option value="true">External</option>
         </select>
+
+        <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.mqtt.enabled != initialSystems.mqtt"></i>
     </div>
     <div id="mqtt-collapse" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
         <div class="card-body">
@@ -94,6 +96,8 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.microphone.system != initialSystems.microphone"></i>
         </h5>
     </div>
     <div id="microphone-collapse" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
@@ -362,9 +366,8 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <span title="Wake system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isWakeCompatible()">
-                Not compatible
-            </span>
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.wake.system != initialSystems.wake"></i>
+            <i title="Wake system is not compatible with this profile" class="fas fa-exclamation-triangle text-warning ml-2" x-show="!isWakeCompatible()"></i>
         </h5>
     </div>
     <div id="wake-collapse" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
@@ -725,9 +728,8 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <span title="Speech system is not compatible with this profile" class="alert alert-warning ml-2" x-show="!isSpeechCompatible()">
-                Not compatible
-            </span>
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.speech_to_text.system != initialSystems.stt"></i>
+            <i title="Speech system is not compatible with this profile" class="fas fa-exclamation-triangle text-warning ml-2" x-show="!isSpeechCompatible()"></i>
         </h5>
     </div>
     <div id="speech-collapse" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
@@ -1287,6 +1289,8 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.intent.system != initialSystems.intent"></i>
         </h5>
     </div>
     <div id="intent-collapse" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
@@ -1609,6 +1613,8 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.text_to_speech.system != initialSystems.tts"></i>
         </h5>
     </div>
     <div id="tts-collapse" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
@@ -1957,6 +1963,8 @@
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.sounds.system != initialSystems.sounds"></i>
         </h5>
     </div>
     <div id="sounds-collapse" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
@@ -2070,6 +2078,8 @@
                 <option value="rhasspy">Rhasspy</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.dialogue.system != initialSystems.dialogue"></i>
         </h5>
     </div>
     <div id="dialogue-collapse" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
@@ -2137,6 +2147,8 @@
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
             </select>
+
+            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.handle.system != initialSystems.handle"></i>
         </h5>
     </div>
     <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
@@ -2363,6 +2375,7 @@
 
 {% block script %}
 <script type="text/javascript">
+ var initialSystems = {};
 
  // POST to /api/profile to save and then restart Rhasspy
  function saveProfile() {
@@ -2465,6 +2478,18 @@
  }
 
  $(document).ready(() => {
+     initialSystems = {
+         mqtt: rhasspy.profile.mqtt.enabled,
+         microphone: rhasspy.profile.microphone.system,
+         wake: rhasspy.profile.wake.system,
+         stt: rhasspy.profile.speech_to_text.system,
+         intent: rhasspy.profile.intent.system,
+         tts: rhasspy.profile.text_to_speech.system,
+         sounds: rhasspy.profile.sounds.system,
+         dialogue: rhasspy.profile.dialogue.system,
+         handle: rhasspy.profile.handle.system
+     };
+
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
      if (hash.length > 0) {

@@ -2478,18 +2478,6 @@
  }
 
  $(document).ready(() => {
-     initialSystems = {
-         mqtt: rhasspy.profile.mqtt.enabled,
-         microphone: rhasspy.profile.microphone.system,
-         wake: rhasspy.profile.wake.system,
-         stt: rhasspy.profile.speech_to_text.system,
-         intent: rhasspy.profile.intent.system,
-         tts: rhasspy.profile.text_to_speech.system,
-         sounds: rhasspy.profile.sounds.system,
-         dialogue: rhasspy.profile.dialogue.system,
-         handle: rhasspy.profile.handle.system
-     };
-
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
      if (hash.length > 0) {

@@ -285,12 +285,38 @@
              missingFiles: {},
              missingSize: '',
 
+             // Initial microphone, speech to text, etc. systems
+             initialSystems: {
+                 mqtt: '',
+                 microphone: '',
+                 wake: '',
+                 stt: '',
+                 intent: '',
+                 tts: '',
+                 sounds: '',
+                 dialogue: '',
+                 handle: ''
+             },
+
              // Do API calls for generally needed bits of data
              init: () => {
                  // Load profile
                  $.get('/api/profile', (r) => {
                      // Update in-place to avoid breaking alpine js proxies
                      Object.assign(rhasspy.profile, r);
+
+                     // Update systems
+                     Object.assign(rhasspy.initialSystems, {
+                         mqtt: r.mqtt.enabled,
+                         microphone: r.microphone.system,
+                         wake: r.wake.system,
+                         stt: r.speech_to_text.system,
+                         intent: r.intent.system,
+                         tts: r.text_to_speech.system,
+                         sounds: r.sounds.system,
+                         dialogue: r.dialogue.system,
+                         handle: r.handle.system
+                     });
                  })
 
                  // Local profile

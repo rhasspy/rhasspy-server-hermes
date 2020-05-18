@@ -40,7 +40,10 @@
             <option value="true">External</option>
         </select>
 
-        <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.mqtt.enabled != initialSystems.mqtt"></i>
+        <span class="fa-stack ml-2" x-show="profile.mqtt.enabled != initialSystems.mqtt">
+            <i class="fas fa-circle fa-stack-2x text-danger"></i>
+            <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+        </span>
     </div>
     <div id="mqtt-collapse" class="collapse hide" aria-labelledby="headingMqtt" data-parent="#accordion">
         <div class="card-body">
@@ -97,7 +100,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.microphone.system != initialSystems.microphone"></i>
+            <span class="fa-stack ml-2" x-show="profile.microphone.system != initialSystems.microphone">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="microphone-collapse" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
@@ -366,7 +372,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.wake.system != initialSystems.wake"></i>
+            <span class="fa-stack ml-2" x-show="profile.wake.system != initialSystems.wake">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
             <i title="Wake system is not compatible with this profile" class="fas fa-exclamation-triangle text-warning ml-2" x-show="!isWakeCompatible()"></i>
         </h5>
     </div>
@@ -728,7 +737,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.speech_to_text.system != initialSystems.stt"></i>
+            <span class="fa-stack ml-2" x-show="profile.speech_to_text.system != initialSystems.stt">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
             <i title="Speech system is not compatible with this profile" class="fas fa-exclamation-triangle text-warning ml-2" x-show="!isSpeechCompatible()"></i>
         </h5>
     </div>
@@ -753,8 +765,21 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <input type="checkbox" id="pocketsphinx-open" x-model="profile.speech_to_text.pocketsphinx.open_transcription">
-                        <label for="pocketsphinx-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                        <div class="col">
+                            <input type="checkbox" id="pocketsphinx-open" x-model="profile.speech_to_text.pocketsphinx.open_transcription">
+                            <label for="pocketsphinx-open" class="col-form-label">
+                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                    Open transcription mode
+                                </a>
+                                (no custom voice commands)
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -762,6 +787,36 @@
                         <ul>
                             <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_dictionary")) }}</tt> </li>
                             <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-mix-weight" class="col-form-label">
+                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                    Mixed Language Model Weight
+                                </a>
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-mix-weight" type="text" class="form-control" x-model="profile.speech_to_text.pocketsphinx.mix_weight">
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-muted">(0-1, 0 to disable)</span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model_fst")) }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -871,8 +926,21 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
-                        <label for="kaldi-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                        <div class="col">
+                            <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
+                            <label for="kaldi-open" class="col-form-label">
+                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                    Open transcription mode
+                                </a>
+                                (no custom voice commands)
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -881,6 +949,36 @@
                             <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_dictionary")) }}</tt> </li>
                             <li>Base Graph Directory: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_graph")) }}</tt> </li>
                             <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-mix-weight" class="col-form-label">
+                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                    Mixed Language Model Weight
+                                </a>
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-mix-weight" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.mix_weight">
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-muted">(0-1, 0 to disable)</span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model_fst")) }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -991,8 +1089,21 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <input type="checkbox" id="deepspeech-open" x-model="profile.speech_to_text.deepspeech.open_transcription">
-                        <label for="deepspeech-open" class="col-form-label">Open transcription mode (no custom voice commands)</label>
+                        <div class="col">
+                            <input type="checkbox" id="deepspeech-open" x-model="profile.speech_to_text.deepspeech.open_transcription">
+                            <label for="deepspeech-open" class="col-form-label">
+                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                    Open transcription mode
+                                </a>
+                                (no custom voice commands)
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1000,6 +1111,36 @@
                         <ul>
                             <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_language_model")) }}</tt> </li>
                             <li>Base Trie: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_trie")) }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-mix-weight" class="col-form-label">
+                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                    Mixed Language Model Weight
+                                </a>
+                            </label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-mix-weight" type="text" class="form-control" x-model="profile.speech_to_text.deepspeech.mix_weight">
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-muted">(0-1, 0 to disable)</span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model_fst")) }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1290,7 +1431,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.intent.system != initialSystems.intent"></i>
+            <span class="fa-stack ml-2" x-show="profile.intent.system != initialSystems.intent">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="intent-collapse" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
@@ -1614,7 +1758,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.text_to_speech.system != initialSystems.tts"></i>
+            <span class="fa-stack ml-2" x-show="profile.text_to_speech.system != initialSystems.tts">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="tts-collapse" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
@@ -1964,7 +2111,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.sounds.system != initialSystems.sounds"></i>
+            <span class="fa-stack ml-2" x-show="profile.sounds.system != initialSystems.sounds">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="sounds-collapse" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
@@ -2079,7 +2229,10 @@
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.dialogue.system != initialSystems.dialogue"></i>
+            <span class="fa-stack ml-2" x-show="profile.dialogue.system != initialSystems.dialogue">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="dialogue-collapse" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
@@ -2148,7 +2301,10 @@
                 <option value="command">Local Command</option>
             </select>
 
-            <i title="Restart is required" class="fas fa-power-off text-danger ml-2" x-show="profile.handle.system != initialSystems.handle"></i>
+            <span class="fa-stack ml-2" x-show="profile.handle.system != initialSystems.handle">
+                <i class="fas fa-circle fa-stack-2x text-danger"></i>
+                <i class="fas fa-power-off fa-stack-1x fa-inverse" title="Restart is required"></i>
+            </span>
         </h5>
     </div>
     <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">

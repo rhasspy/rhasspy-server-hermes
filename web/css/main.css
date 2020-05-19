@@ -89,3 +89,7 @@ div.card-header .fas {
     top: 64px;
     height: 100vh;
 }
+
+textarea.code {
+    font-family: monospace;
+}

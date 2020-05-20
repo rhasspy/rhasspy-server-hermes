@@ -1751,6 +1751,7 @@
                 <option value="dummy">Disabled</option>
                 <option value="espeak">Espeak</option>
                 <option value="picotts">PicoTTS</option>
+                <option value="nanotts">NanoTTS</option>
                 <option value="flite">Flite</option>
                 <option value="marytts">MaryTTS</option>
                 <option value="remote">Remote HTTP</option>
@@ -1845,6 +1846,38 @@
                 </div>
             </div>
             <!-- End PicoTTS -->
+
+            <!-- NanoTTS -->
+            <div x-show="profile.text_to_speech.system == 'nanotts'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="docs/text-to-speech/#nanotts">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="nanotts-language" class="col-form-label">Language:</label>
+                        <div class="col">
+                            <input id="nanotts-language" type="text" class="form-control" x-model="profile.text_to_speech.nanotts.language" :disabled="profile.text_to_speech.system != 'nanotts'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End NanoTTS -->
 
             <!-- Flite -->
             <div x-show="profile.text_to_speech.system == 'flite'">

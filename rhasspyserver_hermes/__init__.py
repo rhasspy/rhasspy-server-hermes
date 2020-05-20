@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import typing
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
@@ -118,7 +119,7 @@ class RhasspyCore:
 
         self.defaults = Profile.load_defaults(self.profile.system_profiles_dir)
 
-        # Look up site_id(s) in profile
+        # Look up site id(s) in profile
         site_ids = str(self.profile.get("mqtt.site_id", "")).split(",")
         self.site_ids = set(site_ids)
 
@@ -126,6 +127,16 @@ class RhasspyCore:
             self.site_id = site_ids[0]
         else:
             self.site_id = "default"
+
+        # Satellite site ids
+        self.satellite_site_ids = defaultdict(
+            set,
+            {
+                "wake": self.parse_satellite_site_ids("wake"),
+                "intent": self.parse_satellite_site_ids("intent"),
+                "speech_to_text": self.parse_satellite_site_ids("speech_to_text"),
+            },
+        )
 
         # MQTT client
         self.client = mqtt.Client()
@@ -994,130 +1005,162 @@ class RhasspyCore:
             for message, site_id, _ in HermesClient.parse_mqtt_message(
                 topic, payload, self.subscribed_types
             ):
+                is_self_site_id = True
                 if site_id and self.site_ids and (site_id not in self.site_ids):
-                    # Invalid site_id
-                    continue
+                    # Invalid site id
+                    is_self_site_id = False
 
-                if isinstance(message, AsrAudioCaptured):
-                    # Audio data from ASR session
-                    assert site_id, "Missing site id"
-                    self.last_audio_captured = message
-                    self.handle_message(topic, message)
-                elif isinstance(message, AsrError):
-                    # ASR service error
-                    self.handle_message(topic, message)
-                elif isinstance(message, AsrTextCaptured):
-                    # Successful transcription
-                    self.handle_message(topic, message)
+                if is_self_site_id:
+                    # Base-only messages
+                    if isinstance(message, AsrAudioCaptured):
+                        # Audio data from ASR session
+                        assert site_id, "Missing site id"
+                        self.last_audio_captured = message
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AsrError):
+                        # ASR service error
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AsrTextCaptured):
+                        # Successful transcription
+                        self.handle_message(topic, message)
 
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("text", message)
-                        )
-                elif isinstance(message, AudioDevices):
-                    # Microphones or speakers
-                    self.handle_message(topic, message)
-                elif isinstance(message, AudioPlayBytes):
-                    # Request to play audio
-                    assert site_id, "Missing site id"
-                    self.handle_message(topic, message)
-                elif isinstance(message, AudioPlayError):
-                    # Error playing audio
-                    self.handle_message(topic, message)
-                elif isinstance(message, AudioPlayFinished):
-                    # Audio finished playing
-                    assert site_id, "Missing site id"
-                    self.handle_message(topic, message)
-                elif isinstance(message, AudioRecordError):
-                    # Error recording audio
-                    self.handle_message(topic, message)
-                elif isinstance(message, AudioSummary):
-                    # Audio summary statistics
-                    assert site_id, "Missing site id"
+                        # Report to websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("text", message)
+                            )
+                    elif isinstance(message, AudioDevices):
+                        # Microphones or speakers
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AudioPlayBytes):
+                        # Request to play audio
+                        assert site_id, "Missing site id"
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AudioPlayError):
+                        # Error playing audio
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AudioPlayFinished):
+                        # Audio finished playing
+                        assert site_id, "Missing site id"
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AudioRecordError):
+                        # Error recording audio
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AudioSummary):
+                        # Audio summary statistics
+                        assert site_id, "Missing site id"
 
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("audiosummary", message)
-                        )
-                elif isinstance(message, DialogueSessionStarted):
-                    # Dialogue session started
-                    self.handle_message(topic, message)
-                elif isinstance(message, G2pPhonemes):
-                    # Word pronunciations
-                    self.handle_message(topic, message)
-                elif isinstance(message, Hotwords):
-                    # Hotword list
-                    self.handle_message(topic, message)
-                elif isinstance(message, HotwordDetected):
-                    _LOGGER.debug("<- %s", message)
+                        # Report to websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("audiosummary", message)
+                            )
+                    elif isinstance(message, DialogueSessionStarted):
+                        # Dialogue session started
+                        self.handle_message(topic, message)
+                    elif isinstance(message, G2pPhonemes):
+                        # Word pronunciations
+                        self.handle_message(topic, message)
+                    elif isinstance(message, Hotwords):
+                        # Hotword list
+                        self.handle_message(topic, message)
+                    elif isinstance(message, HotwordDetected):
+                        _LOGGER.debug("<- %s", message)
 
-                    # Hotword detected
-                    wakeword_id = HotwordDetected.get_wakeword_id(topic)
-                    self.handle_message(topic, message)
+                        # Hotword detected
+                        wakeword_id = HotwordDetected.get_wakeword_id(topic)
+                        self.handle_message(topic, message)
 
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("wake", message, wakeword_id)
-                        )
+                        # Report to websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("wake", message, wakeword_id)
+                            )
 
-                    # Warn user if they're expected wake -> ASR -> NLU workflow
-                    if (self.dialogue_system == "dummy") and (
-                        self.asr_system != "dummy"
-                    ):
-                        _LOGGER.warning(
-                            "Dialogue management is disabled. ASR will NOT be automatically enabled."
-                        )
-                elif isinstance(message, NluError):
-                    # NLU service error
-                    self.handle_message(topic, message)
-                elif isinstance(message, NluIntent):
-                    _LOGGER.debug("<- %s", message)
+                        # Warn user if they're expected wake -> ASR -> NLU workflow
+                        if (self.dialogue_system == "dummy") and (
+                            self.asr_system != "dummy"
+                        ):
+                            _LOGGER.warning(
+                                "Dialogue management is disabled. ASR will NOT be automatically enabled."
+                            )
+                    elif isinstance(message, NluError):
+                        # NLU service error
+                        self.handle_message(topic, message)
+                    elif isinstance(message, NluIntent):
+                        _LOGGER.debug("<- %s", message)
 
-                    # Successful intent recognition
-                    self.handle_message(topic, message)
+                        # Successful intent recognition
+                        self.handle_message(topic, message)
 
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        self.loop.call_soon_threadsafe(
-                            queue.put_nowait, ("intent", message)
-                        )
-                elif isinstance(message, NluIntentNotRecognized):
-                    _LOGGER.debug("<- %s", message)
+                        # Report to websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("intent", message)
+                            )
+                    elif isinstance(message, NluIntentNotRecognized):
+                        _LOGGER.debug("<- %s", message)
 
-                    # Failed intent recognition
-                    self.handle_message(topic, message)
+                        # Failed intent recognition
+                        self.handle_message(topic, message)
 
-                    # Report to websockets
-                    for queue in self.message_queues:
-                        queue.put_nowait(("intent", message))
-                elif isinstance(message, TtsSayFinished):
-                    # Text to speech complete
-                    self.handle_message(topic, message)
-                elif isinstance(message, AsrTrainSuccess):
-                    # ASR training success
-                    assert site_id, "Missing site id"
-                    self.handle_message(topic, message)
-                elif isinstance(message, NluTrainSuccess):
-                    # NLU training success
-                    assert site_id, "Missing site id"
-                    self.handle_message(topic, message)
-                elif isinstance(message, TtsError):
-                    # Error during text to speech
-                    self.handle_message(topic, message)
-                elif isinstance(message, Voices):
-                    # Text to speech voices
-                    self.handle_message(topic, message)
+                        # Report to websockets
+                        for queue in self.message_queues:
+                            queue.put_nowait(("intent", message))
+                    elif isinstance(message, TtsSayFinished):
+                        # Text to speech complete
+                        self.handle_message(topic, message)
+                    elif isinstance(message, AsrTrainSuccess):
+                        # ASR training success
+                        assert site_id, "Missing site id"
+                        self.handle_message(topic, message)
+                    elif isinstance(message, NluTrainSuccess):
+                        # NLU training success
+                        assert site_id, "Missing site id"
+                        self.handle_message(topic, message)
+                    elif isinstance(message, TtsError):
+                        # Error during text to speech
+                        self.handle_message(topic, message)
+                    elif isinstance(message, Voices):
+                        # Text to speech voices
+                        self.handle_message(topic, message)
+                    else:
+                        _LOGGER.warning("Unexpected message: %s", message)
                 else:
-                    _LOGGER.warning("Unexpected message: %s", message)
+                    # Check for satellite messages.
+                    # This ensures that websocket events are reported on the base
+                    # station as well as the satellite.
+                    if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                        site_id in self.satellite_site_ids["intent"]
+                    ):
+                        # Report satellite message to base websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("intent", message)
+                            )
+                    elif isinstance(message, AsrTextCaptured) and (
+                        site_id in self.satellite_site_ids["speech_to_text"]
+                    ):
+                        # Report satellite message to base websockets
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("text", message)
+                            )
+                    elif isinstance(message, HotwordDetected) and (
+                        site_id in self.satellite_site_ids["wake"]
+                    ):
+                        # Report satellite message to base websockets
+                        wakeword_id = HotwordDetected.get_wakeword_id(topic)
+                        for queue in self.message_queues:
+                            self.loop.call_soon_threadsafe(
+                                queue.put_nowait, ("wake", message, wakeword_id)
+                            )
 
-            # -----------------------------------------------------------------
+                # -----------------------------------------------------------------
 
-            # Forward to external message queues
-            for queue in self.message_queues:
-                queue.put_nowait(("mqtt", topic, payload))
+                # Forward to external message queues
+                for queue in self.message_queues:
+                    queue.put_nowait(("mqtt", topic, payload))
 
         except Exception:
             _LOGGER.exception("on_message")
@@ -1173,6 +1216,17 @@ class RhasspyCore:
             self.client.publish(topic, payload)
         except Exception:
             _LOGGER.exception("publish")
+
+    # -------------------------------------------------------------------------
+
+    def parse_satellite_site_ids(self, system: str) -> typing.Set[str]:
+        """Parse comma-separated satellite ids from profile for a system."""
+        return set(
+            site_id.strip()
+            for site_id in str(
+                self.profile.get(f"{system}.satellite_site_ids", "")
+            ).split(",")
+        )
 
 
 # -----------------------------------------------------------------------------

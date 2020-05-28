@@ -135,6 +135,7 @@ class RhasspyCore:
                 "wake": self.parse_satellite_site_ids("wake"),
                 "intent": self.parse_satellite_site_ids("intent"),
                 "speech_to_text": self.parse_satellite_site_ids("speech_to_text"),
+                "text_to_speech": self.parse_satellite_site_ids("text_to_speech"),
             },
         )
 
@@ -197,6 +198,7 @@ class RhasspyCore:
         self.sounds_enabled = True
 
         self.asr_system = self.profile.get("speech_to_text.system", "dummy")
+        self.nlu_system = self.profile.get("intent.system", "dummy")
         self.dialogue_system = self.profile.get("dialogue.system", "dummy")
         self.sound_system = self.profile.get("sounds.system", "dummy")
 
@@ -313,11 +315,8 @@ class RhasspyCore:
         _LOGGER.debug("Finished writing %s", graph_path)
 
         # Send to ASR/NLU systems
-        speech_system = self.profile.get("speech_to_text.system", "dummy")
-        has_speech = speech_system != "dummy"
-
-        intent_system = self.profile.get("intent.system", "dummy")
-        has_intent = intent_system != "dummy"
+        has_speech = self.asr_system != "dummy"
+        has_intent = self.nlu_system != "dummy"
 
         if has_speech or has_intent:
             request_id = str(uuid4())
@@ -419,7 +418,7 @@ class RhasspyCore:
         self, text: str, intent_filter: typing.Optional[typing.List[str]] = None
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
-        if self.profile.get("intent.system", "dummy") == "dummy":
+        if self.nlu_system == "dummy":
             raise NluException("No intent system configured")
 
         nlu_id = str(uuid4())
@@ -473,15 +472,13 @@ class RhasspyCore:
         session_id: str = "",
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
-        if self.profile.get("text_to_speech.system", "dummy") == "dummy":
+        if (self.sound_system == "dummy") and (
+            not self.satellite_site_ids["text_to_speech"]
+        ):
             raise TtsException("No text to speech system configured")
 
         site_id = site_id or self.site_id
         tts_id = str(uuid4())
-
-        if self.sound_system == "dummy":
-            # Will just time out
-            wait_play_finished = False
 
         def handle_finished():
             say_finished: typing.Optional[TtsSayFinished] = None
@@ -1155,6 +1152,11 @@ class RhasspyCore:
                             self.loop.call_soon_threadsafe(
                                 queue.put_nowait, ("wake", message, wakeword_id)
                             )
+                    elif isinstance(message, (TtsSayFinished, AudioPlayFinished)) and (
+                        site_id in self.satellite_site_ids["text_to_speech"]
+                    ):
+                        # Satellite text to speech/audio finished
+                        self.handle_message(topic, message)
 
                 # -----------------------------------------------------------------
 

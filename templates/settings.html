@@ -201,9 +201,12 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="microphone-arecord-udp-audio-port" class="col-form-label">UDP Audio Port</label>
+                        <label for="microphone-arecord-udp-audio-port" class="col-form-label">UDP Audio (Output)</label>
                         <div class="col">
-                            <input id="microphone-arecord-udp-audio-port" type="text" class="form-control" x-model="profile.microphone.arecord.udp_audio_port" :disabled="profile.microphone.system != 'arecord'">
+                            <input id="microphone-arecord-udp-audio-host" type="text" class="form-control" placeholder="host" x-model="profile.microphone.arecord.udp_audio_host" :disabled="profile.microphone.system != 'arecord'">
+                        </div>
+                        <div class="col">
+                            <input id="microphone-arecord-udp-audio-port" type="text" class="form-control" placeholder="port" x-model="profile.microphone.arecord.udp_audio_port" :disabled="profile.microphone.system != 'arecord'">
                         </div>
                         <div class="col-auto text-muted">
                             (outside ASR listening)

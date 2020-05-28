@@ -45,6 +45,7 @@ from rhasspyhermes.asr import (
     AsrTextCaptured,
 )
 from rhasspyhermes.audioserver import (
+    AudioPlayBytes,
     AudioSummary,
     AudioToggleOff,
     AudioToggleOn,
@@ -1022,10 +1023,10 @@ async def api_play_wav() -> str:
         async with get_http_session().get(url, ssl=ssl_context) as response:
             wav_bytes = await response.read()
 
-    # Play through speakers on each site
+    # Play through speakers on each site simultaneously
     _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
-    for site_id in site_ids:
-        await core.play_wav_data(wav_bytes, site_id=site_id)
+    aws = [core.play_wav_data(wav_bytes, site_id=site_id) for site_id in site_ids]
+    await asyncio.gather(*aws)
 
     return "OK"
 
@@ -1544,8 +1545,10 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     sentence = last_sentence if repeat else data.decode().strip()
 
     # Speak on each site
-    wav_bytes = bytes()
-    for site_id in site_ids:
+    async def speak(site_id: str) -> typing.Optional[bytes]:
+        assert core is not None
+        capture_audio = site_id == core.site_id
+
         if not play:
             # Disable audio output
             core.publish(AudioToggleOff(site_id=core.site_id))
@@ -1554,26 +1557,32 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
             _, play_bytes = await core.speak_sentence(
                 sentence,
                 language=(language or voice),
-                capture_audio=True,
+                capture_audio=capture_audio,
                 wait_play_finished=play,
                 site_id=site_id,
                 session_id=session_id,
             )
 
-            if play_bytes:
-                wav_bytes = play_bytes.wav_bytes
+            if isinstance(play_bytes, AudioPlayBytes):
+                return play_bytes.wav_bytes
 
-            # Cache last sentence spoken
-            last_sentence = sentence
+            return None
 
         finally:
             if not play:
                 # Re-enable audio output
                 core.publish(AudioToggleOn(site_id=core.site_id))
 
+    aws = [speak(site_id) for site_id in site_ids]
+    results = await asyncio.gather(*aws)
+
+    # Cache last sentence spoken
+    last_sentence = sentence
+
     # Response
-    if wav_bytes:
-        return Response(wav_bytes, mimetype="audio/wav")
+    for result in results:
+        if result:
+            return Response(result, mimetype="audio/wav")
 
     return sentence
 

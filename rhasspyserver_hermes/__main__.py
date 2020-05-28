@@ -735,18 +735,20 @@ async def api_wake_words() -> Response:
 async def api_listen_for_wake() -> str:
     """Make Rhasspy listen for a wake word"""
     assert core is not None
-    site_id = request.args.get("siteId", core.site_id)
+    site_ids = request.args.get("siteId", core.site_id).split(",")
     reason = request.args.get("reason", HotwordToggleReason.UNKNOWN)
     toggle_off = (await request.data).decode().lower() in ["false", "off"]
 
-    if toggle_off:
-        # Disable
-        core.publish(HotwordToggleOff(site_id=site_id, reason=reason))
-        return "off"
+    # Send to all site ids
+    for site_id in site_ids:
+        if toggle_off:
+            # Disable
+            core.publish(HotwordToggleOff(site_id=site_id, reason=reason))
 
-    # Enable
-    core.publish(HotwordToggleOn(site_id=site_id, reason=reason))
-    return "on"
+        # Enable
+        core.publish(HotwordToggleOn(site_id=site_id, reason=reason))
+
+    return "off" if toggle_off else "on"
 
 
 # -----------------------------------------------------------------------------
@@ -1006,8 +1008,8 @@ async def api_pronounce() -> typing.Union[Response, str]:
 @app.route("/api/play-wav", methods=["POST"])
 async def api_play_wav() -> str:
     """Play WAV data through the configured audio output system"""
-    site_id = request.args.get("siteId", None)
     assert core is not None
+    site_ids = request.args.get("siteId", core.site_id).split(",")
 
     if request.content_type == "audio/wav":
         wav_bytes = await request.data
@@ -1020,9 +1022,10 @@ async def api_play_wav() -> str:
         async with get_http_session().get(url, ssl=ssl_context) as response:
             wav_bytes = await response.read()
 
-    # Play through speakers
+    # Play through speakers on each site
     _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
-    await core.play_wav_data(wav_bytes, site_id=site_id)
+    for site_id in site_ids:
+        await core.play_wav_data(wav_bytes, site_id=site_id)
 
     return "OK"
 
@@ -1527,44 +1530,52 @@ last_sentence = ""
 async def api_text_to_speech() -> typing.Union[Response, str]:
     """Speak a sentence with text to speech system."""
     global last_sentence
+    assert core is not None
+
     repeat = request.args.get("repeat", "false").strip().lower() == "true"
     play = request.args.get("play", "true").strip().lower() == "true"
     language = request.args.get("language")
     voice = request.args.get("voice")
-    site_id = request.args.get("siteId", None)
+    site_ids = request.args.get("siteId", core.site_id).split(",")
     session_id = request.args.get("sessionId", "")
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
     sentence = last_sentence if repeat else data.decode().strip()
 
-    assert core is not None
-
-    if not play:
-        # Disable audio output
-        core.publish(AudioToggleOff(site_id=core.site_id))
-
-    try:
-        _, play_bytes = await core.speak_sentence(
-            sentence,
-            language=(language or voice),
-            capture_audio=True,
-            wait_play_finished=play,
-            site_id=site_id,
-            session_id=session_id,
-        )
-
-        # Cache last sentence spoken
-        last_sentence = sentence
-
-        if play_bytes:
-            return Response(play_bytes.wav_bytes, mimetype="audio/wav")
-
-        return sentence
-    finally:
+    # Speak on each site
+    wav_bytes = bytes()
+    for site_id in site_ids:
         if not play:
-            # Re-enable audio output
-            core.publish(AudioToggleOn(site_id=core.site_id))
+            # Disable audio output
+            core.publish(AudioToggleOff(site_id=core.site_id))
+
+        try:
+            _, play_bytes = await core.speak_sentence(
+                sentence,
+                language=(language or voice),
+                capture_audio=True,
+                wait_play_finished=play,
+                site_id=site_id,
+                session_id=session_id,
+            )
+
+            if play_bytes:
+                wav_bytes = play_bytes.wav_bytes
+
+            # Cache last sentence spoken
+            last_sentence = sentence
+
+        finally:
+            if not play:
+                # Re-enable audio output
+                core.publish(AudioToggleOn(site_id=core.site_id))
+
+    # Response
+    if wav_bytes:
+        return Response(wav_bytes, mimetype="audio/wav")
+
+    return sentence
 
 
 @app.route("/api/tts-voices", methods=["GET"])

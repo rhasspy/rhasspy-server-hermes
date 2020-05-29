@@ -1757,6 +1757,7 @@
                 <option value="nanotts">NanoTTS</option>
                 <option value="flite">Flite</option>
                 <option value="marytts">MaryTTS</option>
+                <option value="opentts">OpenTTS</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1801,20 +1802,6 @@
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Espeak -->
 
@@ -1833,20 +1820,6 @@
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End PicoTTS -->
 
@@ -1862,20 +1835,6 @@
                         <label for="nanotts-language" class="col-form-label">Language:</label>
                         <div class="col">
                             <input id="nanotts-language" type="text" class="form-control" x-model="profile.text_to_speech.nanotts.language" :disabled="profile.text_to_speech.system != 'nanotts'" placeholder="default">
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -1912,20 +1871,6 @@
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Flite -->
 
@@ -1938,26 +1883,9 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tts-system" id="tts-system-marytts" value="marytts" x-model="profile.text_to_speech.system">
-                            <label class="form-check-label" for="tts-system-marytts">
-                                Use marytts <a href="http://mary.dfki.de">MaryTTS</a> server
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
                         <label for="marytts-url" class="col-form-label">URL:</label>
                         <div class="col">
                             <input id="marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col text-muted">
-                            Example: http://localhost:59125/process
                         </div>
                     </div>
                 </div>
@@ -1976,7 +1904,9 @@
                             <input id="marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="tts-marytts-voices">Available Voices:</label>
                         </div>
@@ -1990,22 +1920,49 @@
                         </div>
                     </div>
                 </div>
-                <hr>
+            </div>
+            <!-- End MaryTTS -->
+
+            <!-- OpenTTS -->
+            <div x-show="profile.text_to_speech.system == 'opentts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        <a target="_blank" href="docs/text-to-speech/#opentts">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="opentts-url" class="col-form-label">URL:</label>
+                        <div class="col">
+                            <input id="opentts-url" type="text" class="form-control" x-model="profile.text_to_speech.opentts.url" :disabled="profile.text_to_speech.system != 'opentts'">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="opentts-voice" class="col-form-label">Voice:</label>
+                        <div class="col">
+                            <input id="opentts-voice" type="text" class="form-control" x-model="profile.text_to_speech.opentts.voice" :disabled="profile.text_to_speech.system != 'opentts'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="tts-opentts-voices">Available Voices:</label>
                         </div>
                         <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                            <select id="tts-opentts-voices" x-model="profile.text_to_speech.opentts.voice" class="form-control">
+                                <option value="nanotts:en-GB" selected>Default Voice</option>
+                            </select>
                         </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('opentts')" class="btn btn-primary form-control" title="Refresh OpentTTS voices">Refresh</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- End MaryTTS -->
+            <!-- End OpenTTS -->
 
             <!-- Remote -->
             <div x-show="profile.text_to_speech.system == 'remote'">
@@ -2026,20 +1983,6 @@
                     <div class="form-row">
                         <div class="col text-muted">
                             Example: http://localhost:12101/api/text-to-speech
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -2094,20 +2037,6 @@
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Command -->
 
@@ -2125,6 +2054,24 @@
                 </div>
             </div>
             <!-- End Hermes -->
+
+            <!-- Satellite siteIds -->
+            <div x-show="profile.text_to_speech.system != 'dummy'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="tts-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="tts-satellite-siteids" type="text" class="form-control" x-model="profile.text_to_speech.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Satellite siteIds -->
 
         </div>
     </div>

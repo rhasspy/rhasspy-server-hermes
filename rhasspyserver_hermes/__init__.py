@@ -1158,11 +1158,11 @@ class RhasspyCore:
                         # Satellite text to speech/audio finished
                         self.handle_message(topic, message)
 
-                # -----------------------------------------------------------------
+            # -----------------------------------------------------------------
 
-                # Forward to external message queues
-                for queue in self.message_queues:
-                    queue.put_nowait(("mqtt", topic, payload))
+            # Forward to external message queues
+            for queue in self.message_queues:
+                queue.put_nowait(("mqtt", topic, payload))
 
         except Exception:
             _LOGGER.exception("on_message")

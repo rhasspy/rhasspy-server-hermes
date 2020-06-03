@@ -2210,6 +2210,7 @@ async def api_ws_intent(queue) -> None:
                 intent_dict["sessionId"] = intent.session_id
                 intent_dict["customData"] = intent.custom_data
                 intent_dict["wakewordId"] = getattr(intent, "wakeword_id", None)
+                intent_dict["lang"] = getattr(intent, "lang", None)
 
                 ws_message = json.dumps(intent_dict)
                 await websocket.send(ws_message)
@@ -2238,6 +2239,7 @@ async def api_ws_wake(queue) -> None:
                         "wakewordId": wakeword_id,
                         "siteId": hotword_detected.site_id,
                         "modelId": hotword_detected.model_id,
+                        "lang": hotword_detected.lang,
                     }
                 )
                 await websocket.send(ws_message)
@@ -2266,6 +2268,7 @@ async def api_ws_text(queue) -> None:
                         "siteId": text_captured.site_id,
                         "sessionId": text_captured.session_id,
                         "wakewordId": text_captured.wakeword_id,
+                        "lang": text_captured.lang,
                     }
                 )
                 await websocket.send(ws_message)

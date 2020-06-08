@@ -105,7 +105,12 @@
                       false)
             .done(function() {
                 slots.isDirty = false;
-                rhasspy.train();
+
+                if (window.confirm("Slots saved. Retrain Rhasspy?")) {
+                    rhasspy.train();
+                } else {
+                    rhasspy.hideBusy();
+                }
             });
  }
 

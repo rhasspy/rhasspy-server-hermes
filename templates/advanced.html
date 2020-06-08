@@ -40,7 +40,12 @@
                       false)
             .done(function() {
                 isDirty = false;
-                rhasspy.restart();
+
+                if (window.confirm("Profile saved. Restart Rhasspy?")) {
+                    rhasspy.restart();
+                } else {
+                    rhasspy.hideBusy();
+                }
             });
  }
 

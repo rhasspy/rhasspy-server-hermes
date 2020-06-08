@@ -189,7 +189,12 @@
                       false)
             .done(function() {
                 words.isDirty.value = false;
-                rhasspy.train()
+
+                if (window.confirm("Words saved. Retrain Rhasspy?")) {
+                    rhasspy.train();
+                } else {
+                    rhasspy.hideBusy();
+                }
             });
  }
 

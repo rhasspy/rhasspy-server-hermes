@@ -115,7 +115,12 @@
                       false)
             .done(function() {
                 sentences.isDirty.value = false;
-                rhasspy.train();
+
+                if (window.confirm("Sentences saved. Retrain Rhasspy?")) {
+                    rhasspy.train();
+                } else {
+                    rhasspy.hideBusy();
+                }
             });
  }
 

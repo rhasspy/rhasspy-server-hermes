@@ -2523,7 +2523,11 @@
                       JSON.stringify(rhasspy.profile),
                       false)
             .done(function() {
-                rhasspy.restart();
+                if (window.confirm("Settings saved. Restart Rhasspy?")) {
+                    rhasspy.restart();
+                } else {
+                    rhasspy.hideBusy();
+                }
             });
  }
 

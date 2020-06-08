@@ -43,11 +43,18 @@
     </div>
     <div class="form-group">
         <div class="form-row">
-            <div class="col-xs-auto">
+            <div class="col">
                 <button onclick="saveWords()" x-bind:class="{ 'btn-danger': words.isDirty.value }" class="btn btn-primary">Save Custom Words</button>
             </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
             <div class="col-xs-auto">
                 <button type="button" class="btn btn-success" onclick="guessWord()">Guess Word</button>
+            </div>
+            <div class="col-xs-auto">
+                <button id="addWord" type="button" class="btn btn-warning" onclick="addGuessedWord()" style="display: none;">Add</button>
             </div>
             <div class="col-xs-auto">
                 <input id="word" type="text" class="form-control" placeholder="word">
@@ -55,13 +62,14 @@
             <span id="inDictionary" title="Word is in a dictionary" style="display:none">
                 <i class="fas fa-book"></i>
             </span>
-            <div class="col-xs-auto">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-row">
+            <div class="col">
                 <select id="guesses" class="form-control" style="display: none;">
                     <option disabled value="">Select Guess</option>
                 </select>
-            </div>
-            <div class="col-xs-auto">
-                <button id="addWord" type="button" class="btn btn-info" onclick="addGuessedWord()" style="display: none;">Add</button>
             </div>
         </div>
     </div>

@@ -64,12 +64,22 @@
             </span>
         </div>
     </div>
-    <div class="form-group">
+    <div id="guess-group" class="form-group" style="display: none;">
         <div class="form-row">
             <div class="col">
-                <select id="guesses" class="form-control" style="display: none;">
+                <select id="guesses" class="form-control" onchange="updatePhonemes()">
                     <option disabled value="">Select Guess</option>
                 </select>
+            </div>
+        </div>
+    </div>
+    <div id="guess-group" class="form-group">
+        <div class="form-row">
+            <div class="col-xs-auto">
+                <button id="pronounce" type="button" class="btn btn-info" onclick="pronouncePhonemes()">Pronounce</button>
+            </div>
+            <div class="col">
+                <input id="phonemes" type="text" class="form-control" placeholder="phonemes">
             </div>
         </div>
     </div>
@@ -149,7 +159,7 @@
  // Calls /api/lookup and shows word pronunciation(s)
  function guessWord() {
      $('#guesses option').remove();
-     $('#guesses').hide();
+     $('#guess-group').hide();
      $('#addWord').hide();
      $('#inDictionary').hide();
 
@@ -167,7 +177,8 @@
                         $('#guesses').append('<option>' + phonemes + '</option>');
                     })
 
-                    $('#guesses').show();
+                    $('#guess-group').show();
+                    updatePhonemes();
                 });
      } else {
          alert('Please enter a word to guess')
@@ -216,6 +227,21 @@
 
      rhasspy.unknownWordsText.value = '';
      saveWords();
+ }
+
+ // POST to /api/pronounce to speak phonetic word pronunciation
+ function pronouncePhonemes() {
+     var phonemes = $('#phonemes').val()
+     $('#pronounce').prop('disabled', true);
+     rhasspy.postBusy('Pronouncing word', '/api/pronounce', phonemes)
+            .always(function() {
+                $('#pronounce').prop('disabled', false);
+            });
+ }
+
+ function updatePhonemes() {
+     // Copy guess into phonemes text box
+     $('#phonemes').val($('#guesses').val());
  }
 
  // Warns users that custom words are not saved

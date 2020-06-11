@@ -992,8 +992,19 @@ async def api_pronounce() -> typing.Union[Response, str]:
                     phoneme_map[parts[0]] = parts[1]
 
         # Map to eSpeak phonemes
-        espeak_phonemes = "".join(phoneme_map.get(p, p) for p in pronounce_str.split())
-        espeak_str = f"[[{espeak_phonemes}]]"
+        espeak_phonemes = []
+        for dict_phoneme in pronounce_str.split():
+            espeak_phoneme = phoneme_map.get(dict_phoneme)
+
+            if (not espeak_phoneme) and dict_phoneme.startswith("'"):
+                # Try lookup again without access
+                espeak_phoneme = phoneme_map.get(dict_phoneme[1:])
+
+            if espeak_phoneme:
+                espeak_phonemes.append(espeak_phoneme)
+
+        espeak_phoneme_str = "".join(espeak_phonemes)
+        espeak_str = f"[[{espeak_phoneme_str}]]"
     else:
         # Speak word directly
         espeak_str = pronounce_str

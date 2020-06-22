@@ -295,7 +295,19 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "profile_dir": core.profile.write_path(""),
         "version": version,
         "site_id": core.site_id,
+        "maybe_read_path": maybe_read_path,
     }
+
+
+def maybe_read_path(
+    profile: Profile, key: str, default_value: typing.Optional[typing.Any] = None
+) -> typing.Optional[Path]:
+    """Optionally gets a profile path."""
+    value = profile.get(key, default_value)
+    if not value:
+        return None
+
+    return profile.read_path(value)
 
 
 def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:

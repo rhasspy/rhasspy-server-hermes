@@ -820,9 +820,9 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Acoustic Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.acoustic_model")) }}</tt> </li>
-                            <li>Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.dictionary")) }}</tt> </li>
-                            <li>Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.language_model")) }}</tt> </li>
+                            <li>Acoustic Model: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.acoustic_model") }}</tt> </li>
+                            <li>Dictionary: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.dictionary") }}</tt> </li>
+                            <li>Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.language_model") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -848,8 +848,8 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_dictionary")) }}</tt> </li>
-                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model")) }}</tt> </li>
+                            <li>Base Dictionary: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.base_dictionary") }}</tt> </li>
+                            <li>Base Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.base_language_model") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -879,7 +879,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.pocketsphinx.base_language_model_fst")) }}</tt> </li>
+                            <li>Base Language Model FST: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.base_language_model_fst") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -982,7 +982,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Model Root: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.model_dir")) }}</tt> </li>
+                            <li>Model Root: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.model_dir") }}</tt> </li>
                             <li>Graph Directory: <tt>&lt;model_root&gt;/{{ profile.get("speech_to_text.kaldi.graph") }}</tt> </li>
                         </ul>
                     </div>
@@ -1009,9 +1009,9 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Dictionary: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_dictionary")) }}</tt> </li>
-                            <li>Base Graph Directory: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_graph")) }}</tt> </li>
-                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model")) }}</tt> </li>
+                            <li>Base Dictionary: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_dictionary") }}</tt> </li>
+                            <li>Base Graph Directory: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_graph") }}</tt> </li>
+                            <li>Base Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_language_model") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1041,7 +1041,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model_fst")) }}</tt> </li>
+                            <li>Base Language Model FST: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_language_model_fst") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1144,9 +1144,9 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Acoustic Model: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.acoustic_model")) }}</tt> </li>
-                            <li>Language Model: <tt>{{ profile.read_path("speech_to_text.deepspeech.language_model") }}</tt> </li>
-                            <li>Trie: <tt>{{ profile.read_path("speech_to_text.deepspeech.trie") }}</tt> </li>
+                            <li>Acoustic Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.acoustic_model") }}</tt> </li>
+                            <li>Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.language_model") }}</tt> </li>
+                            <li>Trie: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.trie") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1172,8 +1172,8 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Language Model: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_language_model")) }}</tt> </li>
-                            <li>Base Trie: <tt>{{ profile.read_path(profile.get("speech_to_text.deepspeech.base_trie")) }}</tt> </li>
+                            <li>Base Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.base_language_model") }}</tt> </li>
+                            <li>Base Trie: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.base_trie") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1203,7 +1203,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Base Language Model FST: <tt>{{ profile.read_path(profile.get("speech_to_text.kaldi.base_language_model_fst")) }}</tt> </li>
+                            <li>Base Language Model FST: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_language_model_fst") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1513,8 +1513,8 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
-                            <li>Stop Words: <tt>{{ profile.read_path(profile.get("intent.adapt.stop_words")) }}</tt> </li>
+                            <li>Intent Graph: <tt>{{ maybe_read_path(profile, "intent.fsticuffs.intent_graph") }}</tt> </li>
+                            <li>Stop Words: <tt>{{ maybe_read_path(profile, "intent.adapt.stop_words") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1606,8 +1606,8 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Examples File: <tt>{{ profile.read_path(profile.get("intent.rasa.examples_markdown")) }}</tt> </li>
-                            <li>Intent Graph: <tt>{{ profile.read_path(profile.get("intent.fsticuffs.intent_graph")) }}</tt> </li>
+                            <li>Examples File: <tt>{{ maybe_read_path(profile, "intent.rasa.examples_markdown") }}</tt> </li>
+                            <li>Intent Graph: <tt>{{ maybe_read_path(profile, "intent.fsticuffs.intent_graph") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1658,8 +1658,8 @@
                 <div class="form-group">
                     <div class="form-row">
                         <ul>
-                            <li>Engine: <tt>{{ profile.read_path(profile.get("intent.snips.engine_dir")) }}</tt> </li>
-                            <li>Dataset: <tt>{{ profile.read_path(profile.get("intent.snips.dataset_file")) }}</tt> </li>
+                            <li>Engine: <tt>{{ maybe_read_path(profile, "intent.snips.engine_dir") }}</tt> </li>
+                            <li>Dataset: <tt>{{ maybe_read_path(profile, "intent.snips.dataset_file") }}</tt> </li>
                         </ul>
                     </div>
                 </div>

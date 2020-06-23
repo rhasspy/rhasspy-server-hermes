@@ -1529,7 +1529,7 @@ async def api_stop_recording() -> Response:
             core.publish(HandleToggleOn(site_id=core.site_id))
 
 
-@app.route("/api/play-recording", methods=["POST"])
+@app.route("/api/play-recording", methods=["GET", "POST"])
 async def api_play_recording() -> str:
     """Play last recorded voice command through the configured audio output system"""
     assert core is not None
@@ -1537,8 +1537,15 @@ async def api_play_recording() -> str:
     if core.last_audio_captured:
         # Play through speakers
         wav_bytes = core.last_audio_captured.wav_bytes
+        if request.method == "GET":
+            return Response(wav_bytes, mimetype="audio/wav")
+
         _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))
         await core.play_wav_data(wav_bytes)
+
+    if request.method == "GET":
+        # Return empty WAV
+        return buffer_to_wav(bytes())
 
     return "OK"
 

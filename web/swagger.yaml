@@ -198,6 +198,26 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/play-recording:
+    get:
+      summary: 'Download WAV data from last recorded voice command'
+      responses:
+        '200':
+          description: WAV data
+          content:
+            audio/wav:
+              schema:
+                type: string
+                format: binary
+    post:
+      summary: 'Play last recorded voice command'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
   /api/play-wav:
     post:
       summary: 'Play WAV data using configured audio output'

@@ -80,9 +80,21 @@
                         <span>Wake Up</span>
                     </div>
                     <div class="col">
-                        <button id="play-command" onclick="playCommand()" class="btn btn-success" title="Play the last recorded voice command">
-                            <i class="fas fa-2x fa-play"></i>
-                        </button>
+                        <div class="btn-group w-100">
+                            <button id="play-command" onclick="playCommand()" class="btn btn-success" title="Play the last recorded voice command">
+                                <i class="fas fa-2x fa-play"></i>
+                            </button>
+                            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split w-25" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="api/play-recording">
+                                    <i class="fas fa-download"></i>
+                                    Download WAV
+                                </a>
+                            </div>
+                        </div>
+
                         <span>Play Recording</span>
                     </div>
                 </div>

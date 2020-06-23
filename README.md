@@ -6,68 +6,40 @@
 
 Web interface to Rhasspy using Hermes protocol on the back end.
 
-## Running With Docker
+## Requirements
+
+* Python 3.7
+* [Quart](https://gitlab.com/pgjones/quart)
+* [alpinejs](https://github.com/alpinejs/alpine/)
+
+## Installation
 
 ```bash
-docker run -it rhasspy/rhasspy-server-hermes:<VERSION> <ARGS>
+$ git clone https://github.com/rhasspy/rhasspy-server-hermes
+$ cd rhasspy-server-hermes
+$ ./configure
+$ make
+$ make install
 ```
 
-## Building From Source
-
-Clone the repository and create the virtual environment:
+## Running
 
 ```bash
-git clone https://github.com/rhasspy/rhasspy-server-hermes.git
-cd rhasspy-server-hermes
-make venv
+$ bin/rhasspy-server-hermes <ARGS>
 ```
-
-Before running, you will need to put the generated artifacts (`dist` directory) from [rhasspy-web-vue](https://github.com/rhasspy/rhasspy-web-vue) in a directory named `web`.
-
-Run the `bin/rhasspy-server-hermes` script to access the command-line interface:
-
-```bash
-bin/rhasspy-server-hermes --help
-```
-
-## Building the Debian Package
-
-Before building, you will need to put the generated artifacts (`dist` directory) from [rhasspy-web-vue](https://github.com/rhasspy/rhasspy-web-vue) in a directory named `web`.
-
-Follow the instructions to build from source, then run:
-
-
-```bash
-source .venv/bin/activate
-make debian
-```
-
-If successful, you'll find a `.deb` file in the `dist` directory that can be installed with `apt`.
-
-## Building the Docker Image
-
-Before building, you will need to put the generated artifacts (`dist` directory) from [rhasspy-web-vue](https://github.com/rhasspy/rhasspy-web-vue) in a directory named `web`.
-
-Follow the instructions to build from source, then run:
-
-```bash
-source .venv/bin/activate
-make docker
-```
-
-This will create a Docker image tagged `rhasspy/rhasspy-server-hermes:<VERSION>` where `VERSION` comes from the file of the same name in the source root directory.
-
-NOTE: If you add things to the Docker image, make sure to whitelist them in `.dockerignore`.
 
 ## Command-Line Options
 
 ```
 usage: Rhasspy [-h] --profile PROFILE [--host HOST] [--port PORT]
                [--mqtt-host MQTT_HOST] [--mqtt-port MQTT_PORT]
+               [--mqtt-username MQTT_USERNAME] [--mqtt-password MQTT_PASSWORD]
                [--local-mqtt-port LOCAL_MQTT_PORT]
                [--system-profiles SYSTEM_PROFILES]
-               [--user-profiles USER_PROFILES] [--set SET SET] [--ssl SSL SSL]
-               [--log-level LOG_LEVEL] [--web-dir WEB_DIR]
+               [--user-profiles USER_PROFILES] [--set SET SET]
+               [--certfile CERTFILE] [--keyfile KEYFILE]
+               [--log-level LOG_LEVEL] [--log-format LOG_FORMAT]
+               [--web-dir WEB_DIR]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -79,6 +51,10 @@ optional arguments:
                         Host for MQTT broker
   --mqtt-port MQTT_PORT
                         Port for MQTT broker
+  --mqtt-username MQTT_USERNAME
+                        Host for MQTT broker
+  --mqtt-password MQTT_PASSWORD
+                        Port for MQTT broker
   --local-mqtt-port LOCAL_MQTT_PORT
                         Port to use for internal MQTT broker (default: 12183)
   --system-profiles SYSTEM_PROFILES
@@ -87,8 +63,12 @@ optional arguments:
                         Directory with user profile files (read/write)
   --set SET SET, -s SET SET
                         Set a profile setting value
-  --ssl SSL SSL         Use SSL with <CERT_FILE <KEY_FILE>
+  --certfile CERTFILE   SSL certificate file
+  --keyfile KEYFILE     SSL private key file (optional)
   --log-level LOG_LEVEL
                         Set logging level
-  --web-dir WEB_DIR     Directory with compiled Vue site (default: dist)
+  --log-format LOG_FORMAT
+                        Python logger format
+  --web-dir WEB_DIR     Directory with image/css/javascript files (default:
+                        web)
 ```

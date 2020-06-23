@@ -142,7 +142,7 @@ def parse_args():
     parser.add_argument(
         "--web-dir",
         default="web",
-        help="Directory with compiled Vue site (default: web)",
+        help="Directory with image/css/javascript files (default: web)",
     )
 
     return parser.parse_args()
@@ -1530,7 +1530,7 @@ async def api_stop_recording() -> Response:
 
 
 @app.route("/api/play-recording", methods=["GET", "POST"])
-async def api_play_recording() -> str:
+async def api_play_recording() -> typing.Union[str, Response]:
     """Play last recorded voice command through the configured audio output system"""
     assert core is not None
 
@@ -1545,7 +1545,7 @@ async def api_play_recording() -> str:
 
     if request.method == "GET":
         # Return empty WAV
-        return buffer_to_wav(bytes())
+        return Response(buffer_to_wav(bytes()), mimetype="audio/wav")
 
     return "OK"
 

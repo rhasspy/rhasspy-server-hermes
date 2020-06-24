@@ -21,6 +21,9 @@ from pathlib import Path
 from uuid import uuid4
 
 import aiohttp
+import hypercorn
+import hypercorn.asyncio
+import hypercorn.config
 import quart_cors
 import rhasspyhermes
 import rhasspynlu
@@ -259,12 +262,10 @@ quart_cors._apply_websocket_cors = _apply_websocket_cors
 # Allow all origins
 app = quart_cors.cors(app, allow_origin="*")
 
-# SSL settings
-certfile: typing.Optional[str] = _ARGS.certfile
-keyfile: typing.Optional[str] = _ARGS.keyfile
-
-if certfile:
-    _LOGGER.debug("Using SSL with certfile=%s, keyfile=%s", certfile, keyfile)
+if _ARGS.certfile:
+    _LOGGER.debug(
+        "Using SSL with certfile=%s, keyfile=%s", _ARGS.certfile, _ARGS.keyfile
+    )
 
 # -----------------------------------------------------------------------------
 # Template Functions
@@ -2536,23 +2537,41 @@ for logger_name in ["wsproto", "hpack", "quart.serving", "asyncio"]:
 start_rhasspy()
 
 # Start web server
+hyp_config = hypercorn.config.Config()
 if _ARGS.certfile:
     protocol = "https"
+    hyp_config.bind = [f"{_ARGS.host}:{_ARGS.port}"]
+    hyp_config.certfile = _ARGS.certfile
+    hyp_config.keyfile = _ARGS.keyfile
 else:
     protocol = "http"
+    hyp_config.bind = [f"{_ARGS.host}:{_ARGS.port}"]
+    hyp_config.insecure_bind = [f"{_ARGS.host}:{_ARGS.port}"]
 
 _LOGGER.debug("Starting web server at %s://%s:%s", protocol, _ARGS.host, _ARGS.port)
 
+# Create shutdown event for Hypercorn
+shutdown_event = asyncio.Event()
+
+
+def _signal_handler(*_: typing.Any) -> None:
+    """Signal shutdown to Hypercorn"""
+    shutdown_event.set()
+
+
+_LOOP.add_signal_handler(signal.SIGTERM, _signal_handler)
+
 try:
-    app.run(
-        host=_ARGS.host,
-        port=_ARGS.port,
-        certfile=_ARGS.certfile,
-        keyfile=_ARGS.keyfile,
-        loop=_LOOP,
+    # Need to type cast to satisfy mypy
+    shutdown_trigger = typing.cast(
+        typing.Callable[..., typing.Awaitable[None]], shutdown_event.wait
+    )
+
+    _LOOP.run_until_complete(
+        hypercorn.asyncio.serve(app, hyp_config, shutdown_trigger=shutdown_trigger)
     )
 except KeyboardInterrupt:
-    pass
+    _LOOP.call_soon_threadsafe(shutdown_event.set)
 except LocalProtocolError:
     pass
 finally:

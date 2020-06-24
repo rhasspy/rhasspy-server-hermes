@@ -10,6 +10,7 @@ Web interface to Rhasspy using Hermes protocol on the back end.
 
 * Python 3.7
 * [Quart](https://gitlab.com/pgjones/quart)
+* [Hypercorn](https://pgjones.gitlab.io/hypercorn)
 * [alpinejs](https://github.com/alpinejs/alpine/)
 
 ## Installation

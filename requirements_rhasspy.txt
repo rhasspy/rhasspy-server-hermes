@@ -1,4 +1,0 @@
-https://github.com/rhasspy/rhasspy-hermes/archive/master.tar.gz
-https://github.com/rhasspy/rhasspy-nlu/archive/master.tar.gz
-https://github.com/rhasspy/rhasspy-profile/archive/master.tar.gz
-https://github.com/rhasspy/rhasspy-supervisor/archive/master.tar.gz

@@ -1,8 +1,8 @@
 *
-!rhasspyserver_hermes
+!rhasspyserver_hermes/*.py
 !requirements.txt
-!requirements_rhasspy.txt
 !web
 !templates
 !VERSION
-!etc
+!etc/wav/*.wav
+!scripts/create-venv.sh

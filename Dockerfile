@@ -1,43 +1,123 @@
-ARG BUILD_ARCH
-FROM ${BUILD_ARCH}/python:3.7-alpine as build
-ARG BUILD_ARCH
-ARG FRIENDLY_ARCH
+# -----------------------------------------------------------------------------
+# Dockerfile for Rhasspy Web Server
+# (https://github.com/rhasspy/rhasspy-server-hermes)
+#
+# Requires Docker buildx: https://docs.docker.com/buildx/working-with-buildx/
+# See scripts/build-docker.sh
+#
+# Builds a multi-arch image for amd64/armv6/armv7/arm64.
+# The virtual environment from the build stage is copied over to the run stage.
+# The Rhasspy source code is then copied into the run stage and executed within
+# that virtual environment.
+#
+# Build stages are named build-$TARGETARCH$TARGETVARIANT, so build-amd64,
+# build-armv6, etc. Run stages are named similarly.
+#
+# armv6 images (Raspberry Pi 0/1) are derived from balena base images:
+# https://www.balena.io/docs/reference/base-images/base-images/#balena-base-images
+#
+# The IFDEF statements are handled by docker/preprocess.sh. These are just
+# comments that are uncommented if the environment variable after the IFDEF is
+# not empty.
+#
+# The build-docker.sh script will optionally add apt/pypi proxies running locally:
+# * apt - https://docs.docker.com/engine/examples/apt-cacher-ng/ 
+# * pypi - https://github.com/jayfk/docker-pypi-cache
+# -----------------------------------------------------------------------------
 
-# Multi-arch
-COPY etc/qemu-arm-static /usr/bin/
-COPY etc/qemu-aarch64-static /usr/bin/
+FROM ubuntu:eoan as build-ubuntu
 
-RUN apk update && apk add --no-cache build-base
-RUN python3 -m venv /venv
+ENV LANG C.UTF-8
 
-COPY requirements.txt /
+# IFDEF PROXY
+#! RUN echo 'Acquire::http { Proxy "http://${PROXY}"; };' >> /etc/apt/apt.conf.d/01proxy
+# ENDIF
 
-RUN grep '^rhasspy-' /requirements.txt | \
-    sed -e 's|=.\+|/archive/master.tar.gz|' | \
-    sed 's|^|https://github.com/rhasspy/|' \
-    > /requirements_rhasspy.txt
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes \
+        python3 python3-setuptools python3-pip python3-venv \
+        make
 
-RUN /venv/bin/pip install --upgrade pip
-RUN /venv/bin/pip install -r /requirements_rhasspy.txt
-RUN /venv/bin/pip install -r /requirements.txt
+FROM build-ubuntu as build-amd64
+
+FROM build-ubuntu as build-armv7
+
+FROM build-ubuntu as build-arm64
 
 # -----------------------------------------------------------------------------
 
-ARG BUILD_ARCH
-FROM ${BUILD_ARCH}/python:3.7-alpine
-ARG BUILD_ARCH
-ARG FRIENDLY_ARCH
+FROM balenalib/raspberry-pi-debian-python:3.7-buster-build-20200604 as build-armv6
 
-# Multi-arch
-COPY etc/qemu-arm-static /usr/bin/
-COPY etc/qemu-aarch64-static /usr/bin/
+ENV LANG C.UTF-8
 
-COPY --from=build /venv/ /venv/
+# IFDEF PROXY
+#! RUN echo 'Acquire::http { Proxy "http://${PROXY}"; };' >> /etc/apt/apt.conf.d/01proxy
+# ENDIF
 
-COPY rhasspyserver_hermes/ /rhasspyserver_hermes/
-COPY web/ /web/
-COPY templates/ /templates/
-COPY VERSION /
-WORKDIR /
+# -----------------------------------------------------------------------------
+# Build
+# -----------------------------------------------------------------------------
 
-ENTRYPOINT ["/venv/bin/python3", "-m", "rhasspyserver_hermes", "--web-dir", "/web"]
+ARG TARGETARCH
+ARG TARGETVARIANT
+FROM build-$TARGETARCH$TARGETVARIANT as build
+
+ENV APP_DIR=/usr/lib/rhasspy-server-hermes
+
+COPY requirements.txt Makefile ${APP_DIR}/
+COPY scripts/ ${APP_DIR}/scripts/
+
+# IFDEF PYPI
+#! ENV PIP_INDEX_URL=http://${PYPI}/simple/
+#! ENV PIP_TRUSTED_HOST=${PYPI_HOST}
+# ENDIF
+
+RUN cd ${APP_DIR} && \
+    make install
+
+# Strip binaries and shared libraries
+RUN (find ${APP_DIR} -type f -name '*.so*' -print0 | xargs -0 strip --strip-unneeded -- 2>/dev/null) || true
+RUN (find ${APP_DIR} -type f -executable -print0 | xargs -0 strip --strip-unneeded -- 2>/dev/null) || true
+
+# -----------------------------------------------------------------------------
+
+FROM ubuntu:eoan as run-ubuntu
+
+ENV LANG C.UTF-8
+
+# IFDEF PROXY
+#! RUN echo 'Acquire::http { Proxy "http://${PROXY}"; };' >> /etc/apt/apt.conf.d/01proxy
+# ENDIF
+
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends \
+        python3
+
+FROM run-ubuntu as run-amd64
+
+FROM run-ubuntu as run-armv7
+
+FROM run-ubuntu as run-arm64
+
+# -----------------------------------------------------------------------------
+
+FROM balenalib/raspberry-pi-debian-python:3.7-buster-run-20200604 as run-armv6
+
+ENV LANG C.UTF-8
+
+# -----------------------------------------------------------------------------
+# Run
+# -----------------------------------------------------------------------------
+
+ARG TARGETARCH
+ARG TARGETVARIANT
+FROM run-$TARGETARCH$TARGETVARIANT
+
+ENV APP_DIR=/usr/lib/rhasspy-server-hermes
+COPY --from=build ${APP_DIR}/ ${APP_DIR}/
+COPY etc/ ${APP_DIR}/etc/
+COPY bin/ ${APP_DIR}/bin/
+COPY VERSION ${APP_DIR}/
+COPY rhasspyserver_hermes/ ${APP_DIR}/rhasspyserver_hermes
+
+ENTRYPOINT ["bash", "/usr/lib/rhasspy-server-hermes/bin/rhasspy-server-hermes"]

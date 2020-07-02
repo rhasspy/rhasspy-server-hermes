@@ -47,14 +47,7 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
-from rhasspyhermes.audioserver import (
-    AudioPlayBytes,
-    AudioSummary,
-    AudioToggleOff,
-    AudioToggleOn,
-    SummaryToggleOff,
-    SummaryToggleOn,
-)
+from rhasspyhermes.audioserver import AudioPlayBytes, AudioToggleOff, AudioToggleOn
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -2033,11 +2026,13 @@ async def api_audio_summaries() -> str:
 
     if toggle_off:
         # Disable
-        core.publish(SummaryToggleOff(site_id=core.site_id))
+        core.disable_audio_summaries()
+        _LOGGER.debug("Audio summaries disabled.")
         return "off"
 
     # Enable
-    core.publish(SummaryToggleOn(site_id=core.site_id))
+    core.enable_audio_summaries()
+    _LOGGER.debug("Audio summaries enabled.")
     return "on"
 
 
@@ -2328,8 +2323,8 @@ async def api_ws_audiosummary(queue) -> None:
         while True:
             message = await queue.get()
             if message[0] == "audiosummary":
-                audio_summary: AudioSummary = message[1]
-                ws_message = audio_summary.to_json()
+                audio_energies = message[1]
+                ws_message = json.dumps(dataclasses.asdict(audio_energies))
                 await websocket.send(ws_message)
     except CancelledError:
         pass

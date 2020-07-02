@@ -62,7 +62,7 @@ from rhasspyhermes.wake import (
 from rhasspyprofile import Profile
 
 from .train import sentences_to_graph
-from .utils import get_ini_paths
+from .utils import get_ini_paths, wav_to_buffer
 
 _LOGGER = logging.getLogger("rhasspyserver_hermes")
 
@@ -77,6 +77,16 @@ class TrainingFailedException(Exception):
 
     def __str__(self):
         return self.reason
+
+
+@dataclass
+class AudioEnergies:
+    """Summary of energy from recorded audio."""
+
+    current_energy: float = float("nan")
+    max_energy: float = float("nan")
+    min_energy: float = float("nan")
+    max_current_ratio: float = float("nan")
 
 
 # -----------------------------------------------------------------------------
@@ -201,6 +211,10 @@ class RhasspyCore:
         self.nlu_system = self.profile.get("intent.system", "dummy")
         self.dialogue_system = self.profile.get("dialogue.system", "dummy")
         self.sound_system = self.profile.get("sounds.system", "dummy")
+
+        # Audio summaries
+        self.audio_summaries = False
+        self.audio_energies = AudioEnergies()
 
     # -------------------------------------------------------------------------
 
@@ -951,6 +965,28 @@ class RhasspyCore:
                     _LOGGER.exception("handle_message")
 
     # -------------------------------------------------------------------------
+
+    def enable_audio_summaries(self):
+        """Enable audio summaries on websocket /api/events/audiosummary."""
+        self.audio_energies = AudioEnergies()
+        self.audio_summaries = True
+        self.subscribe(AudioFrame)
+
+    def disable_audio_summaries(self):
+        """Disable audio summaries on websocket /api/events/audiosummary."""
+        self.audio_summaries = False
+        self.unsubscribe(AudioFrame)
+
+    def compute_audio_energies(self, wav_bytes: bytes):
+        """Compute energy statistics from audio frame."""
+        audio_data = wav_to_buffer(wav_bytes)
+        energy = AudioSummary.get_debiased_energy(audio_data)
+        self.audio_energies.current_energy = energy
+        self.audio_energies.max_energy = max(energy, self.audio_energies.max_energy)
+        self.audio_energies.min_energy = min(energy, self.audio_energies.min_energy)
+        self.audio_energies.max_current_ratio = self.audio_energies.max_energy / energy
+
+    # -------------------------------------------------------------------------
     # MQTT Event Handlers
     # -------------------------------------------------------------------------
 
@@ -1043,14 +1079,16 @@ class RhasspyCore:
                     elif isinstance(message, AudioRecordError):
                         # Error recording audio
                         self.handle_message(topic, message)
-                    elif isinstance(message, AudioSummary):
-                        # Audio summary statistics
+                    elif isinstance(message, AudioFrame):
+                        # Recorded audio frame
                         assert site_id, "Missing site id"
+
+                        self.compute_audio_energies(message.wav_bytes)
 
                         # Report to websockets
                         for queue in self.message_queues:
                             self.loop.call_soon_threadsafe(
-                                queue.put_nowait, ("audiosummary", message)
+                                queue.put_nowait, ("audiosummary", self.audio_energies)
                             )
                     elif isinstance(message, DialogueSessionStarted):
                         # Dialogue session started
@@ -1191,6 +1229,30 @@ class RhasspyCore:
                 self.client.subscribe(topic)
                 self.subscribed_topics.add(topic)
                 _LOGGER.debug("Subscribed to %s", topic)
+
+    def unsubscribe(self, *message_types):
+        """Unsubscribe to one or more Hermes messages."""
+        topics: typing.List[str] = []
+
+        if self.site_ids:
+            # Specific site_ids
+            for site_id in self.site_ids:
+                for message_type in message_types:
+                    topics.append(message_type.topic(site_id=site_id))
+                    self.subscribed_types.discard(message_type)
+        else:
+            # All site_ids
+            for message_type in message_types:
+                topics.append(message_type.topic())
+                self.subscribed_types.discard(message_type)
+
+        for topic in topics:
+            self.all_mqtt_topics.discard(topic)
+
+            # Unsubscribe from topic
+            self.client.unsubscribe(topic)
+            self.subscribed_topics.discard(topic)
+            _LOGGER.debug("Unsubscribed from %s", topic)
 
     def publish(self, message: Message, **topic_args):
         """Publish a Hermes message to MQTT."""

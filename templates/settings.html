@@ -412,6 +412,50 @@
             </div>
             <!-- End Hermes -->
 
+            <div x-show="profile.microphone.system != 'dummy'">
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <input type="checkbox" id="toggle-audio-statistics" onclick="toggleAudioStatistics()">
+                        <label for="toggle-audio-statistics" class="col-form-label">Audio Statistics</label>
+                    </div>
+                    <div class="form-row">
+                        <div id="audio-statistics-connecting" class="alert alert-warning">Connecting to websocket...</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="audio-current-energy" class="col-form-label">Current Energy:</label>
+                        </div>
+                        <div class="col">
+                            <input type="text" id="audio-current-energy" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="audio-max-energy" class="col-form-label">Max Energy:</label>
+                        </div>
+                        <div class="col">
+                            <input type="text" id="audio-max-energy" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="audio-min-energy" class="col-form-label">Min Energy:</label>
+                        </div>
+                        <div class="col">
+                            <input type="text" id="audio-min-energy" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="audio-ratio-energy" class="col-form-label">Max/Current Ratio:</label>
+                        </div>
+                        <div class="col">
+                            <input type="text" id="audio-ratio-energy" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -883,92 +927,6 @@
                         </ul>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-skip-sec" class="col-form-label">Skip Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End Pocketsphinx -->
 
@@ -1043,92 +1001,6 @@
                         <ul>
                             <li>Base Language Model FST: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_language_model_fst") }}</tt> </li>
                         </ul>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-skip-sec" class="col-form-label">Skip Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="kaldi-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="kaldi-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1221,78 +1093,6 @@
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-skip-sec" class="col-form-label">Skip Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="deepspeech-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="deepspeech-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- End DeepSpeech -->
 
@@ -1323,92 +1123,6 @@
                         <label for="stt-train-url" class="col-form-label">Training URL</label>
                         <div class="col">
                             <input id="stt-train-url" type="text" class="form-control" x-model="profile.training.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <h5>Voice Command Settings</h5>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-skip-sec" class="col-form-label">Skip Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-min-sec" class="col-form-label">Minimum Duration:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="remote-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="remote-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (1-3)
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
-                        </div>
-                        <div class="col">
-                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (comma-separated)
                         </div>
                     </div>
                 </div>
@@ -1469,6 +1183,95 @@
                 </div>
             </div>
             <!-- End Hermes -->
+
+            <div x-show="!['dummy', 'hermes'].includes(profile.speech_to_text.system)">
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="stt-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="stt-satellite-siteids" type="text" class="form-control" x-model="profile.speech_to_text.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <h5>Voice Command Settings</h5>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-skip-sec" class="col-form-label">Skip Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-speech-sec" class="col-form-label">Speech Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-silence-sec" class="col-form-label">Silence After:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-silence-sec" class="col-form-label">Record Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (1-3)
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -2680,6 +2483,32 @@
      return rhasspy.profile.wake[wakeSystem].compatible;
  }
 
+ var energies = null;
+ function toggleAudioStatistics() {
+     if ($('#toggle-audio-statistics').prop('checked')) {
+         // Enable audio stats
+         payload = "on";
+     } else {
+         // Disable audio stats
+         payload = "off";
+     }
+
+     $.post({
+         url: '/api/audio-summaries',
+         data: payload
+     });
+ }
+
+ function updateEnergies() {
+     // Update text boxes with recent audio summary info
+     if (energies != null) {
+         $('#audio-current-energy').val(energies.current_energy);
+         $('#audio-max-energy').val(energies.max_energy);
+         $('#audio-min-energy').val(energies.min_energy);
+         $('#audio-ratio-energy').val(energies.max_current_ratio);
+     }
+ }
+
  $(document).ready(() => {
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
@@ -2697,6 +2526,18 @@
          var scrollTo = offset.top - 70;
          $('html, body').animate({ scrollTop: scrollTo}, 0);
      }
+
+     rhasspy.makeWebSocket(
+         '/api/events/audiosummary',
+         (socket) => {
+             $('#audio-statistics-connecting').hide();
+             socket.onmessage = (e) => {
+                 energies = JSON.parse(e.data);
+             }
+         });
+
+     // Update audio energies 2x per second
+     setInterval(updateEnergies, 500);
  })
 
 </script>

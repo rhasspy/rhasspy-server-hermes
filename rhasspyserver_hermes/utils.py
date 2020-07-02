@@ -123,6 +123,15 @@ def get_wav_duration(wav_bytes: bytes) -> float:
             return frames / float(rate)
 
 
+def wav_to_buffer(wav_bytes: bytes) -> bytes:
+    """Return the raw audio of a WAV file"""
+    with io.BytesIO(wav_bytes) as wav_buffer:
+        wav_file: wave.Wave_read = wave.open(wav_buffer, "rb")
+        with wav_file:
+            frames = wav_file.getnframes()
+            return wav_file.readframes(frames)
+
+
 # -----------------------------------------------------------------------------
 
 

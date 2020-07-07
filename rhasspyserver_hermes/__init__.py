@@ -2,6 +2,8 @@
 import asyncio
 import io
 import logging
+import os
+import ssl
 import sys
 import threading
 import time
@@ -186,6 +188,45 @@ class RhasspyCore:
         if self.username:
             # MQTT username/password
             self.client.username_pw_set(self.username, self.password)
+
+        # MQTT TLS
+        tls_enabled = self.profile.get("mqtt.tls.enabled", False)
+        if tls_enabled:
+            _LOGGER.debug("Loading MQTT TLS settings")
+
+            # Certificate Authority certs
+            tls_ca_certs = self.profile.get("mqtt.tls.ca_certs")
+
+            # CERT_REQUIRED, CERT_OPTIONAL, CERT_NONE
+            tls_cert_reqs = self.profile.get("mqtt.tls.cert_reqs")
+
+            # PEM
+            tls_certfile = self.profile.get("mqtt.tls.certfile")
+            if tls_certfile is not None:
+                tls_certfile = os.path.expandvars(tls_certfile)
+
+            tls_keyfile = self.profile.get("mqtt.tls.keyfile")
+            if tls_keyfile is not None:
+                tls_keyfile = os.path.expandvars(tls_keyfile)
+
+            # Cipers/version
+            tls_ciphers = self.profile.get("mqtt.tls.ciphers")
+            tls_version = self.profile.get("mqtt.tls.version")
+
+            if tls_version is None:
+                # Use highest TLS version
+                tls_version = ssl.PROTOCOL_TLS
+
+            tls_args = {
+                "ca_certs": tls_ca_certs,
+                "certfile": tls_certfile,
+                "keyfile": tls_keyfile,
+                "cert_reqs": getattr(ssl, tls_cert_reqs),
+                "tls_version": tls_version,
+                "ciphers": (tls_ciphers or None),
+            }
+            _LOGGER.debug("MQTT TLS enabled: %s", tls_args)
+            self.client.tls_set(**tls_args)
 
         # MQTT retries
         self.connection_retries = connection_retries

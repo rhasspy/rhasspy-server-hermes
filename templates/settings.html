@@ -1796,7 +1796,9 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wavenet-voice" class="col-form-label">Voice:</label>
+                        <div class="col-auto">
+                            <label for="wavenet-voice" class="col-form-label">Voice:</label>
+                        </div>
                         <div class="col">
                             <input id="wavenet-voice" type="text" class="form-control" x-model="profile.text_to_speech.wavenet.voice" :disabled="profile.text_to_speech.system != 'wavenet'" olaceholder="Wavenet-C">
                         </div>
@@ -1804,7 +1806,9 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wavenet-gender" class="col-form-label">Gender:</label>
+                        <div class="col-auto">
+                            <label for="wavenet-gender" class="col-form-label">Gender:</label>
+                        </div>
                         <div class="col">
                             <select class="form-control" x-model="profile.text_to_speech.wavenet.gender">
                                 <option value="FEMALE">Female</option>
@@ -1816,7 +1820,9 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wavenet-language_code" class="col-form-label">Language code (xx-XX)</label>
+                        <div class="col-auto">
+                            <label for="wavenet-language_code" class="col-form-label">Language code (xx-XX)</label>
+                        </div>
                         <div class="col">
                             <input id="wavenet-language_code" type="text" class="form-control" x-model="profile.text_to_speech.wavenet.language_code" :disabled="profile.text_to_speech.system != 'wavenet'">
                         </div>
@@ -1825,9 +1831,9 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
-                        <label for="wavenet-samplerate" class="col-form-label col">Sample Rate</label>
+                            <label for="wavenet-samplerate" class="col-form-label">Sample Rate</label>
                         </div>
-                        <div class="col-auto">
+                        <div class="col">
                             <select class="form-control" id="wavenet-samplerate" :disabled="profile.text_to_speech.system != 'wavenet'" x-model="profile.text_to_speech.wavenet.sample_rate">
                                 <option value="8000">8000</option>
                                 <option value="11025">11025</option>
@@ -1841,9 +1847,10 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col text-muted">
-                            Expecting JSON credentials at: <tt>{{ profile.read_path(profile.get("text_to_speech.wavenet.credentials_json")) }}</tt>
-                            <br>
-                            WAV files will be cached in: <tt>{{ profile.read_path(profile.get("text_to_speech.wavenet.cache_dir")) }}</tt>
+                            <ul>
+                                <li>Credentials: <tt>{{ maybe_read_path(profile, "text_to_speech.wavenet.credentials_json") }}</tt></li>
+                                <li>WAV cache: <tt>{{ maybe_read_path(profile, "text_to_speech.wavenet.cache_dir") }}</tt></li>
+                            </ul>
                         </div>
                     </div>
                 </div>

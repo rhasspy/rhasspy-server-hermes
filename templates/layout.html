@@ -402,7 +402,9 @@
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
                  contentType = (contentType === undefined) ? 'application/json' : contentType;
 
-                 rhasspy.showBusy(message);
+                 if (message != '') {
+                    rhasspy.showBusy(message);
+                 }
                  return $.ajax({
                      url: url,
                      type: method,

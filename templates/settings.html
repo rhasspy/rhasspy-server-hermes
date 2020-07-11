@@ -1797,34 +1797,14 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
-                            <label for="wavenet-voice" class="col-form-label">Voice:</label>
+                            <label for="tts-wavenet-voices" class="col-form-label">Voice:</label>
                         </div>
                         <div class="col">
-                            <input id="wavenet-voice" type="text" class="form-control" x-model="profile.text_to_speech.wavenet.voice" :disabled="profile.text_to_speech.system != 'wavenet'" olaceholder="Wavenet-C">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="wavenet-gender" class="col-form-label">Gender:</label>
-                        </div>
-                        <div class="col">
-                            <select class="form-control" x-model="profile.text_to_speech.wavenet.gender">
-                                <option value="FEMALE">Female</option>
-                                <option value="MALE">Male</option>
-                                <option value="NEUTRAL">Neutral</option>
+                            <select id="tts-wavenet-voices" x-model="profile.text_to_speech.wavenet.voice" class="form-control">
                             </select>
                         </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="wavenet-language_code" class="col-form-label">Language code (xx-XX)</label>
-                        </div>
-                        <div class="col">
-                            <input id="wavenet-language_code" type="text" class="form-control" x-model="profile.text_to_speech.wavenet.language_code" :disabled="profile.text_to_speech.system != 'wavenet'">
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('wavenet')" class="btn btn-primary form-control" title="Refresh wavenet voices">Refresh</button>
                         </div>
                     </div>
                 </div>
@@ -2466,16 +2446,18 @@
  }
 
  // Load available audio input devices
- function refreshInputDevices(micSystem) {
+ function refreshInputDevices(micSystem, suppressMessage = false) {
      var selectId = '#microphone-' + micSystem + '-devices';
+     var message = (suppressMessage) ? '' : 'Refreshing microphones';
      $(selectId + ' option:not(:first)').remove();
 
-     rhasspy.getBusy('Refreshing microphones',
+     rhasspy.getBusy(message,
                      '/api/microphones')
             .done((r) => {
                 Object.entries(r).forEach((kv) => {
+                    var selected = (kv[0] == rhasspy.profile.microphone[micSystem].device) ? ' selected' : '';
                     $(selectId)
-                        .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
+                        .append('<option value="' + kv[0] + '"' + selected + '>' + kv[1] + ' (' + kv[0] + ')</option>');
                 });
             });
  }
@@ -2496,50 +2478,56 @@
  }
 
  // Load available audio output devices
- function refreshOutputDevices(soundSystem) {
+ function refreshOutputDevices(soundSystem, suppressMessage = false) {
      var selectId = '#sounds-' + soundSystem + '-devices';
+     var message = (suppressMessage) ? '' : 'Refreshing speakers';
      $(selectId + ' option:not(:first)').remove();
 
-     rhasspy.getBusy('Refreshing speakers',
+     rhasspy.getBusy(message,
                      '/api/speakers')
             .done((r) => {
                 Object.entries(r).forEach((kv) => {
+                    var selected = (kv[0] == rhasspy.profile.sounds[soundSystem].device) ? ' selected' : '';
                     $(selectId)
-                        .append('<option value="' + kv[0] + '">' + kv[1] + ' (' + kv[0] + ')</option>');
+                        .append('<option value="' + kv[0] + '"' + selected + '>' + kv[1] + ' (' + kv[0] + ')</option>');
                 });
             });
  }
 
  // Load available hot words
- function refreshHotwords(wakeSystem) {
+ function refreshHotwords(wakeSystem, suppressMessage = false) {
      var selectId = '#wake-' + wakeSystem + '-hotwords';
+     var message = (suppressMessage) ? '' : 'Refreshing hotwords';
      $(selectId + ' option').remove();
 
-     rhasspy.getBusy('Refreshing hotwords',
+     rhasspy.getBusy(message,
                      '/api/wake-words')
             .done((r) => {
                r.forEach((hotword) => {
+                    var selected = (hotword.modelId == rhasspy.profile.wake[wakeSystem].modelId) ? ' selected' : '';
                     $(selectId)
-                        .append('<option value="' + hotword.modelId + '">' + hotword.modelWords + ' (' + hotword.modelId + ')</option>');
+                        .append('<option value="' + hotword.modelId + '"' + selected + '>' + hotword.modelWords + ' (' + hotword.modelId + ')</option>');
                 });
             });
  }
 
  // Load available TTS voices
- function refreshVoices(ttsSystem) {
+ function refreshVoices(ttsSystem, suppressMessage = false) {
      var selectId = '#tts-' + ttsSystem + '-voices';
+     var message = (suppressMessage) ? '' : 'Refreshing voices';
      $(selectId + ' option:not(:first)').remove();
 
-     rhasspy.getBusy('Refreshing voices',
+     rhasspy.getBusy(message,
                      '/api/tts-voices')
             .done((r) => {
                 r.forEach((voice) => {
                     var description = voice.voiceId;
+                    var selected = (voice.voiceId == rhasspy.profile.text_to_speech[ttsSystem].voice) ? ' selected' : '';
                     if (voice.description) {
                         description += ' (' + voice.description + ')';
                     }
                     $(selectId)
-                        .append('<option value="' + voice.voiceId + '">' + description + '</option>');
+                        .append('<option value="' + voice.voiceId + '"' + selected + '>' + description + '</option>');
                 });
             });
  }
@@ -2580,6 +2568,24 @@
      }
  }
 
+ function refreshSelects() {
+    if ($('#tts-' + rhasspy.profile.text_to_speech.system + '-voices').length) {
+        refreshVoices(rhasspy.profile.text_to_speech.system, true);
+     }
+     
+     if ($('#wake-' + rhasspy.profile.wake.system + '-hotwords').length) { 
+         refreshHotwords(rhasspy.profile.wake.system, true);
+     }
+
+     if ($('#sounds-' + rhasspy.profile.sounds.system + '-devices').length) {
+        refreshOutputDevices(rhasspy.profile.sounds.system, true);
+     }
+
+     if ($('#microphone-' + rhasspy.profile.microphone.system + '-devices').length) {
+        refreshInputDevices(rhasspy.profile.microphone.system, true);
+     }
+ }
+
  $(document).ready(() => {
      // Highlight selected section from URL
      var hash = $(location).attr('hash') || '';
@@ -2597,6 +2603,8 @@
          var scrollTo = offset.top - 70;
          $('html, body').animate({ scrollTop: scrollTo}, 0);
      }
+
+     refreshSelects();
 
      rhasspy.makeWebSocket(
          '/api/events/audiosummary',

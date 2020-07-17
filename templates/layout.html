@@ -541,6 +541,23 @@
                      this.sensitivityToThreshold(sensitivity);
              },
 
+             // Computed getter for Raven sensitivity
+             get ravenWakeSensitivity() {
+                 var probThreshold = this.profile.wake.raven.probability_threshold
+                 var width = (probThreshold[1] - probThreshold[0]) / 2
+
+                 return (Math.max(0, Math.min(1, width / 0.1))).toFixed(1)
+             },
+
+             // Computed setter for Raven sensitivity
+             set ravenWakeSensitivity(sensitivity) {
+                 sensitivity = Math.max(0, Math.min(1, sensitivity))
+                 var center = 0.5
+                 var width = sensitivity * 0.1
+                 this.profile.wake.raven.probability_threshold =
+                     [center - width, center + width]
+             },
+
              // Creates a new websocket and the calls afterFunc with it.
              // Websocket will automatically reconnect after 5 seconds.
              makeWebSocket: (urlFragment, afterFunc) => {

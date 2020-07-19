@@ -202,10 +202,14 @@ class RhasspyCore:
 
             # PEM
             tls_certfile = self.profile.get("mqtt.tls.certfile")
+            if tls_certfile == "":
+                tls_certfile = None
             if tls_certfile is not None:
                 tls_certfile = os.path.expandvars(tls_certfile)
 
             tls_keyfile = self.profile.get("mqtt.tls.keyfile")
+            if tls_keyfile == "":
+                tls_keyfile = None
             if tls_keyfile is not None:
                 tls_keyfile = os.path.expandvars(tls_keyfile)
 

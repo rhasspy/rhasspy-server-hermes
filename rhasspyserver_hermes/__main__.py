@@ -2541,7 +2541,6 @@ if _ARGS.certfile:
 else:
     protocol = "http"
     hyp_config.bind = [f"{_ARGS.host}:{_ARGS.port}"]
-    hyp_config.insecure_bind = [f"{_ARGS.host}:{_ARGS.port}"]
 
 _LOGGER.debug("Starting web server at %s://%s:%s", protocol, _ARGS.host, _ARGS.port)
 

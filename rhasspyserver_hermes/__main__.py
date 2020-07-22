@@ -53,9 +53,12 @@ from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
 from rhasspyhermes.wake import (
     HotwordDetected,
+    HotwordError,
+    HotwordExampleRecorded,
     HotwordToggleOff,
     HotwordToggleOn,
     HotwordToggleReason,
+    RecordHotwordExample,
 )
 from rhasspyprofile import Profile, human_size
 from swagger_ui import quart_api_doc
@@ -2034,6 +2037,59 @@ async def api_audio_summaries() -> str:
     core.enable_audio_summaries()
     _LOGGER.debug("Audio summaries enabled.")
     return "on"
+
+
+# -----------------------------------------------------------------------------
+
+
+@app.route("/api/record-wake-example", methods=["POST"])
+async def api_record_wake_example() -> Response:
+    """Record example of a wake word and optionally save it to profile."""
+    assert core is not None
+
+    # Path to save WAV example (relative to profile)
+    save_path = request.args.get("savePath")
+
+    session_id = str(uuid4())
+
+    messages: typing.List[typing.Any] = []
+    message_types: typing.List[typing.Type[Message]] = []
+
+    # Start recording and wait for response
+    def handle_recorded():
+        while True:
+            topic, message = yield
+
+            if isinstance(message, HotwordError) and (message.session_id == session_id):
+                return message
+
+            if isinstance(message, HotwordExampleRecorded) and (
+                HotwordExampleRecorded.get_request_id(topic) == session_id
+            ):
+                return message
+
+    message_types = [HotwordExampleRecorded, HotwordError]
+    messages = [RecordHotwordExample(id=session_id, site_id=core.site_id)]
+
+    # Expecting only a single result
+    _LOGGER.debug("Waiting for hotword example (id=%s)", session_id)
+    example_recorded = None
+    async for response in core.publish_wait(handle_recorded(), messages, message_types):
+        example_recorded = response
+
+    if isinstance(example_recorded, HotwordError):
+        raise RuntimeError(example_recorded.error)
+
+    assert isinstance(example_recorded, HotwordExampleRecorded)
+    wav_bytes = example_recorded.wav_bytes
+
+    if save_path is not None:
+        wav_path = core.profile.write_path(save_path)
+        wav_path.parent.mkdir(parents=True, exist_ok=True)
+        wav_path.write_bytes(wav_bytes)
+        _LOGGER.debug("Wrote WAV example to %s (%s byte(s))", wav_path, len(wav_bytes))
+
+    return Response(wav_bytes, mimetype="audio/wav")
 
 
 # -----------------------------------------------------------------------------

@@ -722,11 +722,37 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        {% set raven_template_path = maybe_read_path(profile, "wake.raven.template_dir", "raven") %}
+                        {% set raven_template_dir = profile.get("wake.raven.template_dir", "raven") %}
                         <ul>
-                            <li>Template Directory: <tt>{{ maybe_read_path(profile, "wake.raven.template_dir") }}</tt> </li>
+                            <li>Template Directory: <tt>{{ raven_template_path }}</tt> </li>
                         </ul>
                     </div>
                 </div>
+
+                <!-- Examples -->
+                {% for i in range(3): %}
+                {% set example_file = "example-{i:02d}.wav".format(i=i) %}
+                {% set example_path = raven_template_path / example_file %}
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            {% if example_path.is_file(): %}
+                            <span id="raven-missing-{{ i }}" class="badge badge-success">Present</span>
+                            {% else %}
+                            <span id="raven-missing-{{ i }}" class="badge badge-danger">Missing</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-auto">
+                            <tt>{{ example_file }}</tt>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord({{ i }}, '{{ raven_template_dir }}/{{ example_file }}')">Record</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
                 <div class="form-group">
                     <div class="form-row">
                         <label for="wake-raven-sensitivity" class="col-form-label">Sensitivity</label>
@@ -2526,6 +2552,21 @@
             });
  }
 
+ // Record an example for Rhasspy Raven
+ function ravenRecord(i, filename) {
+     var message = 'Speak wake word (' + filename + ')';
+     var missing = $('#raven-missing-' + i);
+
+     rhasspy.postBusy(message,
+                     '/api/record-wake-example?savePath=' + filename)
+            .done((r) => {
+                // Change missing label
+                missing.removeClass('badge-danger');
+                missing.addClass('badge-success');
+                missing.text("Present");
+            });
+ }
+
  function isSpeechCompatible() {
      var speechSystem = rhasspy.profile.speech_to_text.system;
      return rhasspy.profile.speech_to_text[speechSystem].compatible;
@@ -2566,8 +2607,8 @@
     if ($('#tts-' + rhasspy.profile.text_to_speech.system + '-voices').length) {
         refreshVoices(rhasspy.profile.text_to_speech.system, true);
      }
-     
-     if ($('#wake-' + rhasspy.profile.wake.system + '-hotwords').length) { 
+
+     if ($('#wake-' + rhasspy.profile.wake.system + '-hotwords').length) {
          refreshHotwords(rhasspy.profile.wake.system, true);
      }
 

@@ -56,6 +56,8 @@ from rhasspyhermes.tts import GetVoices, TtsError, TtsSay, TtsSayFinished, Voice
 from rhasspyhermes.wake import (
     GetHotwords,
     HotwordDetected,
+    HotwordError,
+    HotwordExampleRecorded,
     Hotwords,
     HotwordToggleOff,
     HotwordToggleOn,
@@ -1164,6 +1166,9 @@ class RhasspyCore:
                             _LOGGER.warning(
                                 "Dialogue management is disabled. ASR will NOT be automatically enabled."
                             )
+                    elif isinstance(message, (HotwordError, HotwordExampleRecorded)):
+                        # Other hotword message
+                        self.handle_message(topic, message)
                     elif isinstance(message, NluError):
                         # NLU service error
                         self.handle_message(topic, message)

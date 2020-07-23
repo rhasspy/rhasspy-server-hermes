@@ -755,9 +755,9 @@
 
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="wake-raven-sensitivity" class="col-form-label">Sensitivity</label>
+                        <label for="wake-raven-probability-threshold" class="col-form-label">Probability Threshold</label>
                         <div class="col-sm-auto">
-                            <input id="wake-raven-sensitivity" type="number" min="0" max="1" step="0.1" class="form-control" x-model="ravenWakeSensitivity" :disabled="profile.wake.system != 'raven'">
+                            <input id="wake-raven-probability-threshold" x-model="profile.wake.raven.probability_threshold" :disabled="profile.wake.system != 'raven'">
                         </div>
                     </div>
                 </div>
@@ -1311,7 +1311,7 @@
                 <option value="fsticuffs">Fsticuffs</option>
                 <option value="fuzzywuzzy">Fuzzywuzzy</option>
                 <option value="rasa">Rasa NLU</option>
-                <option value="snips">Snips NLU</option>
+                <!-- <option value="snips">Snips NLU</option> -->
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>

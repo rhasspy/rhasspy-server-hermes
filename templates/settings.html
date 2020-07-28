@@ -731,23 +731,27 @@
                 </div>
 
                 <!-- Examples -->
-                {% for i in range(3): %}
-                {% set example_file = "example-{i:02d}.wav".format(i=i) %}
-                {% set example_path = raven_template_path / example_file %}
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
-                            {% if example_path.is_file(): %}
-                            <span id="raven-missing-{{ i }}" class="badge badge-success">Present</span>
-                            {% else %}
-                            <span id="raven-missing-{{ i }}" class="badge badge-danger">Missing</span>
-                            {% endif %}
+                            <label for="wake-raven-keyword-name" class="col-form-label">Wakeword Id:</label>
+                        </div>
+                        <div class="col">
+                            <input id="wake-raven-keyword-name" type="text" class="form-control" value="default" onchange="resetRavenRecordings()" :disabled="profile.wake.system != 'raven'">
+                        </div>
+                    </div>
+                </div>
+                {% for i in range(3): %}
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <span id="raven-missing-{{ i }}" class="badge badge-info"></span>
                         </div>
                         <div class="col-auto">
-                            <tt>{{ example_file }}</tt>
+                            <tt>Example {{ i + 1 }}</tt>
                         </div>
                         <div class="col-auto">
-                            <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord({{ i }}, '{{ raven_template_dir }}/{{ example_file }}')">Record</button>
+                            <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord({{ i }}, '{{ raven_template_dir }}')">Record</button>
                         </div>
                     </div>
                 </div>
@@ -2578,7 +2582,10 @@
  }
 
  // Record an example for Rhasspy Raven
- function ravenRecord(i, filename) {
+ function ravenRecord(i, dirname) {
+     var wakewordId = $('#wake-raven-keyword-name').val();
+     var filename = dirname + '/' + wakewordId + '/example-' + i + '.wav'
+
      var message = 'Speak wake word (' + filename + ')';
      var missing = $('#raven-missing-' + i);
 
@@ -2586,10 +2593,15 @@
                      '/api/record-wake-example?savePath=' + filename)
             .done((r) => {
                 // Change missing label
-                missing.removeClass('badge-danger');
-                missing.addClass('badge-success');
-                missing.text("Present");
+                missing.text('Recorded');
             });
+ }
+
+ function resetRavenRecordings() {
+     for (var i = 0; i < 3; i++) {
+         var missing = $('#raven-missing-' + i);
+         missing.text('');
+     }
  }
 
  function isSpeechCompatible() {

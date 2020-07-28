@@ -6,6 +6,6 @@ quart==0.11.3
 quart-cors==0.3.0
 rhasspy-hermes~=0.4.0
 rhasspy-nlu~=0.3.0
-rhasspy-profile~=0.3.0
-rhasspy-supervisor~=0.3.0
+rhasspy-profile~=0.4.0
+rhasspy-supervisor~=0.4.0
 swagger-ui-py==0.2.1

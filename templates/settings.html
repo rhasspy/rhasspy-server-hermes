@@ -1011,6 +1011,22 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-language-model-type" class="col-form-label">
+                                Language Model Type:
+                            </label>
+                        </div>
+                        <div class="col">
+                            <select id="kaldi-language-model-type" class="form-control" x-model="profile.speech_to_text.kaldi.language_model_type">
+                                <option value="arpa">ARPA</option>
+                                <option value="text_fst">Text FST</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col">
                             <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
                             <label for="kaldi-open" class="col-form-label">

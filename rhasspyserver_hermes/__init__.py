@@ -484,11 +484,7 @@ class RhasspyCore:
 
         nlu_id = str(uuid4())
         query = NluQuery(
-            id=nlu_id,
-            input=text,
-            intent_filter=intent_filter,
-            site_id=self.site_id,
-            session_id=nlu_id,
+            id=nlu_id, input=text, intent_filter=intent_filter, site_id=self.site_id,
         )
 
         def handle_intent():
@@ -497,7 +493,7 @@ class RhasspyCore:
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.session_id == nlu_id):
+                ) and (message.id == nlu_id):
                     return message
 
         messages = [query]

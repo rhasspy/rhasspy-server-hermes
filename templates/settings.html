@@ -516,6 +516,18 @@
                         </div>
                     </div>
                 </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="wake-pocketsphinx-udp-audio" class="col-form-label">UDP Audio (Input)</label>
+                        <div class="col">
+                            <input id="wake-pocketsphinx-udp-audio" type="text" class="form-control" placeholder="host1:port1:siteId1,host2:port2:siteId2" x-model="profile.wake.pocketsphinx.udp_audio" :disabled="profile.wake.system != 'pocketsphinx'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (outside ASR listening)
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Pocketsphinx -->
 

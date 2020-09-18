@@ -288,7 +288,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "len": len,
         "sorted": sorted,
         "profile": core.profile,
-        "profile_json": json.dumps(core.profile.json, indent=4),
+        "profile_json": json.dumps(core.profile.json, indent=4, ensure_ascii=False),
         "profile_dir": core.profile.write_path(""),
         "version": version,
         "site_id": core.site_id,
@@ -316,7 +316,7 @@ def save_profile(profile_json: typing.Dict[str, typing.Any]) -> str:
 
     profile_path = Path(core.profile.write_path("profile.json"))
     with open(profile_path, "w") as profile_file:
-        json.dump(profile_json, profile_file, indent=4)
+        json.dump(profile_json, profile_file, indent=4, ensure_ascii=False)
 
     msg = f"Wrote profile to {str(profile_path)}"
     _LOGGER.debug(msg)
@@ -2191,7 +2191,7 @@ def handle_ws_mqtt(message: typing.Union[str, bytes], matcher: MQTTMatcher):
         matcher[topic] = message_dict
         _LOGGER.debug("Subscribed to %s", topic)
     elif message_type == "publish":
-        payload = json.dumps(message_dict["payload"])
+        payload = json.dumps(message_dict["payload"], ensure_ascii=False)
         core.client.publish(topic, payload)
         _LOGGER.debug("Published %s char(s) to %s", len(payload), topic)
 
@@ -2229,7 +2229,8 @@ async def api_ws_mqtt(queue) -> None:
                     if message[0] == "mqtt":
                         topic, payload = message[1], message[2]
                         mqtt_message = json.dumps(
-                            {"topic": topic, "payload": json.loads(payload)}
+                            {"topic": topic, "payload": json.loads(payload)},
+                            ensure_ascii=False,
                         )
 
                         for _ in topic_matcher.iter_match(topic):
@@ -2267,7 +2268,7 @@ async def api_ws_mqtt_topic(queue, topic: str) -> None:
             if message[0] == "mqtt":
                 topic, payload = message[1], message[2]
                 mqtt_message = json.dumps(
-                    {"topic": topic, "payload": json.loads(payload)}
+                    {"topic": topic, "payload": json.loads(payload)}, ensure_ascii=False
                 )
 
                 for _ in topic_matcher.iter_match(topic):
@@ -2302,7 +2303,7 @@ async def api_ws_intent(queue) -> None:
                 intent_dict["wakewordId"] = getattr(intent, "wakeword_id", None)
                 intent_dict["lang"] = getattr(intent, "lang", None)
 
-                ws_message = json.dumps(intent_dict)
+                ws_message = json.dumps(intent_dict, ensure_ascii=False)
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
     except CancelledError:
@@ -2330,7 +2331,8 @@ async def api_ws_wake(queue) -> None:
                         "siteId": hotword_detected.site_id,
                         "modelId": hotword_detected.model_id,
                         "lang": hotword_detected.lang,
-                    }
+                    },
+                    ensure_ascii=False,
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2359,7 +2361,8 @@ async def api_ws_text(queue) -> None:
                         "sessionId": text_captured.session_id,
                         "wakewordId": text_captured.wakeword_id,
                         "lang": text_captured.lang,
-                    }
+                    },
+                    ensure_ascii=False,
                 )
                 await websocket.send(ws_message)
                 _LOGGER.debug("Sent %s char(s) to websocket", len(ws_message))
@@ -2380,7 +2383,9 @@ async def api_ws_audiosummary(queue) -> None:
             message = await queue.get()
             if message[0] == "audiosummary":
                 audio_energies = message[1]
-                ws_message = json.dumps(dataclasses.asdict(audio_energies))
+                ws_message = json.dumps(
+                    dataclasses.asdict(audio_energies), ensure_ascii=False
+                )
                 await websocket.send(ws_message)
     except CancelledError:
         pass

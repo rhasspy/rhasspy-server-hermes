@@ -6,3 +6,5 @@
 !VERSION
 !etc/wav/*.wav
 !scripts/create-venv.sh
+!bin/rhasspy-server-hermes
+!Makefile

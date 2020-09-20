@@ -117,6 +117,8 @@ ENV APP_DIR=/usr/lib/rhasspy-server-hermes
 COPY --from=build ${APP_DIR}/ ${APP_DIR}/
 COPY etc/ ${APP_DIR}/etc/
 COPY bin/ ${APP_DIR}/bin/
+COPY web/ ${APP_DIR}/web/
+COPY templates/ ${APP_DIR}/templates/
 COPY VERSION ${APP_DIR}/
 COPY rhasspyserver_hermes/ ${APP_DIR}/rhasspyserver_hermes
 

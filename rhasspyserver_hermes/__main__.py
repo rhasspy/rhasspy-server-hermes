@@ -25,14 +25,11 @@ import hypercorn
 import hypercorn.asyncio
 import hypercorn.config
 import quart_cors
-import rhasspyhermes
-import rhasspynlu
-import rhasspyprofile
-import rhasspysupervisor
 from paho.mqtt.matcher import MQTTMatcher
 from quart import (
     Quart,
     Response,
+    exceptions,
     jsonify,
     render_template,
     request,
@@ -40,6 +37,13 @@ from quart import (
     send_from_directory,
     websocket,
 )
+from swagger_ui import quart_api_doc
+from wsproto.utilities import LocalProtocolError
+
+import rhasspyhermes
+import rhasspynlu
+import rhasspyprofile
+import rhasspysupervisor
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,
@@ -61,8 +65,6 @@ from rhasspyhermes.wake import (
     RecordHotwordExample,
 )
 from rhasspyprofile import Profile, human_size
-from swagger_ui import quart_api_doc
-from wsproto.utilities import LocalProtocolError
 
 from . import RhasspyCore
 from .utils import (
@@ -94,6 +96,9 @@ def parse_args():
         "--host", type=str, help="Host for web server", default="0.0.0.0"
     )
     parser.add_argument("--port", type=int, help="Port for web server", default=12101)
+    parser.add_argument(
+        "--url-root", type=str, help="Root of application URLs (default: '/')"
+    )
     parser.add_argument(
         "--mqtt-host", type=str, help="Host for MQTT broker", default=None
     )
@@ -243,6 +248,36 @@ template_dir = web_dir.parent / "templates"
 app = Quart("rhasspy", template_folder=str(template_dir))
 app.secret_key = str(uuid4())
 
+if _ARGS.url_root:
+    # Set URL root for application
+    class PrefixMiddleware:
+        """Middleware to strip URL prefix from incoming paths"""
+
+        def __init__(self, asgi_app, prefix):
+            self.asgi_app = asgi_app
+            self.prefix = prefix
+
+            if not self.prefix.startswith("/"):
+                self.prefix = f"/{self.prefix}"
+
+        async def __call__(
+            self, scope: dict, receive: typing.Callable, send: typing.Callable
+        ):
+            path = scope.get("path")
+            if path:
+                if path.startswith(self.prefix):
+                    path = path[len(self.prefix) :]
+                    if not path:
+                        path = "/"
+
+                    scope["path"] = path
+                else:
+                    raise exceptions.HTTPException(404, path, app.name)
+
+            return await self.asgi_app(scope, receive, send)
+
+    app.asgi_app = PrefixMiddleware(app.asgi_app, _ARGS.url_root)  # type: ignore
+
 # Monkey patch quart_cors to get rid of non-standard requirement that websockets
 # have origin header set.
 
@@ -293,6 +328,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "version": version,
         "site_id": core.site_id,
         "maybe_read_path": maybe_read_path,
+        "url_prefix": _ARGS.url_root,
     }
 
 

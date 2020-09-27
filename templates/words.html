@@ -142,7 +142,7 @@
 
  // Displays dialog with phoneme table
  function showPhonemes() {
-     $.get('/api/phonemes', (r) => {
+     $.get('{{ url_prefix }}/api/phonemes', (r) => {
          console.log(r)
          words.phonemes.value = r;
          $('#phonemesModal').modal('show');
@@ -254,7 +254,7 @@
 
  $(document).ready(() => {
      // Load custom words
-     $.get('/api/custom-words', (r) => words.customWords.value = r);
+     $.get('{{ url_prefix }}/api/custom-words', (r) => words.customWords.value = r);
 
      // Catch ENTER and guess word pronuncation(s)
      $("#word").keypress(function() {

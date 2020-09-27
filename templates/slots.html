@@ -141,7 +141,7 @@
  $(document).ready(() => {
      // Load slots on start up
      $.get({
-         url: '/api/slots',
+         url: '{{ url_prefix }}/api/slots',
          dataType: 'json',
      }).done((r) => {
          slots.textByKey = Object.fromEntries(

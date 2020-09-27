@@ -4,13 +4,13 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
-        <link rel="icon" href="/img/favicon.png">
+        <link rel="icon" href="{{ url_prefix }}/img/favicon.png">
         <title>{{ site_id }} | Rhasspy</title>
 
         <!-- CSS -->
-        <link rel="stylesheet" href="/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="{{ url_prefix }}/css/bootstrap.min.css">
+        <link rel="stylesheet" href="{{ url_prefix }}/css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="{{ url_prefix }}/css/main.css">
 
         <style>
          [x-cloak] { display: none; }
@@ -26,8 +26,8 @@
         <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
 
             <!-- Logo -->
-            <a href="/">
-                <img id="logo" title="Rhasspy" class="navbar-brand" src="/img/logo.png">
+            <a href="{{ url_prefix }}/">
+                <img id="logo" title="Rhasspy" class="navbar-brand" src="{{ url_prefix }}/img/logo.png">
             </a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 
                 <!-- Version -->
                 <div class="navbar-container">
-                    <a href="/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
+                    <a href="{{ url_prefix }}/api/" title="HTTP API" class="badge badge-info">{{ version }}</a>
                 </div>
 
                 <!-- Page Drop Down -->
@@ -48,27 +48,27 @@
                             {{ page }}
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="/">
+                            <a class="dropdown-item" href="{{ url_prefix }}/">
                                 <i class="fas fa-home mr-2"></i>Home
                             </a>
-                            <a class="dropdown-item" href="/sentences">
+                            <a class="dropdown-item" href="{{ url_prefix }}/sentences">
                                 <i class="fas fa-align-left mr-2"></i>Sentences
                             </a>
-                            <a class="dropdown-item" href="/slots">
+                            <a class="dropdown-item" href="{{ url_prefix }}/slots">
                                 <i class="fas fa-dot-circle mr-2"></i>Slots
                             </a>
-                            <a class="dropdown-item" href="/words">
+                            <a class="dropdown-item" href="{{ url_prefix }}/words">
                                 <i class="fas fa-quote-right mr-2"></i>Words
                             </a>
-                            <a class="dropdown-item" href="/settings">
+                            <a class="dropdown-item" href="{{ url_prefix }}/settings">
                                 <i class="fas fa-cogs mr-2"></i>Settings
                             </a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/advanced">
+                            <a class="dropdown-item" href="{{ url_prefix }}/advanced">
                                 <i class="fas fa-skull-crossbones mr-2"></i>Advanced
                             </a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/docs/" target="_blank">
+                            <a class="dropdown-item" href="{{ url_prefix }}/docs/" target="_blank">
                                 <i class="fas fa-book mr-2"></i>Documentation
                                 <i class="fas fa-external-link-alt ml-1"></i>
                             </a>
@@ -93,27 +93,27 @@
         <div>
             <div class="row">
                 <div class="col-xs-auto bg-dark p-0">
-                    <a href="/" title="Home" class="btn w-100  {{ "btn-light rounded-0" if page == "Home" else "btn-dark" }}">
+                    <a href="{{ url_prefix }}/" title="Home" class="btn w-100  {{ "btn-light rounded-0" if page == "Home" else "btn-dark" }}">
                         <i class="fas fa-home fa-lg ml-2"></i>
                     </a>
                     <br>
-                    <a href="/sentences" title="Sentences" class="btn w-100 {{ "btn-light rounded-0" if page == "Sentences" else "btn-dark" }}">
+                    <a href="{{ url_prefix }}/sentences" title="Sentences" class="btn w-100 {{ "btn-light rounded-0" if page == "Sentences" else "btn-dark" }}">
                         <i class="fas fa-align-left fa-lg ml-2"></i>
                     </a>
                     <br>
-                    <a href="/slots" title="Slots" class="btn w-100 {{ "btn-light rounded-0" if page == "Slots" else "btn-dark" }}">
+                    <a href="{{ url_prefix }}/slots" title="Slots" class="btn w-100 {{ "btn-light rounded-0" if page == "Slots" else "btn-dark" }}">
                         <i class="fas fa-dot-circle fa-lg ml-2"></i>
                     </a>
                     <br>
-                    <a href="/words" title="Words" class="btn w-100 {{ "btn-light rounded-0" if page == "Words" else "btn-dark" }}">
+                    <a href="{{ url_prefix }}/words" title="Words" class="btn w-100 {{ "btn-light rounded-0" if page == "Words" else "btn-dark" }}">
                         <i class="fas fa-quote-right fa-lg ml-2"></i>
                     </a>
                     <br>
-                    <a href="/settings" title="Settings" class="btn w-100 {{ "btn-light rounded-0" if page == "Settings" else "btn-dark" }}">
+                    <a href="{{ url_prefix }}/settings" title="Settings" class="btn w-100 {{ "btn-light rounded-0" if page == "Settings" else "btn-dark" }}">
                         <i class="fas fa-cogs fa-lg ml-2"></i>
                     </a>
                     <br>
-                    <a href="/docs/" target="_blank" title="Documentation" class="btn btn-info w-100 rounded-0">
+                    <a href="{{ url_prefix }}/docs/" target="_blank" title="Documentation" class="btn btn-info w-100 rounded-0">
                         <i class="fas fa-book fa-lg ml-2"></i>
                     </a>
                 </div>
@@ -121,7 +121,7 @@
                     <!-- New Alert -->
                     <div id="new-alert" class="alert alert-success alert-dismissable" role="alert" x-show="allDummy()" x-cloak>
                         <span class="ml-2">
-                            New to Rhasspy? Try the <a target="_blank" href="/docs/tutorials/#getting-started-guide">Getting Started Guide</a> &#x263A;
+                            New to Rhasspy? Try the <a target="_blank" href="{{ url_prefix }}/docs/tutorials/#getting-started-guide">Getting Started Guide</a> &#x263A;
                         </span>
                         <button type="button" onclick="$('#new-alert').hide()" class="close ml-auto" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -143,7 +143,7 @@
 
                     <!-- Unknown Words Alert -->
                     <div id="unknown-words-alert" class="alert alert-warning alert-dismissable" role="alert" x-show="!$.isEmptyObject(unknownWords)" x-cloak>
-                        <a title="Go to Words page" href="/words" class="btn btn-primary">View</a>
+                        <a title="Go to Words page" href="{{ url_prefix }}/words" class="btn btn-primary">View</a>
                         <span class="ml-2">
                             There are <span x-text="Object.keys(unknownWords).length"></span> word(s) that Rhasspy isn't sure how to pronounce
                         </span>
@@ -251,7 +251,7 @@
                         <div class="container">
                             <div class="text-muted pl-1">
                                 <p>
-                                    This log is streamed live from your Rhasspy server at <tt>ws://<span x-text="window.location.host"></span>/api/events/log</tt>
+                                    This log is streamed live from your Rhasspy server at <tt>ws://<span x-text="window.location.host"></span>{{ url_prefix }}/api/events/log</tt>
                                 </p>
                             </div>
                             <textarea x-model="log.text" class="form-control" type="text" rows="20"></textarea>
@@ -263,11 +263,11 @@
         <!-- End Log -->
 
         <!-- Load Javascript libraries -->
-        <script src="/js/reconnecting-websocket-iife.min.js"></script>
-        <script src="/js/jquery-3.4.1.min.js"></script>
-        <script src="/js/popper.min.js"></script>
-        <script src="/js/bootstrap.min.js"></script>
-        <script src="/js/alpine.js" defer></script>
+        <script src="{{ url_prefix }}/js/reconnecting-websocket-iife.min.js"></script>
+        <script src="{{ url_prefix }}/js/jquery-3.4.1.min.js"></script>
+        <script src="{{ url_prefix }}/js/popper.min.js"></script>
+        <script src="{{ url_prefix }}/js/bootstrap.min.js"></script>
+        <script src="{{ url_prefix }}/js/alpine.js" defer></script>
 
         <script type="text/javascript">
          // Shared object with profile and functions
@@ -301,7 +301,7 @@
              // Do API calls for generally needed bits of data
              init: () => {
                  // Load profile
-                 $.get('/api/profile', (r) => {
+                 $.get('{{ url_prefix }}/api/profile', (r) => {
                      // Update in-place to avoid breaking alpine js proxies
                      Object.assign(rhasspy.profile, r);
 
@@ -320,12 +320,12 @@
                  })
 
                  // Local profile
-                 $.get('/api/profile?layers=profile', (r) => {
+                 $.get('{{ url_prefix }}/api/profile?layers=profile', (r) => {
                      rhasspy.localProfileJson.value = JSON.stringify(r, null, 4);
                  })
 
                  // Load missing files
-                 $.get('/api/profiles', (r) => {
+                 $.get('{{ url_prefix }}/api/profiles', (r) => {
                      rhasspy.missingSize = r.missing_size;
                      var missingFiles = r.missing_files;
 
@@ -337,7 +337,7 @@
                  })
 
                  // Load unknown words
-                 $.get('/api/unknown-words', (r) => {
+                 $.get('{{ url_prefix }}/api/unknown-words', (r) => {
                      rhasspy.unknownWords = r;
                      rhasspy.unknownWordsText.value =
                          Object.entries(rhasspy.unknownWords)
@@ -397,6 +397,7 @@
              },
 
              // Display the busy modal with a message and do an AJAX call.
+             // Adds URL prefix automatically.
              // Returns the AJAX request.
              ajaxBusy: (method, message, url, data, hideOnComplete, contentType) => {
                  hideOnComplete = (hideOnComplete === undefined) ? true : hideOnComplete;
@@ -406,7 +407,7 @@
                     rhasspy.showBusy(message);
                  }
                  return $.ajax({
-                     url: url,
+                     url: '{{ url_prefix }}' + url,
                      type: method,
                      data: data,
                      processData: false,
@@ -454,7 +455,7 @@
 
                  // POST to /api/download-profile and show progress
                  $.ajax({
-                     url: '/api/download-profile',
+                     url: '{{ url_prefix }}/api/download-profile',
                      type: 'POST',
                      complete: () => {
                          rhasspy.downloading = false;
@@ -482,7 +483,7 @@
                      return;
                  }
 
-                 $.get('/api/download-status', (r) => {
+                 $.get('{{ url_prefix }}/api/download-status', (r) => {
                      Object.keys(r).forEach((fileKey) => {
                          var remoteFile = r[fileKey];
                          var localFile = rhasspy.missingFiles[fileKey];
@@ -544,6 +545,7 @@
              },
 
              // Creates a new websocket and the calls afterFunc with it.
+             // Adds url prefix automatically.
              // Websocket will automatically reconnect after 5 seconds.
              makeWebSocket: (urlFragment, afterFunc) => {
                  // Use URL to decide websocket protocol
@@ -552,7 +554,7 @@
                      wsProtocol = 'wss://';
                  }
 
-                 var wsURL = wsProtocol + window.location.host + urlFragment;
+                 var wsURL = wsProtocol + window.location.host + '{{ url_prefix }}' + urlFragment;
                  var socket = new ReconnectingWebSocket(wsURL);
 
                  if (afterFunc != undefined) {

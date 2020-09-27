@@ -168,7 +168,7 @@
  $(document).ready(() => {
      // Load sentences on start up
      $.get({
-         url: '/api/sentences',
+         url: '{{ url_prefix }}/api/sentences',
          dataType: 'json',
      }).done((r) => {
          sentences.textByKey = r;

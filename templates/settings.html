@@ -9,7 +9,7 @@
             <button onclick="saveProfile()" class="btn btn-primary" title="Save all settings and restart Rhasspy">Save Settings</button>
         </div>
         <div class="col-auto">
-            <a href="api/backup-profile" class="btn btn-success" title="Download zip file with profile files">Backup Profile</a>
+            <a href="{{ url_prefix }}/api/backup-profile" class="btn btn-success" title="Download zip file with profile files">Backup Profile</a>
         </div>
     </div>
 </div>
@@ -173,7 +173,7 @@
             <div x-show="profile.microphone.system == 'pyaudio'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#pyaudio">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#pyaudio">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -233,7 +233,7 @@
             <div x-show="profile.microphone.system == 'arecord'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#alsa">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#alsa">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -288,7 +288,7 @@
             <div x-show="profile.microphone.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-input/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -401,7 +401,7 @@
             <div x-show="profile.microphone.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#audio-input">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/services/#audio-input">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -494,7 +494,7 @@
             <div x-show="profile.wake.system == 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#pocketsphinx">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#pocketsphinx">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -535,7 +535,7 @@
             <div x-show="profile.wake.system == 'snowboy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#snowboy">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#snowboy">Documentation</a>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -582,7 +582,7 @@
                 </div>
                 <div class="form-group">
                     <p>
-                        See <a target="_blank" href="docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
+                        See <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#snowboy">documentation</a> for how to use multiple wake words.
                     </p>
                 </div>
                 <hr>
@@ -604,7 +604,7 @@
             <div x-show="profile.wake.system == 'porcupine'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#porcupine">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#porcupine">Documentation</a>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -662,7 +662,7 @@
             <div x-show="profile.wake.system == 'precise'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#precise">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#precise">Documentation</a>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -729,7 +729,7 @@
             <div x-show="profile.wake.system == 'raven'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#raven">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#raven">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -844,7 +844,7 @@
             <div x-show="profile.wake.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/wake-word/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -870,7 +870,7 @@
             <div x-show="profile.wake.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#wake-word">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/services/#wake-word">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -934,7 +934,7 @@
             <div x-show="profile.speech_to_text.system == 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#pocketsphinx">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#pocketsphinx">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -951,7 +951,7 @@
                         <div class="col">
                             <input type="checkbox" id="pocketsphinx-open" x-model="profile.speech_to_text.pocketsphinx.open_transcription">
                             <label for="pocketsphinx-open" class="col-form-label">
-                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#open-transcription">
                                     Open transcription mode
                                 </a>
                                 (no custom voice commands)
@@ -977,7 +977,7 @@
                     <div class="form-row">
                         <div class="col-auto">
                             <label for="pocketsphinx-mix-weight" class="col-form-label">
-                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                <a target="_blank" href="{{ url_prefix }}/docs/training/#language-model-mixing">
                                     Mixed Language Model Weight
                                 </a>
                             </label>
@@ -1010,7 +1010,7 @@
             <div x-show="profile.speech_to_text.system == 'kaldi'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#kaldi">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#kaldi">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1042,7 +1042,7 @@
                         <div class="col">
                             <input type="checkbox" id="kaldi-open" x-model="profile.speech_to_text.kaldi.open_transcription">
                             <label for="kaldi-open" class="col-form-label">
-                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#open-transcription">
                                     Open transcription mode
                                 </a>
                                 (no custom voice commands)
@@ -1069,7 +1069,7 @@
                     <div class="form-row">
                         <div class="col-auto">
                             <label for="kaldi-mix-weight" class="col-form-label">
-                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                <a target="_blank" href="{{ url_prefix }}/docs/training/#language-model-mixing">
                                     Mixed Language Model Weight
                                 </a>
                             </label>
@@ -1102,7 +1102,7 @@
             <div x-show="profile.speech_to_text.system == 'deepspeech'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#deepspeech">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#deepspeech">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1119,7 +1119,7 @@
                         <div class="col">
                             <input type="checkbox" id="deepspeech-open" x-model="profile.speech_to_text.deepspeech.open_transcription">
                             <label for="deepspeech-open" class="col-form-label">
-                                <a target="_blank" href="docs/speech-to-text/#open-transcription">
+                                <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#open-transcription">
                                     Open transcription mode
                                 </a>
                                 (no custom voice commands)
@@ -1145,7 +1145,7 @@
                     <div class="form-row">
                         <div class="col-auto">
                             <label for="deepspeech-mix-weight" class="col-form-label">
-                                <a target="_blank" href="docs/training/#language-model-mixing">
+                                <a target="_blank" href="{{ url_prefix }}/docs/training/#language-model-mixing">
                                     Mixed Language Model Weight
                                 </a>
                             </label>
@@ -1192,7 +1192,7 @@
             <div x-show="profile.speech_to_text.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#remote">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1206,7 +1206,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col text-muted">
-                            Example: http://localhost:12101/api/speech-to-text
+                            Example: http://localhost:12101/{{ url_prefix }}/api/speech-to-text
                         </div>
                     </div>
                 </div>
@@ -1225,7 +1225,7 @@
             <div x-show="profile.speech_to_text.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/speech-to-text/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1265,7 +1265,7 @@
             <div x-show="profile.speech_to_text.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#speech-to-text">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/services/#speech-to-text">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1402,7 +1402,7 @@
             <div x-show="profile.intent.system == 'fsticuffs'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#fsticuffs">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#fsticuffs">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1441,7 +1441,7 @@
             <div x-show="profile.intent.system == 'fuzzywuzzy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#fuzzywuzzy">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-recognition/#fuzzywuzzy">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1478,7 +1478,7 @@
             <div x-show="profile.intent.system == 'rasa'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#rasanlu">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-recognition/#rasanlu">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1547,7 +1547,7 @@
             <div x-show="profile.intent.system == 'snips'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#snips-nlu">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-recognition/#snips-nlu">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1594,7 +1594,7 @@
             <div x-show="profile.intent.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#remote">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-recognition/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1608,7 +1608,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col text-muted">
-                            Example: http://localhost:12101/api/text-to-intent
+                            Example: http://localhost:12101/{{ url_prefix }}/api/text-to-intent
                         </div>
                     </div>
                 </div>
@@ -1641,7 +1641,7 @@
             <div x-show="profile.intent.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-recognition/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-recognition/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1681,7 +1681,7 @@
             <div x-show="profile.intent.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#intent-recognition">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/services/#intent-recognition">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -1732,7 +1732,7 @@
             <div x-show="profile.text_to_speech.system == 'espeak'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#espeak">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#espeak">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1765,7 +1765,7 @@
             <div x-show="profile.text_to_speech.system == 'picotts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#picotts">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#picotts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1783,7 +1783,7 @@
             <div x-show="profile.text_to_speech.system == 'nanotts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#nanotts">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#nanotts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1801,7 +1801,7 @@
             <div x-show="profile.text_to_speech.system == 'flite'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#flite">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#flite">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1834,7 +1834,7 @@
             <div x-show="profile.text_to_speech.system == 'marytts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#marytts">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#marytts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1883,7 +1883,7 @@
             <div x-show="profile.text_to_speech.system == 'wavenet'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#wavenet">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#wavenet">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1933,7 +1933,7 @@
             <div x-show="profile.text_to_speech.system == 'opentts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#opentts">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#opentts">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1974,7 +1974,7 @@
             <div x-show="profile.text_to_speech.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#remote">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1988,7 +1988,7 @@
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col text-muted">
-                            Example: http://localhost:12101/api/text-to-speech
+                            Example: http://localhost:12101/{{ url_prefix }}/api/text-to-speech
                         </div>
                     </div>
                 </div>
@@ -1999,7 +1999,7 @@
             <div x-show="profile.text_to_speech.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/text-to-speech/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2050,7 +2050,7 @@
             <div x-show="profile.text_to_speech.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#text-to-speech">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/services/#text-to-speech">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -2113,7 +2113,7 @@
             <div x-show="profile.sounds.system == 'aplay'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#alsa">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/audio-output/#alsa">Documentation</a>
                     </div>
                 </div>
                 <div class="form-row">
@@ -2144,7 +2144,7 @@
             <div x-show="profile.sounds.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#remote">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/audio-output/#remote">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2162,7 +2162,7 @@
             <div x-show="profile.sounds.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/audio-output/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/audio-output/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2188,7 +2188,7 @@
             <div x-show="profile.sounds.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#audio-output">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/services/#audio-output">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -2231,7 +2231,7 @@
             <div x-show="profile.dialogue.system == 'rhasspy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/services/#dialogue-manager">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -2259,7 +2259,7 @@
             <div x-show="profile.dialogue.system == 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/services/#dialogue-manager">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/services/#dialogue-manager">Documentation</a>
                     </div>
                     <div class="form-row">
                         <p>
@@ -2302,7 +2302,7 @@
             <div x-show="profile.handle.system == 'hass'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#home-assistant">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-handling/#home-assistant">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2380,7 +2380,7 @@
             <div x-show="profile.handle.system == 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#remote-server">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-handling/#remote-server">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2398,7 +2398,7 @@
             <div x-show="profile.handle.system == 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="docs/intent-handling/#command">Documentation</a>
+                        <a target="_blank" href="{{ url_prefix }}/intent-handling/#command">Documentation</a>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2668,7 +2668,7 @@
      }
 
      $.post({
-         url: '/api/audio-summaries',
+         url: '{{ url_prefix }}/api/audio-summaries',
          data: payload
      });
  }

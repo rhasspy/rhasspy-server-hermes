@@ -10,59 +10,59 @@
 <!-- Services Bar -->
 <div id="services" class="btn-group text-center w-100">
 
-    <a href="/settings#mqtt" class="btn flex-fill p-2"
+    <a href="{{ url_prefix }}/settings#mqtt" class="btn flex-fill p-2"
 	   x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')"
 	   x-bind:class="{ 'btn-dark': !profile.mqtt.enabled, 'btn-success' : profile.mqtt.enabled }">
 	    <i class="fas fa-inverse fa-network-wired fa-lg"></i>
     </a>
 
-    <a href="/settings#microphone" class="btn flex-fill p-2"
+    <a href="{{ url_prefix }}/settings#microphone" class="btn flex-fill p-2"
 	   x-bind:title="'Audio input: ' + profile.microphone.system"
 	   x-bind:class="{ 'btn-dark': profile.microphone.system === 'dummy', 'btn-success': profile.microphone.system !== 'dummy' }">
       <i class="fas fa-inverse fa-microphone fa-lg"></i>
     </a>
 
-	<a href="/settings#wake" class="btn flex-fill p-2"
-	   x-bind:title="'Wake word: ' + profile.wake.system"
-	   x-bind:class="{ 'btn-dark': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
-	</a>
+	  <a href="{{ url_prefix }}/settings#wake" class="btn flex-fill p-2"
+       x-bind:title="'Wake word: ' + profile.wake.system"
+       x-bind:class="{ 'btn-dark': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
+    </a>
 
-	<a href="/settings#speech" class="btn flex-fill p-2"
-	   x-bind:title="'Speech to text: ' + profile.speech_to_text.system"
-	   x-bind:class="{ 'btn-dark': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-phone-volume fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#speech" class="btn flex-fill p-2"
+       x-bind:title="'Speech to text: ' + profile.speech_to_text.system"
+       x-bind:class="{ 'btn-dark': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-phone-volume fa-lg"></i>
+	  </a>
 
-	<a href="/settings#intent" class="btn flex-fill p-2"
-	   x-bind:title="'Intent recognition: ' + profile.intent.system"
-	   x-bind:class="{ 'btn-dark': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-comment fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#intent" class="btn flex-fill p-2"
+       x-bind:title="'Intent recognition: ' + profile.intent.system"
+       x-bind:class="{ 'btn-dark': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-comment fa-lg"></i>
+	  </a>
 
-	<a href="/settings#tts" class="btn flex-fill p-2"
-	   x-bind:title="'Text to speech: ' + profile.text_to_speech.system"
-	   x-bind:class="{ 'btn-dark': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-paper-plane fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#tts" class="btn flex-fill p-2"
+       x-bind:title="'Text to speech: ' + profile.text_to_speech.system"
+       x-bind:class="{ 'btn-dark': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-paper-plane fa-lg"></i>
+	  </a>
 
-	<a href="/settings#sounds" class="btn flex-fill p-2"
-	   x-bind:title="'Audio output: ' + profile.sounds.system"
-	   x-bind:class="{ 'btn-dark': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-volume-up fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#sounds" class="btn flex-fill p-2"
+       x-bind:title="'Audio output: ' + profile.sounds.system"
+       x-bind:class="{ 'btn-dark': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-volume-up fa-lg"></i>
+	  </a>
 
-	<a href="/settings#handle" class="btn flex-fill p-2"
-	   x-bind:title="'Intent handling: ' + profile.handle.system"
-	   x-bind:class="{ 'btn-dark': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy'}">
-		<i class="fas fa-inverse fa-bolt fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#handle" class="btn flex-fill p-2"
+       x-bind:title="'Intent handling: ' + profile.handle.system"
+       x-bind:class="{ 'btn-dark': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy'}">
+        <i class="fas fa-inverse fa-bolt fa-lg"></i>
+	  </a>
 
-	<a href="/settings#dialogue" class="btn flex-fill p-2"
-	   x-bind:title="'Dialogue management: ' + profile.dialogue.system"
-	   x-bind:class="{ 'btn-dark': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }">
-		<i class="fas fa-inverse fa-tasks fa-lg"></i>
-	</a>
+    <a href="{{ url_prefix }}/settings#dialogue" class="btn flex-fill p-2"
+       x-bind:title="'Dialogue management: ' + profile.dialogue.system"
+       x-bind:class="{ 'btn-dark': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }">
+        <i class="fas fa-inverse fa-tasks fa-lg"></i>
+	  </a>
 
 </div>
 <!-- End Services Bar -->
@@ -88,7 +88,7 @@
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="api/play-recording">
+                                <a class="dropdown-item" href="{{ url_prefix }}/api/play-recording">
                                     <i class="fas fa-download"></i>
                                     Download WAV
                                 </a>

@@ -97,7 +97,10 @@ def parse_args():
     )
     parser.add_argument("--port", type=int, help="Port for web server", default=12101)
     parser.add_argument(
-        "--url-root", type=str, help="Root of application URLs (default: '/')"
+        "--url-root",
+        type=str,
+        default="",
+        help="Root of application URLs (default: '/')",
     )
     parser.add_argument(
         "--mqtt-host", type=str, help="Host for MQTT broker", default=None

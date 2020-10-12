@@ -1714,6 +1714,7 @@
                 <option value="marytts">MaryTTS</option>
                 <option value="wavenet">Google Wavenet</option>
                 <option value="opentts">OpenTTS</option>
+                <option value="larynx">Larynx</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1969,6 +1970,39 @@
                 </div>
             </div>
             <!-- End OpenTTS -->
+
+            <!-- Larynx -->
+            <div x-show="profile.text_to_speech.system == 'larynx'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <a target="_blank" href="{{ url_prefix }}/text-to-speech/#larynx">Documentation</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="opentts-voice" class="col-form-label">Voice:</label>
+                        <div class="col">
+                            <input id="larynx-voice" type="text" class="form-control" x-model="profile.text_to_speech.larynx.voice" :disabled="profile.text_to_speech.system != 'larynx'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="tts-larynx-voices">Available Voices:</label>
+                        </div>
+                        <div class="col">
+                            <select id="tts-larynx-voices" x-model="profile.text_to_speech.larynx.default_voice" class="form-control">
+                                <option value="default" selected>Default Voice</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshVoices('larynx')" class="btn btn-primary form-control" title="Refresh Larynx voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Larynx -->
 
             <!-- Remote -->
             <div x-show="profile.text_to_speech.system == 'remote'">

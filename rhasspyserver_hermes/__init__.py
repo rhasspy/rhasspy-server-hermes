@@ -14,9 +14,8 @@ from pathlib import Path
 from uuid import uuid4
 
 import paho.mqtt.client as mqtt
-from paho.mqtt.matcher import MQTTMatcher
-
 import rhasspynlu
+from paho.mqtt.matcher import MQTTMatcher
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,

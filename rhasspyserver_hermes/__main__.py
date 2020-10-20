@@ -25,6 +25,9 @@ import hypercorn
 import hypercorn.asyncio
 import hypercorn.config
 import quart_cors
+import rhasspyhermes
+import rhasspynlu
+import rhasspyprofile
 from paho.mqtt.matcher import MQTTMatcher
 from quart import (
     Quart,
@@ -37,13 +40,6 @@ from quart import (
     send_from_directory,
     websocket,
 )
-from swagger_ui import quart_api_doc
-from wsproto.utilities import LocalProtocolError
-
-import rhasspyhermes
-import rhasspynlu
-import rhasspyprofile
-import rhasspysupervisor
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,
@@ -65,6 +61,10 @@ from rhasspyhermes.wake import (
     RecordHotwordExample,
 )
 from rhasspyprofile import Profile, human_size
+from swagger_ui import quart_api_doc
+from wsproto.utilities import LocalProtocolError
+
+import rhasspysupervisor
 
 from . import RhasspyCore
 from .utils import (
@@ -2129,6 +2129,26 @@ async def api_record_wake_example() -> Response:
         _LOGGER.debug("Wrote WAV example to %s (%s byte(s))", wav_path, len(wav_bytes))
 
     return Response(wav_bytes, mimetype="audio/wav")
+
+
+@app.route("/api/delete-wake-word", methods=["POST"])
+async def api_word_wake_word() -> Response:
+    """Delete wake word examples (Raven only)."""
+    assert core is not None
+    keyword = (await request.data).decode()
+    if keyword:
+        keyword_dir = core.profile.write_path(
+            core.profile.get("wake.raven.template_dir", "raven"), keyword
+        )
+        if keyword_dir.is_dir():
+            _LOGGER.debug("Deleting Raven keyword at %s", keyword_dir)
+            shutil.rmtree(keyword_dir)
+        else:
+            _LOGGER.warning("No keyword found at %s", keyword_dir)
+    else:
+        _LOGGER.warning("No keyword provided")
+
+    return "OK"
 
 
 # -----------------------------------------------------------------------------

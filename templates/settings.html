@@ -751,6 +751,9 @@
                         <div class="col">
                             <input id="wake-raven-keyword-name" type="text" class="form-control" value="default" onchange="resetRavenRecordings()" :disabled="profile.wake.system != 'raven'">
                         </div>
+                        <div class="col-xs-auto">
+                            <button onclick="deleteHotword()" class="btn btn-danger form-control" title="Delete Raven keyword">Delete</button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2629,12 +2632,31 @@
      rhasspy.getBusy(message,
                      '/api/wake-words')
             .done((r) => {
-               r.forEach((hotword) => {
+                r.forEach((hotword) => {
                     var selected = (hotword.modelId == rhasspy.profile.wake[wakeSystem].modelId) ? ' selected' : '';
                     $(selectId)
                         .append('<option value="' + hotword.modelId + '"' + selected + '>' + hotword.modelWords + ' (' + hotword.modelId + ')</option>');
                 });
             });
+ }
+
+ // Delete a Raven hot word
+ function deleteHotword(hotword, suppressMessage = false) {
+     var wakewordId = $('#wake-raven-keyword-name').val();
+     var message = (suppressMessage) ? '' : 'Deleting ' + wakewordId;
+
+     if (window.confirm('Really delete ' + wakewordId + '?')) {
+            rhasspy.postBusy(message,
+                            '/api/delete-wake-word',
+                            wakewordId)
+                    .done((r) => {
+                        if (window.confirm("Hotword deleted. Restart Rhasspy?")) {
+                            rhasspy.restart();
+                        } else {
+                            rhasspy.hideBusy();
+                        }
+                    });
+     }
  }
 
  // Load available TTS voices

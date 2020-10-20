@@ -5,7 +5,6 @@ import typing
 from pathlib import Path
 
 import networkx as nx
-
 import rhasspynlu
 from rhasspynlu.jsgf import Expression, Word
 

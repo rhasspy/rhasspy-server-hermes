@@ -2457,6 +2457,22 @@
             </div>
             <!-- End Command -->
 
+            <!-- Satellite siteIds -->
+            <div x-show="!['dummy', 'hermes'].includes(profile.handle.system)">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="handle-satellite-siteids" class="col-form-label">Satellite siteIds:</label>
+                        </div>
+                        <div class="col">
+                            <input id="handle-satellite-siteids" type="text" class="form-control" x-model="profile.handle.satellite_site_ids">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (comma-separated)
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

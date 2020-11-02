@@ -464,8 +464,11 @@
                          $('#downloadModal').modal('hide')
                      },
                      success: () => {
-                         // Re-train when done downloading
-                         rhasspy.train();
+                         // Re-train and restart when done downloading
+                         rhasspy.train()
+                                .done(function() {
+                                    rhasspy.restart();
+                                });
                      },
                      error: (error) => {
                          rhasspy.downloading = false;

@@ -198,6 +198,10 @@ class RhasspyCore:
 
             # Certificate Authority certs
             tls_ca_certs = self.profile.get("mqtt.tls.ca_certs")
+            if tls_ca_certs == "":
+                tls_ca_certs = None
+            if tls_ca_certs is not None:
+                tls_ca_certs = os.path.expandvars(tls_ca_certs)
 
             # CERT_REQUIRED, CERT_OPTIONAL, CERT_NONE
             tls_cert_reqs = self.profile.get("mqtt.tls.cert_reqs")

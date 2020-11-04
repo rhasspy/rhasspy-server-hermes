@@ -2132,7 +2132,7 @@ async def api_record_wake_example() -> Response:
 
 
 @app.route("/api/delete-wake-word", methods=["POST"])
-async def api_word_wake_word() -> Response:
+async def api_word_wake_word() -> str:
     """Delete wake word examples (Raven only)."""
     assert core is not None
     keyword = (await request.data).decode()

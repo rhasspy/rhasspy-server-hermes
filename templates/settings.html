@@ -1762,6 +1762,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-espeak-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-espeak-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.espeak.volume" :disabled="profile.text_to_speech.system != 'espeak'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Espeak -->
 
@@ -1780,6 +1788,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-picotts-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-picotts-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.picotts.volume" :disabled="profile.text_to_speech.system != 'picotts'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End PicoTTS -->
 
@@ -1795,6 +1811,14 @@
                         <label for="nanotts-language" class="col-form-label">Language:</label>
                         <div class="col">
                             <input id="nanotts-language" type="text" class="form-control" x-model="profile.text_to_speech.nanotts.language" :disabled="profile.text_to_speech.system != 'nanotts'" placeholder="default">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-nanotts-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-nanotts-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.nanotts.volume" :disabled="profile.text_to_speech.system != 'nanotts'">
                         </div>
                     </div>
                 </div>
@@ -1817,6 +1841,8 @@
                             <input id="tts-flite-voice" x-model="profile.text_to_speech.flite.voice" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
                     <div class="form-row mt-2">
                         <div class="col-xs-auto">
                             <label for="tts-flite-voices">Available Voices:</label>
@@ -1828,6 +1854,14 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="refreshVoices('flite')" class="btn btn-primary form-control" title="Refresh flite voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-flite-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-flite-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.flite.volume" :disabled="profile.text_to_speech.system != 'flite'">
                         </div>
                     </div>
                 </div>
@@ -1877,6 +1911,14 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="refreshVoices('marytts')" class="btn btn-primary form-control" title="Refresh marytts voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-marytts-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-marytts-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.marytts.volume" :disabled="profile.text_to_speech.system != 'marytts'">
                         </div>
                     </div>
                 </div>
@@ -1930,6 +1972,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-wavenet-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-wavenet-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.wavenet.volume" :disabled="profile.text_to_speech.system != 'wavenet'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Wavenet -->
 
@@ -1971,6 +2021,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-opentts-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-opentts-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.opentts.volume" :disabled="profile.text_to_speech.system != 'opentts'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End OpenTTS -->
 
@@ -2001,6 +2059,14 @@
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="refreshVoices('larynx')" class="btn btn-primary form-control" title="Refresh Larynx voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-larynx-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-larynx-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.larynx.volume" :disabled="profile.text_to_speech.system != 'larynx'">
                         </div>
                     </div>
                 </div>
@@ -2080,6 +2146,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="tts-command-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="tts-command-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.text_to_speech.command.volume" :disabled="profile.text_to_speech.system != 'command'">
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End Command -->
 
@@ -2153,25 +2227,35 @@
                         <a target="_blank" href="{{ url_prefix }}/audio-output/#alsa">Documentation</a>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="col-xs-auto">
-                        <label for="sounds-aplay-device">Device:</label>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="sounds-aplay-device">Device:</label>
+                        </div>
+                        <div class="col">
+                            <input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
+                        </div>
                     </div>
-                    <div class="col">
-                        <input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
+                    <div class="form-row mt-2">
+                        <div class="col-xs-auto">
+                            <label for="sounds-aplay-devices">Available Devices:</label>
+                        </div>
+                        <div class="col">
+                            <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
+                                <option value="" selected>Default Device</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-auto">
+                            <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control" placeholder="Refresh aplay devices">Refresh</button>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row mt-2">
-                    <div class="col-xs-auto">
-                        <label for="sounds-aplay-devices">Available Devices:</label>
-                    </div>
-                    <div class="col">
-                        <select id="sounds-aplay-devices" x-model="profile.sounds.aplay.device" class="form-control">
-                            <option value="" selected>Default Device</option>
-                        </select>
-                    </div>
-                    <div class="col-xs-auto">
-                        <button onclick="refreshOutputDevices('aplay')" class="btn btn-primary form-control" placeholder="Refresh aplay devices">Refresh</button>
+                <div class="form-group">
+                    <div class="form-row">
+                        <label for="sounds-aplay-volume" class="col-form-label">Volume</label>
+                        <div class="col-sm-auto">
+                            <input id="sounds-aplay-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.sounds.aplay.volume" :disabled="profile.sounds.system != 'aplay'">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2520,6 +2604,14 @@
                 </div>
             </div>
         </div>
+        <div class="form-group">
+            <div class="form-row">
+                <label for="dialogue-volume" class="col-form-label">Volume</label>
+                <div class="col-sm-auto">
+                    <input id="dialogue-volume" type="number" min="0" max="1" step="0.05" class="form-control" x-model="profile.dialogue.volume">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <!-- End Sounds -->
@@ -2662,16 +2754,16 @@
      var message = (suppressMessage) ? '' : 'Deleting ' + wakewordId;
 
      if (window.confirm('Really delete ' + wakewordId + '?')) {
-            rhasspy.postBusy(message,
-                            '/api/delete-wake-word',
-                            wakewordId)
-                    .done((r) => {
-                        if (window.confirm("Hotword deleted. Restart Rhasspy?")) {
-                            rhasspy.restart();
-                        } else {
-                            rhasspy.hideBusy();
-                        }
-                    });
+         rhasspy.postBusy(message,
+                          '/api/delete-wake-word',
+                          wakewordId)
+                .done((r) => {
+                    if (window.confirm("Hotword deleted. Restart Rhasspy?")) {
+                        rhasspy.restart();
+                    } else {
+                        rhasspy.hideBusy();
+                    }
+                });
      }
  }
 
@@ -2705,7 +2797,7 @@
      var missing = $('#raven-missing-' + i);
 
      rhasspy.postBusy(message,
-                     '/api/record-wake-example?savePath=' + filename)
+                      '/api/record-wake-example?savePath=' + filename)
             .done((r) => {
                 // Change missing label
                 missing.text('Recorded');
@@ -2756,8 +2848,8 @@
  }
 
  function refreshSelects() {
-    if ($('#tts-' + rhasspy.profile.text_to_speech.system + '-voices').length) {
-        refreshVoices(rhasspy.profile.text_to_speech.system, true);
+     if ($('#tts-' + rhasspy.profile.text_to_speech.system + '-voices').length) {
+         refreshVoices(rhasspy.profile.text_to_speech.system, true);
      }
 
      if ($('#wake-' + rhasspy.profile.wake.system + '-hotwords').length) {
@@ -2765,11 +2857,11 @@
      }
 
      if ($('#sounds-' + rhasspy.profile.sounds.system + '-devices').length) {
-        refreshOutputDevices(rhasspy.profile.sounds.system, true);
+         refreshOutputDevices(rhasspy.profile.sounds.system, true);
      }
 
      if ($('#microphone-' + rhasspy.profile.microphone.system + '-devices').length) {
-        refreshInputDevices(rhasspy.profile.microphone.system, true);
+         refreshInputDevices(rhasspy.profile.microphone.system, true);
      }
  }
 

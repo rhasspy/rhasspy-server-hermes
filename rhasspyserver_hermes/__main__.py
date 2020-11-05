@@ -25,7 +25,6 @@ import hypercorn
 import hypercorn.asyncio
 import hypercorn.config
 import quart_cors
-import rhasspyhermes
 import rhasspynlu
 import rhasspyprofile
 from paho.mqtt.matcher import MQTTMatcher
@@ -40,6 +39,12 @@ from quart import (
     send_from_directory,
     websocket,
 )
+from rhasspyprofile import Profile, human_size
+from swagger_ui import quart_api_doc
+from wsproto.utilities import LocalProtocolError
+
+import rhasspyhermes
+import rhasspysupervisor
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,
@@ -47,7 +52,12 @@ from rhasspyhermes.asr import (
     AsrStopListening,
     AsrTextCaptured,
 )
-from rhasspyhermes.audioserver import AudioPlayBytes, AudioToggleOff, AudioToggleOn
+from rhasspyhermes.audioserver import (
+    AudioPlayBytes,
+    AudioSetVolume,
+    AudioToggleOff,
+    AudioToggleOn,
+)
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
 from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
@@ -60,11 +70,6 @@ from rhasspyhermes.wake import (
     HotwordToggleReason,
     RecordHotwordExample,
 )
-from rhasspyprofile import Profile, human_size
-from swagger_ui import quart_api_doc
-from wsproto.utilities import LocalProtocolError
-
-import rhasspysupervisor
 
 from . import RhasspyCore
 from .utils import (
@@ -1613,6 +1618,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     voice = request.args.get("voice")
     site_ids = request.args.get("siteId", core.site_id).split(",")
     session_id = request.args.get("sessionId", "")
+    volume = float(request.args.get("volume", 1.0))
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
@@ -1635,6 +1641,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
                 wait_play_finished=play,
                 site_id=site_id,
                 session_id=session_id,
+                volume=volume,
             )
 
             if isinstance(play_bytes, AudioPlayBytes):
@@ -2149,6 +2156,22 @@ async def api_word_wake_word() -> str:
         _LOGGER.warning("No keyword provided")
 
     return "OK"
+
+
+# -----------------------------------------------------------------------------
+
+
+@app.route("/api/set-volume", methods=["POST"])
+async def api_set_volume() -> str:
+    """Set audio output volume for one or more sites."""
+    assert core is not None
+    volume = float((await request.data).decode().strip())
+    site_ids = request.args.get("siteId", core.site_id).split(",") or [core.site_id]
+
+    for site_id in site_ids:
+        core.publish(AudioSetVolume(volume=volume, site_id=site_id))
+
+    return str(volume)
 
 
 # -----------------------------------------------------------------------------

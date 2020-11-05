@@ -16,6 +16,8 @@ from uuid import uuid4
 import paho.mqtt.client as mqtt
 import rhasspynlu
 from paho.mqtt.matcher import MQTTMatcher
+from rhasspyprofile import Profile
+
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
     AsrError,
@@ -63,7 +65,6 @@ from rhasspyhermes.wake import (
     HotwordToggleOn,
     HotwordToggleReason,
 )
-from rhasspyprofile import Profile
 
 from .train import sentences_to_graph
 from .utils import get_ini_paths, wav_to_buffer
@@ -535,6 +536,7 @@ class RhasspyCore:
         wait_play_finished: bool = True,
         site_id: typing.Optional[str] = None,
         session_id: str = "",
+        volume: float = 1.0,
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         if (self.sound_system == "dummy") and (
@@ -573,7 +575,13 @@ class RhasspyCore:
                 if say_finished and play_bytes and play_finished:
                     return (say_finished, play_bytes)
 
-        say = TtsSay(id=tts_id, text=sentence, site_id=site_id, session_id=session_id)
+        say = TtsSay(
+            id=tts_id,
+            text=sentence,
+            site_id=site_id,
+            session_id=session_id,
+            volume=volume,
+        )
         if language:
             say.lang = language
 

@@ -360,6 +360,28 @@ paths:
             text/plain:
               schema:
                 type: string
+  /api/set-volume:
+    post:
+      summary: 'Set volume for one or more sites'
+      requestBody:
+        description: 'Volume scale (0 = off, 1 = full volume)'
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      parameters:
+        - in: query
+          name: siteId
+          description: 'Hermes site id(s) (comma-separated)'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Volume
+          content:
+            text/plain:
+              type: string
   /api/speakers:
     get:
       summary: 'Get list of available speakers'

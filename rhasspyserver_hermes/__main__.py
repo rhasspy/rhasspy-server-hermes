@@ -256,6 +256,9 @@ template_dir = web_dir.parent / "templates"
 app = Quart("rhasspy", template_folder=str(template_dir))
 app.secret_key = str(uuid4())
 
+# Force jsonify to not output ASCII
+app.config["JSON_AS_ASCII"] = False
+
 if _ARGS.url_root:
     # Set URL root for application
     class PrefixMiddleware:

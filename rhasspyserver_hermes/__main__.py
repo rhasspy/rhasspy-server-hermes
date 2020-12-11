@@ -809,9 +809,9 @@ async def api_listen_for_wake() -> str:
         if toggle_off:
             # Disable
             core.publish(HotwordToggleOff(site_id=site_id, reason=reason))
-
-        # Enable
-        core.publish(HotwordToggleOn(site_id=site_id, reason=reason))
+        else:
+            # Enable
+            core.publish(HotwordToggleOn(site_id=site_id, reason=reason))
 
     return "off" if toggle_off else "on"
 

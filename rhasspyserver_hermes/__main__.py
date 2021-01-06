@@ -2616,7 +2616,10 @@ async def swagger_yaml() -> Response:
 
 # Swagger UI
 quart_api_doc(
-    app, config_path=(web_dir / "swagger.yaml"), url_prefix="/api", title="Rhasspy API"
+    app,
+    config_path=(web_dir / "swagger.yaml"),
+    url_prefix="/openapi",
+    title="Rhasspy API",
 )
 
 # -----------------------------------------------------------------------------

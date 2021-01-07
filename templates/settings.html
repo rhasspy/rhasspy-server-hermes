@@ -420,6 +420,11 @@
                         <label for="toggle-audio-statistics" class="col-form-label">Audio Statistics</label>
                     </div>
                     <div class="form-row">
+                        <p class="alert alert-info">
+                            <strong>Note:</strong> statistics will not work if UDP audio is enabled
+                        </p>
+                    </div>
+                    <div class="form-row">
                         <div id="audio-statistics-connecting" class="alert alert-warning">Connecting to websocket...</div>
                     </div>
                     <div class="form-row">
@@ -1296,73 +1301,124 @@
                 </div>
                 <hr>
                 <div class="form-group">
-                    <div class="form-row">
+                    <div class="form-row mb-3">
                         <h5>Voice Command Settings</h5>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row mb-3">
+                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#silence-detection">Documentation</a>
+                    </div>
+                    <div class="form-row mb-3">
                         <div class="col-auto">
-                            <label for="pocketsphinx-skip-sec" class="col-form-label">Skip Before:</label>
+                            <label for="webrtcvad-silence-method" class="col-form-label">Silence Method</label>
                         </div>
                         <div class="col">
-                            <input id="pocketsphinx-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
+                            <select id="webrtcvad-silence-method" class="form-control" x-model="profile.command.webrtcvad.silence_method">
+                                <option value="vad_only">VAD</option>
+                                <option value="current_only">Current Energy</option>
+                                <option value="ratio_only">Max/Current Energy Ratio</option>
+                                <option value="vad_and_current">VAD + Current Energy</option>
+                                <option value="vad_and_ratio">VAD + Max/Current Energy Ratio</option>
+                                <option value="all">VAD + Current Energy + Max/Current Energy Ratio</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row mb-3">
                         <div class="col-auto">
-                            <label for="pocketsphinx-min-sec" class="col-form-label">Minimum Duration:</label>
+                            <label for="webrtcvad-vad-mode" class="col-form-label">VAD Sensitivity:</label>
                         </div>
                         <div class="col">
-                            <input id="pocketsphinx-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-speech-sec" class="col-form-label">Speech Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Silence After:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-silence-sec" class="col-form-label">Record Before:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
-                        </div>
-                        <div class="col-auto text-muted">
-                            (seconds)
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <label for="pocketsphinx-vad-mode" class="col-form-label">VAD Sensitivity:</label>
-                        </div>
-                        <div class="col">
-                            <input id="pocketsphinx-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
+                            <input id="webrtcvad-vad-mode" type="text" class="form-control" x-model="profile.command.webrtcvad.vad_mode">
                         </div>
                         <div class="col-auto text-muted">
                             (1-3)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-current-energy-threshold" class="col-form-label">Current Energy Threshold:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-current-energy-threshold" type="text" class="form-control" x-model="profile.command.webrtcvad.current_energy_threshold">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (audio above threshold is speech)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-max-current-energy-ratio-threshold" class="col-form-label">Max/Current Energy Ratio Threshold</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-max-current-energy-ratio-threshold" type="text" class="form-control" x-model="profile.command.webrtcvad.max_current_energy_ratio_threshold">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (audio below threshold is speech)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-max-energy" class="col-form-label">Max Energy:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-max-energy" type="text" class="form-control" x-model="profile.command.webrtcvad.max_energy">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (set from audio input if no value)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-skip-sec" class="col-form-label">Skip Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-skip-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.skip_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-min-sec" class="col-form-label">Minimum Duration:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-min-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.min_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row  mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-speech-sec" class="col-form-label">Speech Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-speech-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.speech_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row mb-3">
+                        <div class="col-auto">
+                            <label for="webrtcvad-silence-sec" class="col-form-label">Silence After:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-silence-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.silence_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="webrtcvad-silence-sec" class="col-form-label">Record Before:</label>
+                        </div>
+                        <div class="col">
+                            <input id="webrtcvad-before-sec" type="text" class="form-control" x-model="profile.command.webrtcvad.before_sec">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (seconds)
                         </div>
                     </div>
                 </div>

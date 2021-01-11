@@ -287,15 +287,15 @@
 
              // Initial microphone, speech to text, etc. systems
              initialSystems: {
-                 mqtt: '',
-                 microphone: '',
-                 wake: '',
-                 stt: '',
-                 intent: '',
-                 tts: '',
-                 sounds: '',
-                 dialogue: '',
-                 handle: ''
+                 mqtt: {% if mqtt_external: %}true{% else: %}false{% endif %},
+                 microphone: '{{ microphone_system }}',
+                 wake: '{{ wake_system }}',
+                 stt: '{{ speech_to_text_system }}',
+                 intent: '{{ intent_system }}',
+                 tts: '{{ text_to_speech_system }}',
+                 sounds: '{{ sounds_system }}',
+                 dialogue: '{{ dialogue_system }}',
+                 handle: '{{ handle_system }}'
              },
 
              // Do API calls for generally needed bits of data
@@ -426,8 +426,8 @@
              },
 
              // POSTs to /api/train and displays a busy modal
-             train: () => {
-                 return rhasspy.postBusy('Training Profile', '/api/train')
+             train: (hideOnComplete) => {
+                 return rhasspy.postBusy('Training Profile', '/api/train', '', hideOnComplete)
                             .done((r) => {
                                 rhasspy.alert(r, 'success');
                                 rhasspy.init();
@@ -435,8 +435,8 @@
              },
 
              // POSTs to /api/restart and displays a busy modal
-             restart: () => {
-                 return rhasspy.postBusy('Restarting Rhasspy', '/api/restart')
+             restart: (hideOnComplete) => {
+                 return rhasspy.postBusy('Restarting Rhasspy', '/api/restart', '', hideOnComplete)
                             .done((r) => {
                                 rhasspy.alert(r.responseText || r, 'success');
                                 rhasspy.init();

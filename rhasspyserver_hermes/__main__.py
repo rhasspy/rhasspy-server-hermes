@@ -330,6 +330,15 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
     """Return kwargs for template rendering"""
     assert core is not None
 
+    microphone_system = core.profile.get("microphone.system")
+    wake_system = core.profile.get("wake.system")
+    speech_to_text_system = core.profile.get("speech_to_text.system")
+    intent_system = core.profile.get("intent.system")
+    text_to_speech_system = core.profile.get("text_to_speech.system")
+    sounds_system = core.profile.get("sounds.system")
+    handle_system = core.profile.get("handle.system")
+    dialogue_system = core.profile.get("dialogue.system")
+
     return {
         "len": len,
         "sorted": sorted,
@@ -340,6 +349,23 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "site_id": core.site_id,
         "maybe_read_path": maybe_read_path,
         "url_prefix": _ARGS.url_root,
+        "mqtt_external": core.profile.get("mqtt.enabled", False),
+        "has_microphone": microphone_system != "dummy",
+        "has_wake": wake_system != "dummy",
+        "has_speech_to_text": speech_to_text_system != "dummy",
+        "has_intent": intent_system != "dummy",
+        "has_text_to_speech": text_to_speech_system != "dummy",
+        "has_sounds": sounds_system != "dummy",
+        "has_handle": handle_system != "dummy",
+        "has_dialogue": dialogue_system != "dummy",
+        "microphone_system": microphone_system,
+        "wake_system": wake_system,
+        "speech_to_text_system": speech_to_text_system,
+        "intent_system": intent_system,
+        "text_to_speech_system": text_to_speech_system,
+        "sounds_system": sounds_system,
+        "handle_system": handle_system,
+        "dialogue_system": dialogue_system,
     }
 
 

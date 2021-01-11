@@ -154,8 +154,8 @@
             </button>
             <select class="ml-2" x-model="profile.microphone.system">
                 <option value="dummy">Disabled</option>
-                <option value="pyaudio">PyAudio</option>
-                <option value="arecord">arecord</option>
+                <option value="pyaudio">PyAudio{% if profile.get("microphone.recommended") == "pyaudio" %} (Recommended){% endif %}</option>
+                <option value="arecord">arecord{% if profile.get("microphone.recommended") == "arecord" %} (Recommended){% endif %}</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
@@ -168,12 +168,22 @@
     </div>
     <div id="microphone-collapse" class="collapse hide" aria-labelledby="headingMicrophone" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.microphone.system != initialSystems.microphone">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- PyAudio -->
-            <div x-show="profile.microphone.system == 'pyaudio'">
+            <div x-show="profile.microphone.system == 'pyaudio'" :disabled="initialSystems.microphone != 'pyaudio'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#pyaudio">Documentation</a>
+                        <p>
+                            Streams microphone data from a <a href="https://people.csail.mit.edu/hubert/pyaudio/">PyAudio</a> device (<a target="_blank" href="{{ url_prefix }}/docs/audio-input/#pyaudio">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -230,10 +240,12 @@
             <!-- End PyAudio -->
 
             <!-- arecord -->
-            <div x-show="profile.microphone.system == 'arecord'">
+            <div x-show="profile.microphone.system == 'arecord'" :disabled="initialSystems.microphone != 'arecord'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#alsa">Documentation</a>
+                        <p>
+                            Starts an <tt>arecord</tt> process locally and reads audio data from its standard out (<a target="_blank" href="{{ url_prefix }}/docs/audio-input/#alsa">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -285,10 +297,12 @@
             <!-- End arecord -->
 
             <!-- Command -->
-            <div x-show="profile.microphone.system == 'command'">
+            <div x-show="profile.microphone.system == 'command'" :disabled="initialSystems.microphone != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-input/#command">Documentation</a>
+                        <p>
+                            Calls an external program to record raw audio (<a target="_blank" href="{{ url_prefix }}/docs/audio-input/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -398,14 +412,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.microphone.system == 'hermes'">
+            <div x-show="profile.microphone.system == 'hermes'" :disabled="initialSystems.microphone != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#audio-input">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects audio frames from a custom external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> (<a target="_blank" href="{{ url_prefix }}/docs/services/#audio-input">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -476,11 +487,11 @@
             </button>
             <select class="ml-2" x-model="profile.wake.system">
                 <option value="dummy">Disabled</option>
-                <option value="raven">Rhasspy Raven</option>
-                <option value="porcupine">Porcupine</option>
-                <option value="snowboy">Snowboy</option>
-                <option value="precise">Mycroft Precise</option>
-                <option value="pocketsphinx">Pocketsphinx</option>
+                <option value="raven">Rhasspy Raven{% if profile.get("wake.recommended") == "raven" %} (Recommended){% endif %}</option>
+                <option value="porcupine">Porcupine{% if profile.get("wake.recommended") == "porcupine" %} (Recommended){% endif %}</option>
+                <option value="snowboy">Snowboy{% if profile.get("wake.recommended") == "snowboy" %} (Recommended){% endif %}</option>
+                <option value="precise">Mycroft Precise{% if profile.get("wake.recommended") == "precise" %} (Recommended){% endif %}</option>
+                <option value="pocketsphinx">Pocketsphinx{% if profile.get("wake.recommended") == "pocketsphinx" %} (Recommended){% endif %}</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
@@ -494,12 +505,22 @@
     </div>
     <div id="wake-collapse" class="collapse hide" aria-labelledby="headingWake" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.wake.system != initialSystems.wake">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- Pocketsphinx -->
-            <div x-show="profile.wake.system == 'pocketsphinx'">
+            <div x-show="profile.wake.system == 'pocketsphinx'" :disabled="initialSystems.wake != 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#pocketsphinx">Documentation</a>
+                        <p>
+                            Listens for a keyphrase using <a href="https://github.com/cmusphinx/pocketsphinx">pocketsphinx</a> (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#pocketsphinx">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -537,10 +558,12 @@
             <!-- End Pocketsphinx -->
 
             <!-- Snowboy -->
-            <div x-show="profile.wake.system == 'snowboy'">
+            <div x-show="profile.wake.system == 'snowboy'" :disabled="initialSystems.wake != 'snowboy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#snowboy">Documentation</a>
+                        <p>
+                            Listens for one or more wake words with <a href="https://snowboy.kitt.ai">snowboy</a> (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#snowboy">Documentation</a>)
+                        </p>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -606,10 +629,12 @@
             <!-- End Snowboy -->
 
             <!-- Porcupine -->
-            <div x-show="profile.wake.system == 'porcupine'">
+            <div x-show="profile.wake.system == 'porcupine'" :disabled="initialSystems.wake != 'porcupine'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#porcupine">Documentation</a>
+                        <p>
+                            Listens for a wake word with <a href="https://github.com/Picovoice/Porcupine">porcupine</a> (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#porcupine">Documentation</a>)
+                        </p>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -664,10 +689,12 @@
             <!-- End Porcupine -->
 
             <!-- Mycroft Precise -->
-            <div x-show="profile.wake.system == 'precise'">
+            <div x-show="profile.wake.system == 'precise'" :disabled="initialSystems.wake != 'precise'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#precise">Documentation</a>
+                        <p>
+                            Listens for a wake word with <a href="https://github.com/MycroftAI/mycroft-precise">Mycroft Precise</a> (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#precise">Documentation</a>)
+                        </p>
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
@@ -731,10 +758,12 @@
 
 
             <!-- Rhasspy Raven -->
-            <div x-show="profile.wake.system == 'raven'">
+            <div x-show="profile.wake.system == 'raven'" :disabled="initialSystems.wake != 'raven'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#raven">Documentation</a>
+                        <p>
+                            Listens for a wake word with <a href="https://github.com/rhasspy/rhasspy-wake-raven">Raven</a> (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#raven">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -849,10 +878,12 @@
             <!-- End Command -->
 
             <!-- Command -->
-            <div x-show="profile.wake.system == 'command'">
+            <div x-show="profile.wake.system == 'command'" :disabled="initialSystems.wake != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/wake-word/#command">Documentation</a>
+                        <p>
+                            Calls a custom external program and wakes up when the program exits (<a target="_blank" href="{{ url_prefix }}/docs/wake-word/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -875,14 +906,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.wake.system == 'hermes'">
+            <div x-show="profile.wake.system == 'hermes'" :disabled="initialSystems.wake != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#wake-word">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects hotword detections from an external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> (<a target="_blank" href="{{ url_prefix }}/docs/services/#wake-word">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -920,9 +948,9 @@
             </button>
             <select class="ml-2" x-model="profile.speech_to_text.system">
                 <option value="dummy">Disabled</option>
-                <option value="pocketsphinx">Pocketsphinx</option>
-                <option value="kaldi">Kaldi</option>
-                <option value="deepspeech">Mozilla DeepSpeech</option>
+                <option value="pocketsphinx">Pocketsphinx{% if profile.get("speech_to_text.recommended") == "pocketsphinx" %} (Recommended){% endif %}</option>
+                <option value="kaldi">Kaldi{% if profile.get("speech_to_text.recommended") == "kaldi" %} (Recommended){% endif %}</option>
+                <option value="deepspeech">Mozilla DeepSpeech{% if profile.get("speech_to_text.recommended") == "deepspeech" %} (Recommended){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -937,12 +965,22 @@
     </div>
     <div id="speech-collapse" class="collapse hide" aria-labelledby="headingSpeech" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.speech_to_text.system != initialSystems.stt">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- Pocketsphinx -->
-            <div x-show="profile.speech_to_text.system == 'pocketsphinx'">
+            <div x-show="profile.speech_to_text.system == 'pocketsphinx'" :disabled="initialSystems.stt != 'pocketsphinx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#pocketsphinx">Documentation</a>
+                        <p>
+                            Does speech recognition with <a href="https://github.com/cmusphinx/pocketsphinx">CMU's pocketsphinx</a>. Less accurate, but supports many languages (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#pocketsphinx">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1015,10 +1053,12 @@
             <!-- End Pocketsphinx -->
 
             <!-- Kaldi -->
-            <div x-show="profile.speech_to_text.system == 'kaldi'">
+            <div x-show="profile.speech_to_text.system == 'kaldi'" :disabled="initialSystems.stt != 'kaldi'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#kaldi">Documentation</a>
+                        <p>
+                            Does speech recognition with <a href="https://kaldi-asr.org">Kaldi</a>. Fast and accurate for trained sentences (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#kaldi">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1107,10 +1147,13 @@
             <!-- End Kaldi -->
 
             <!-- DeepSpeech -->
-            <div x-show="profile.speech_to_text.system == 'deepspeech'">
+            <div x-show="profile.speech_to_text.system == 'deepspeech'" :disabled="initialSystems.stt != 'deepspeech'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#deepspeech">Documentation</a>
+                        <p>
+                            Does speech recognition with <a href="https://github.com/mozilla/DeepSpeech">Mozilla's DeepSpeech</a> version 0.9.
+                            Slower on some hardware, but often more accurate (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#deepspeech">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1197,10 +1240,12 @@
             <!-- End DeepSpeech -->
 
             <!-- Remote -->
-            <div x-show="profile.speech_to_text.system == 'remote'">
+            <div x-show="profile.speech_to_text.system == 'remote'" :disabled="initialSystems.stt != 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#remote">Documentation</a>
+                        <p>
+                            POSTs WAV audio to a remote HTTP endpoint, expecting a plain text transcription back (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#remote">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1230,10 +1275,12 @@
             <!-- End Remote -->
 
             <!-- Command -->
-            <div x-show="profile.speech_to_text.system == 'command'">
+            <div x-show="profile.speech_to_text.system == 'command'" :disabled="initialSystems.stt != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#command">Documentation</a>
+                        <p>
+                            Calls an external program with WAV audio on standard input and expects a text transcription on standard output (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1270,14 +1317,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.speech_to_text.system == 'hermes'">
+            <div x-show="profile.speech_to_text.system == 'hermes'" :disabled="initialSystems.stt != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#speech-to-text">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects an external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> to do speech to text (<a target="_blank" href="{{ url_prefix }}/docs/services/#speech-to-text">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -1439,8 +1483,8 @@
             </button>
             <select class="ml-2" x-model="profile.intent.system">
                 <option value="dummy">Disabled</option>
-                <option value="fsticuffs">Fsticuffs</option>
-                <option value="fuzzywuzzy">Fuzzywuzzy</option>
+                <option value="fsticuffs">Fsticuffs{% if profile.get("intent.recommended") == "fsticuffs" %} (Recommended){% endif %}</option>
+                <option value="fuzzywuzzy">Fuzzywuzzy{% if profile.get("intent.recommended") == "fuzzywuzzy" %} (Recommended){% endif %}</option>
                 <option value="rasa">Rasa NLU</option>
                 <!-- <option value="snips">Snips NLU</option> -->
                 <option value="remote">Remote HTTP</option>
@@ -1456,12 +1500,22 @@
     </div>
     <div id="intent-collapse" class="collapse hide" aria-labelledby="headingIntent" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.intent.system != initialSystems.intent">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- Fsticuffs -->
-            <div x-show="profile.intent.system == 'fsticuffs'">
+            <div x-show="profile.intent.system == 'fsticuffs'" :disabled="initialSystems.intent != 'fsticuffs'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#fsticuffs">Documentation</a>
+                        <p>
+                            Uses <a href="https://github.com/rhasspy/rhasspy-nlu">rhasspy-nlu</a> to recognize only the <a href="sentences">sentences Rhasspy was trained on</a> (<a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#fsticuffs">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1497,10 +1551,12 @@
             <!-- End Fsticuffs -->
 
             <!-- Fuzzywuzzy -->
-            <div x-show="profile.intent.system == 'fuzzywuzzy'">
+            <div x-show="profile.intent.system == 'fuzzywuzzy'" :disabled="initialSystems.intent != 'fuzzywuzzy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#fuzzywuzzy">Documentation</a>
+                        <p>
+                            Finds the closest matching intent using <a href="https://github.com/maxbachmann/rapidfuzz">rapidfuzz library</a> (<a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#fuzzywuzzy">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1534,10 +1590,17 @@
             <!-- End Fuzzywuzzy -->
 
             <!-- Rasa NLU -->
-            <div x-show="profile.intent.system == 'rasa'">
+            <div x-show="profile.intent.system == 'rasa'" :disabled="initialSystems.intent != 'rasa'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#rasanlu">Documentation</a>
+                        <p>
+                            <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#rasanlu">Documentation</a>
+                        </p>
+                    </div>
+                    <div class="form-row">
+                        <p class="alert alert-info">
+                            <strong>Note:</strong> requires an external service (<a href="https://rasa.com/docs/rasa/installation">installation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1603,10 +1666,12 @@
             <!-- End Rasa NLU -->
 
             <!-- Snips NLU -->
-            <div x-show="profile.intent.system == 'snips'">
+            <div x-show="profile.intent.system == 'snips'" :disabled="initialSystems.intent != 'snips'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#snips-nlu">Documentation</a>
+                        <p>
+                            Uses <a href="https://github.com/snipsco/snips-nlu">Snips NLU</a> to flexibly recognize sentences (<a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#snips-nlu">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1650,10 +1715,12 @@
             <!-- End Snips NLU -->
 
             <!-- Remote -->
-            <div x-show="profile.intent.system == 'remote'">
+            <div x-show="profile.intent.system == 'remote'" :disabled="initialSystems.intent != 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#remote">Documentation</a>
+                        <p>
+                            POSTs plain text to an HTTP endpoint and receives intent JSON back (<a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#remote">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1697,10 +1764,12 @@
             <!-- End Remote -->
 
             <!-- Command -->
-            <div x-show="profile.intent.system == 'command'">
+            <div x-show="profile.intent.system == 'command'" :disabled="initialSystems.intent != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#command">Documentation</a>
+                        <p>
+                            Calls an external program with text on standard input and expects intent JSON on standard output (<a target="_blank" href="{{ url_prefix }}/docs/intent-recognition/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1737,14 +1806,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.intent.system == 'hermes'">
+            <div x-show="profile.intent.system == 'hermes'" :disabled="initialSystems.intent != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#intent-recognition">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects an external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> to recognize intents (<a target="_blank" href="{{ url_prefix }}/docs/services/#intent-recognition">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -1766,14 +1832,14 @@
             </button>
             <select class="ml-2" x-model="profile.text_to_speech.system">
                 <option value="dummy">Disabled</option>
-                <option value="espeak">Espeak</option>
-                <option value="picotts">PicoTTS</option>
-                <option value="nanotts">NanoTTS</option>
-                <option value="flite">Flite</option>
+                <option value="espeak">Espeak{% if profile.get("text_to_speech.recommended") == "espeak" %} (Recommended){% endif %}</option>
+                <option value="picotts">PicoTTS{% if profile.get("text_to_speech.recommended") == "picotts" %} (Recommended){% endif %}</option>
+                <option value="nanotts">NanoTTS{% if profile.get("text_to_speech.recommended") == "nanotts" %} (Recommended){% endif %}</option>
+                <option value="flite">Flite{% if profile.get("text_to_speech.recommended") == "flite" %} (Recommended){% endif %}</option>
                 <option value="marytts">MaryTTS</option>
                 <option value="wavenet">Google Wavenet</option>
                 <option value="opentts">OpenTTS</option>
-                <option value="larynx">Larynx</option>
+                <option value="larynx">Larynx{% if profile.get("text_to_speech.recommended") == "larynx" %} (Recommended){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1787,12 +1853,22 @@
     </div>
     <div id="tts-collapse" class="collapse hide" aria-labelledby="headingTTS" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.text_to_speech.system != initialSystems.tts">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- Espeak -->
-            <div x-show="profile.text_to_speech.system == 'espeak'">
+            <div x-show="profile.text_to_speech.system == 'espeak'" :disabled="initialSystems.tts != 'espeak'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#espeak">Documentation</a>
+                        <p>
+                            Uses <a href="http://espeak.sourceforge.net">eSpeak</a> to speak sentences. Sounds robotic, but supports many languages and locales (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#espeak">Documentation</a>).
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1804,7 +1880,9 @@
                             <input id="tts-espeak-voice" x-model="profile.text_to_speech.espeak.voice" type="text" class="form-control" placeholder="default">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="tts-espeak-voices">Available Voices:</label>
                         </div>
@@ -1819,6 +1897,21 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <form onsubmit="speak('espeak')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-espeak-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group">
                     <div class="form-row">
                         <label for="tts-espeak-volume" class="col-form-label">Volume</label>
                         <div class="col-sm-auto">
@@ -1830,19 +1923,53 @@
             <!-- End Espeak -->
 
             <!-- PicoTTS -->
-            <div x-show="profile.text_to_speech.system == 'picotts'">
+            <div x-show="profile.text_to_speech.system == 'picotts'" :disabled="initialSystems.tts != 'picotts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#picotts">Documentation</a>
+                        <p>
+                            Uses SVOX's <a href="https://en.wikipedia.org/wiki/SVOX">picotts</a> to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#picotts">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="picotts-language" class="col-form-label">Language:</label>
+                        <label for="tts-picotts-voice" class="col-form-label">Language:</label>
                         <div class="col">
-                            <input id="picotts-language" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
+                            <input id="tts-picotts-voice" type="text" class="form-control" x-model="profile.text_to_speech.picotts.language" :disabled="profile.text_to_speech.system != 'picotts'" placeholder="default">
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="tts-picotts-languages">Available Languages:</label>
+                        </div>
+                        <div class="col">
+                            <select id="tts-picotts-languages" x-model="profile.text_to_speech.picotts.language" class="form-control">
+                                <option value="en-US">en-US</option>
+                                <option value="en-GB">en-GB</option>
+                                <option value="de-DE">de-DE</option>
+                                <option value="es-ES">es-ES</option>
+                                <option value="fr-FR">fr-FR</option>
+                                <option value="it-IT">it-IT</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <form onsubmit="speak('picotts')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-picotts-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -1856,19 +1983,53 @@
             <!-- End PicoTTS -->
 
             <!-- NanoTTS -->
-            <div x-show="profile.text_to_speech.system == 'nanotts'">
+            <div x-show="profile.text_to_speech.system == 'nanotts'" :disabled="initialSystems.tts != 'nanotts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#nanotts">Documentation</a>
+                        <p>
+                            Uses an <a href="https://github.com/gmn/nanotts">improved fork</a> of picoTTS to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#nanotts">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="nanotts-language" class="col-form-label">Language:</label>
+                        <label for="tts-nanotts-voice" class="col-form-label">Language:</label>
                         <div class="col">
-                            <input id="nanotts-language" type="text" class="form-control" x-model="profile.text_to_speech.nanotts.language" :disabled="profile.text_to_speech.system != 'nanotts'" placeholder="default">
+                            <input id="tts-nanotts-voice" type="text" class="form-control" x-model="profile.text_to_speech.nanotts.language" :disabled="profile.text_to_speech.system != 'nanotts'" placeholder="default">
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="tts-nanotts-languages">Available Languages:</label>
+                        </div>
+                        <div class="col">
+                            <select id="tts-nanotts-languages" x-model="profile.text_to_speech.nanotts.language" class="form-control">
+                                <option value="en-US">en-US</option>
+                                <option value="en-GB">en-GB</option>
+                                <option value="de-DE">de-DE</option>
+                                <option value="es-ES">es-ES</option>
+                                <option value="fr-FR">fr-FR</option>
+                                <option value="it-IT">it-IT</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <form onsubmit="speak('nanotts')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-nanotts-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -1882,10 +2043,12 @@
             <!-- End NanoTTS -->
 
             <!-- Flite -->
-            <div x-show="profile.text_to_speech.system == 'flite'">
+            <div x-show="profile.text_to_speech.system == 'flite'" :disabled="initialSystems.tts != 'flite'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#flite">Documentation</a>
+                        <p>
+                            Uses FestVox's <a href="http://www.festvox.org/flite">flite</a> to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#flite">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1914,6 +2077,21 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <form onsubmit="speak('flite')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-flite-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group">
                     <div class="form-row">
                         <label for="tts-flite-volume" class="col-form-label">Volume</label>
                         <div class="col-sm-auto">
@@ -1925,11 +2103,18 @@
             <!-- End Flite -->
 
             <!-- MaryTTS -->
-            <div x-show="profile.text_to_speech.system == 'marytts'">
+            <div x-show="profile.text_to_speech.system == 'marytts'" :disabled="initialSystems.tts != 'marytts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#marytts">Documentation</a>
+                        <p>
+                            Uses a remote <a href="http://mary.dfki.de/">MaryTTS</a> web server to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#marytts">Documentation</a>)
+                        </p>
                     </div>
+                </div>
+                <div class="form-row">
+                    <p class="alert alert-info">
+                        <strong>Note:</strong> requires an external service (<a href="https://github.com/synesthesiam/docker-marytts">Docker image available</a>)
+                    </p>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -1971,6 +2156,21 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <form onsubmit="speak('marytts')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-marytts-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group">
                     <div class="form-row">
                         <label for="tts-marytts-volume" class="col-form-label">Volume</label>
                         <div class="col-sm-auto">
@@ -1982,11 +2182,16 @@
             <!-- End MaryTTS -->
 
             <!-- Wavenet -->
-            <div x-show="profile.text_to_speech.system == 'wavenet'">
+            <div x-show="profile.text_to_speech.system == 'wavenet'" :disabled="initialSystems.tts != 'wavenet'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#wavenet">Documentation</a>
+                        Uses <a href="https://cloud.google.com/text-to-speech/docs/wavenet">Google's WaveNet</a> to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#wavenet">Documentation</a>)
                     </div>
+                </div>
+                <div class="form-row">
+                    <p class="alert alert-info">
+                        <strong>Note:</strong> requires an internet connection and <a href="https://cloud.google.com/text-to-speech/docs/reference/libraries#setting_up_authentication">a Google account</a>
+                    </p>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -2001,6 +2206,21 @@
                             <button onclick="refreshVoices('wavenet')" class="btn btn-primary form-control" title="Refresh wavenet voices">Refresh</button>
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <form onsubmit="speak('wavenet')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-wavenet-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
@@ -2040,25 +2260,32 @@
             <!-- End Wavenet -->
 
             <!-- OpenTTS -->
-            <div x-show="profile.text_to_speech.system == 'opentts'">
+            <div x-show="profile.text_to_speech.system == 'opentts'" :disabled="initialSystems.tts != 'opentts'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#opentts">Documentation</a>
+                        <p>
+                            Uses a remote <a href="https://github.com/synesthesiam/opentts">OpenTTS</a> web server to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#opentts">Documentation</a>)
+                        </p>
                     </div>
+                </div>
+                <div class="form-row">
+                    <p class="alert alert-info">
+                        <strong>Note:</strong> requires an external service (<a href="https://github.com/synesthesiam/opentts">Docker image available</a>)
+                    </p>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="opentts-url" class="col-form-label">URL:</label>
+                        <label for="tts-opentts-url" class="col-form-label">URL:</label>
                         <div class="col">
-                            <input id="opentts-url" type="text" class="form-control" x-model="profile.text_to_speech.opentts.url" :disabled="profile.text_to_speech.system != 'opentts'">
+                            <input id="tts-opentts-url" type="text" class="form-control" x-model="profile.text_to_speech.opentts.url" :disabled="profile.text_to_speech.system != 'opentts'">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="opentts-voice" class="col-form-label">Voice:</label>
+                        <label for="tts-opentts-voice" class="col-form-label">Voice:</label>
                         <div class="col">
-                            <input id="opentts-voice" type="text" class="form-control" x-model="profile.text_to_speech.opentts.voice" :disabled="profile.text_to_speech.system != 'opentts'" placeholder="default">
+                            <input id="tts-opentts-voice" type="text" class="form-control" x-model="profile.text_to_speech.opentts.voice" :disabled="profile.text_to_speech.system != 'opentts'" placeholder="default">
                         </div>
                     </div>
                 </div>
@@ -2078,6 +2305,21 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <form onsubmit="speak('opentts')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-opentts-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group">
                     <div class="form-row">
                         <label for="tts-opentts-volume" class="col-form-label">Volume</label>
                         <div class="col-sm-auto">
@@ -2089,17 +2331,19 @@
             <!-- End OpenTTS -->
 
             <!-- Larynx -->
-            <div x-show="profile.text_to_speech.system == 'larynx'">
+            <div x-show="profile.text_to_speech.system == 'larynx'" :disabled="initialSystems.tts != 'larynx'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#larynx">Documentation</a>
+                        <p>
+                            Uses <a href="https://github.com/rhasspy/larynx">Larynx</a>, a fork of <a href="https://github.com/mozilla/TTS">MozillaTTS</a>, to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#larynx">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="opentts-voice" class="col-form-label">Voice:</label>
+                        <label for="tts-larynx-voice" class="col-form-label">Voice:</label>
                         <div class="col">
-                            <input id="larynx-voice" type="text" class="form-control" x-model="profile.text_to_speech.larynx.voice" :disabled="profile.text_to_speech.system != 'larynx'" placeholder="default">
+                            <input id="tts-larynx-voice" type="text" class="form-control" x-model="profile.text_to_speech.larynx.voice" :disabled="profile.text_to_speech.system != 'larynx'" placeholder="default">
                         </div>
                     </div>
                 </div>
@@ -2119,6 +2363,21 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <form onsubmit="speak('larynx')">
+                        <div class="form-row">
+                            <div class="col-xs-auto">
+                                <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
+                                    <i class="fas fa-inverse fa-paper-plane"></i>
+                                    Speak
+                                </button>
+                            </div>
+                            <div class="col">
+                                <input type="text" id="tts-larynx-text" class="form-control ml-1" placeholder="Text to speak">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group">
                     <div class="form-row">
                         <label for="tts-larynx-volume" class="col-form-label">Volume</label>
                         <div class="col-sm-auto">
@@ -2130,10 +2389,12 @@
             <!-- End Larynx -->
 
             <!-- Remote -->
-            <div x-show="profile.text_to_speech.system == 'remote'">
+            <div x-show="profile.text_to_speech.system == 'remote'" :disabled="initialSystems.tts != 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#remote">Documentation</a>
+                        <p>
+                            POSTs text to a remote HTTP endpoint and plays received WAV audio (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#remote">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2155,10 +2416,12 @@
             <!-- End Remote -->
 
             <!-- Command -->
-            <div x-show="profile.text_to_speech.system == 'command'">
+            <div x-show="profile.text_to_speech.system == 'command'" :disabled="initialSystems.tts != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#command">Documentation</a>
+                        <p>
+                            Calls an external program with text on standard input and plays WAV audio from standard output (<a target="_blank" href="{{ url_prefix }}/docs/text-to-speech/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2214,14 +2477,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.text_to_speech.system == 'hermes'">
+            <div x-show="profile.text_to_speech.system == 'hermes'" :disabled="initialSystems.tts != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#text-to-speech">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects an external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> to speak sentences (<a target="_blank" href="{{ url_prefix }}/docs/services/#text-to-speech">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -2261,7 +2521,7 @@
             </button>
             <select class="ml-2" x-model="profile.sounds.system">
                 <option value="dummy">Disabled</option>
-                <option value="aplay">aplay</option>
+                <option value="aplay">aplay{% if profile.get("sounds.recommended") == "aplay" %} (Recommended){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -2275,12 +2535,22 @@
     </div>
     <div id="sounds-collapse" class="collapse hide" aria-labelledby="headingSounds" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.sounds.system != initialSystems.sounds">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- aplay -->
-            <div x-show="profile.sounds.system == 'aplay'">
+            <div x-show="profile.sounds.system == 'aplay'" :disabled="initialSystems.sounds != 'aplay'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-output/#alsa">Documentation</a>
+                        <p>
+                            Plays WAV files on the local device by calling the <tt>aplay</tt> command (<a target="_blank" href="{{ url_prefix }}/docs/audio-output/#alsa">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2292,7 +2562,9 @@
                             <input id="sounds-aplay-device" x-model="profile.sounds.aplay.device" type="text" class="form-control">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="sounds-aplay-devices">Available Devices:</label>
                         </div>
@@ -2318,10 +2590,12 @@
             <!-- End aplay -->
 
             <!-- Remote -->
-            <div x-show="profile.sounds.system == 'remote'">
+            <div x-show="profile.sounds.system == 'remote'" :disabled="initialSystems.sounds != 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-output/#remote">Documentation</a>
+                        <p>
+                            POSTs WAV audio to a remote HTTP endpoint (<a target="_blank" href="{{ url_prefix }}/docs/audio-output/#remote">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2336,10 +2610,12 @@
             <!-- End Remote -->
 
             <!-- Command -->
-            <div x-show="profile.sounds.system == 'command'">
+            <div x-show="profile.sounds.system == 'command'" :disabled="initialSystems.sounds != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/audio-output/#command">Documentation</a>
+                        <p>
+                            Calls an external program with WAV audio on standard input (<a target="_blank" href="{{ url_prefix }}/docs/audio-output/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2362,14 +2638,11 @@
             <!-- End Command -->
 
             <!-- Hermes -->
-            <div x-show="profile.sounds.system == 'hermes'">
+            <div x-show="profile.sounds.system == 'hermes'" :disabled="initialSystems.sounds != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#audio-output">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects an external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> to play audio (<a target="_blank" href="{{ url_prefix }}/docs/services/#audio-output">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -2391,7 +2664,7 @@
             </button>
             <select class="ml-2" x-model="profile.dialogue.system">
                 <option value="dummy">Disabled</option>
-                <option value="rhasspy">Rhasspy</option>
+                <option value="rhasspy">Rhasspy{% if profile.get("dialogue.recommended") == "rhasspy" %} (Recommended){% endif %}</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
 
@@ -2403,12 +2676,22 @@
     </div>
     <div id="dialogue-collapse" class="collapse hide" aria-labelledby="headingDialogue" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.dialogue.system != initialSystems.dialogue">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
 
             <!-- Rhasspy -->
-            <div x-show="profile.dialogue.system == 'rhasspy'">
+            <div x-show="profile.dialogue.system == 'rhasspy'" :disabled="initialSystems.dialogue != 'rhasspy'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#dialogue-manager">Documentation</a>
+                        <p>
+                            Makes Rhasspy behave like a typical voice assistant, automatically listening for voice commands after hotword detections and recognizing intents from them (<a target="_blank" href="{{ url_prefix }}/docs/services/#dialogue-manager">Documentation</a>)
+                        </p>
                     </div>
                     <div class="form-row">
                         <p>
@@ -2433,14 +2716,11 @@
             <!-- End Rhasspy -->
 
             <!-- Hermes -->
-            <div x-show="profile.dialogue.system == 'hermes'">
+            <div x-show="profile.dialogue.system == 'hermes'" :disabled="initialSystems.dialogue != 'hermes'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/services/#dialogue-manager">Documentation</a>
-                    </div>
-                    <div class="form-row">
                         <p>
-                            External service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a>
+                            Expects a custom external service that supports the <a href="https://docs.snips.ai/reference/hermes">Hermes Protocol</a> to do something with hotword detections, etc. (<a target="_blank" href="{{ url_prefix }}/docs/services/#dialogue-manager">Documentation</a>)
                         </p>
                     </div>
                 </div>
@@ -2475,11 +2755,22 @@
     </div>
     <div id="handle-collapse" class="collapse hide" aria-labelledby="headingHandle" data-parent="#accordion">
         <div class="card-body">
+            <div x-show="profile.speech_to_text.system != initialSystems.handle">
+                <div class="mb-3">
+                    <button onclick="saveProfile()" class="btn btn-danger" title="Save all settings and restart Rhasspy">
+                        <i class="fas fa-power-off fa-inverse mr-2"></i>
+                        Save and Restart Required
+                    </button>
+                </div>
+            </div>
+
             <!-- Home Assistant -->
-            <div x-show="profile.handle.system == 'hass'">
+            <div x-show="profile.handle.system == 'hass'" :disabled="initialSystems.handle != 'hass'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#home-assistant">Documentation</a>
+                        <p>
+                            Sends intents or events directly to <a href="https://www.home-assistant.io">Home Assistant</a> or <a href="https://www.home-assistant.io/hassio/">Hass.io</a> (<a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#home-assistant">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2554,10 +2845,12 @@
             <!-- End Home Assistant -->
 
             <!-- Remote -->
-            <div x-show="profile.handle.system == 'remote'">
+            <div x-show="profile.handle.system == 'remote'" :disabled="initialSystems.handle != 'remote'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#remote-server">Documentation</a>
+                        <p>
+                            POSTs intent JSON to a remote HTTP endpoint (<a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#remote-server">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2572,10 +2865,12 @@
             <!-- End Remote -->
 
             <!-- Command -->
-            <div x-show="profile.handle.system == 'command'">
+            <div x-show="profile.handle.system == 'command'" :disabled="initialSystems.handle != 'command'">
                 <div class="form-group">
                     <div class="form-row">
-                        <a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#command">Documentation</a>
+                        <p>
+                            Calls a custom external program with intent JSON on standard input (<a target="_blank" href="{{ url_prefix }}/docs/intent-handling/#command">Documentation</a>)
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -2624,16 +2919,25 @@
 
 <!-- Sounds -->
 <div class="card mt-3">
-    <div class="card-header">
+    <div class="card-header bg-success text-light">
         <h5>Sounds</h5>
     </div>
     <div class="card-body">
         <div class="form-group">
             <div class="form-row">
-                <p class="text-muted">WAV files to play when Rhasspy wakes up and is finished recording a voice command.</p>
+                <p>
+                    WAV files to play when Rhasspy wakes up and is finished recording a voice command.
+                </p>
             </div>
             <div class="form-row">
-                <p class="text-muted">Use <tt>${RHASSPY_PROFILE_DIR}</tt> for your profile directory.</p>
+                <p class="alert alert-info">
+                    <strong>Note:</strong> dialogue management must be set to "Rhasspy" to hear these sounds
+                </p>
+            </div>
+            <div class="form-row">
+                <p class="text-muted">
+                    Use <tt>${RHASSPY_PROFILE_DIR}</tt> environment variable for your profile directory.
+                </p>
             </div>
         </div>
         <div class="form-group">
@@ -2641,6 +2945,9 @@
                 <label for="sounds-wake" class="col-form-label">Wake WAV</label>
                 <div class="col">
                     <input id="sounds-wake" type="text" class="form-control" x-model="profile.sounds.wake">
+                </div>
+                <div class="col-auto text-muted">
+                    (empty to disable)
                 </div>
             </div>
         </div>
@@ -2650,6 +2957,9 @@
                 <div class="col">
                     <input id="sounds-recorded" type="text" class="form-control" x-model="profile.sounds.recorded">
                 </div>
+                <div class="col-auto text-muted">
+                    (empty to disable)
+                </div>
             </div>
         </div>
         <div class="form-group">
@@ -2657,6 +2967,9 @@
                 <label for="sounds-error" class="col-form-label">Error WAV</label>
                 <div class="col">
                     <input id="sounds-error" type="text" class="form-control" x-model="profile.sounds.error">
+                </div>
+                <div class="col-auto text-muted">
+                    (empty to disable)
                 </div>
             </div>
         </div>
@@ -2674,10 +2987,27 @@
 
 <!-- SSL -->
 <div class="card mt-3" id="ssl">
-    <div class="card-header">
+    <div class="card-header bg-info text-light">
         <h5>Certificates</h5>
     </div>
     <div class="card-body">
+        <div class="form-group">
+            <div class="form-row">
+                <p>
+                    Files needed for using HTTPS with your Rhasspy server or Home Assistant
+                </p>
+            </div>
+            <div class="form-row">
+                <p class="alert alert-info">
+                    <strong>Note:</strong> all paths should be absolute
+                </p>
+            </div>
+            <div class="form-row">
+                <p class="text-muted">
+                    Use <tt>${RHASSPY_PROFILE_DIR}</tt> environment variable for your profile directory.
+                </p>
+            </div>
+        </div>
         <div class="form-group">
             <div class="form-row">
                 <div class="col-auto">
@@ -2704,12 +3034,6 @@
                 </div>
             </div>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <p class="muted">Paths should be absolute.</p>
-                <p class="mited">Use <tt>$RHASSPY_PROFILE_DIR</tt> environment variable for the directory of this profile (<tt>{{ profile_dir }}</tt>)</p>
-            </div>
-        </div>
     </div>
 </div>
 <!-- End SSL -->
@@ -2731,7 +3055,14 @@
                       false)
             .done(function() {
                 if (window.confirm("Settings saved. Restart Rhasspy?")) {
-                    rhasspy.restart();
+                    var needRetrain = ((rhasspy.profile.speech_to_text.system != rhasspy.initialSystems.stt) || (rhasspy.profile.intent.system != rhasspy.initialSystems.intent));
+
+                    rhasspy.restart(!needRetrain).done(function() {
+                        // Automatically re-train if either the speech to text or intent recognition system has changed
+                        if (needRetrain) {
+                            rhasspy.train();
+                        }
+                    });
                 } else {
                     rhasspy.hideBusy();
                 }
@@ -2919,6 +3250,21 @@
      if ($('#microphone-' + rhasspy.profile.microphone.system + '-devices').length) {
          refreshInputDevices(rhasspy.profile.microphone.system, true);
      }
+ }
+
+ // POST text to /api/text-to-speech to speak sentence with selected voice
+ function speak(textId) {
+     event.preventDefault();
+
+     var text = $('#tts-' + textId + '-text').val() || '';
+     if (text.length > 0) {
+         var voice = $('#tts-' + textId + '-voice').val() || '';
+         rhasspy.postBusy(text, '/api/text-to-speech?voice=' + voice, text);
+     } else {
+         alert('No text to speak')
+     }
+
+     return false;
  }
 
  $(document).ready(() => {

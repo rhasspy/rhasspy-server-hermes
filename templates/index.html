@@ -14,54 +14,126 @@
 	   x-bind:title="'MQTT: ' + (profile.mqtt.enabled ? 'external' : 'internal')"
 	   x-bind:class="{ 'btn-dark': !profile.mqtt.enabled, 'btn-success' : profile.mqtt.enabled }">
 	    <i class="fas fa-inverse fa-network-wired fa-lg"></i>
+        <br>
+        <span>
+            {% if not mqtt_external %}
+            Internal MQTT
+            {% else %}
+            External MQTT
+            {% endif %}
+        </span>
     </a>
 
     <a href="{{ url_prefix }}/settings#microphone" class="btn flex-fill p-2"
 	   x-bind:title="'Audio input: ' + profile.microphone.system"
 	   x-bind:class="{ 'btn-dark': profile.microphone.system === 'dummy', 'btn-success': profile.microphone.system !== 'dummy' }">
       <i class="fas fa-inverse fa-microphone fa-lg"></i>
+      <br>
+      <span>
+          {% if not has_microphone %}
+          Microphone
+          {% else %}
+          {{ profile.get("microphone.system") }}
+          {% endif %}
+      </span>
     </a>
 
 	  <a href="{{ url_prefix }}/settings#wake" class="btn flex-fill p-2"
        x-bind:title="'Wake word: ' + profile.wake.system"
        x-bind:class="{ 'btn-dark': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy' }">
         <i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_wake %}
+            Wake
+            {% else %}
+            {{ profile.get("wake.system") }}
+            {% endif %}
+        </span>
     </a>
 
     <a href="{{ url_prefix }}/settings#speech" class="btn flex-fill p-2"
        x-bind:title="'Speech to text: ' + profile.speech_to_text.system"
        x-bind:class="{ 'btn-dark': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy' }">
         <i class="fas fa-inverse fa-phone-volume fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_speech_to_text %}
+            Speech to Text
+            {% else %}
+            {{ profile.get("speech_to_text.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
     <a href="{{ url_prefix }}/settings#intent" class="btn flex-fill p-2"
        x-bind:title="'Intent recognition: ' + profile.intent.system"
        x-bind:class="{ 'btn-dark': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }">
         <i class="fas fa-inverse fa-comment fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_intent %}
+            Intent Recognition
+            {% else %}
+            {{ profile.get("intent.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
     <a href="{{ url_prefix }}/settings#tts" class="btn flex-fill p-2"
        x-bind:title="'Text to speech: ' + profile.text_to_speech.system"
        x-bind:class="{ 'btn-dark': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }">
         <i class="fas fa-inverse fa-paper-plane fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_text_to_speech %}
+            Text to Speech
+            {% else %}
+            {{ profile.get("text_to_speech.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
     <a href="{{ url_prefix }}/settings#sounds" class="btn flex-fill p-2"
        x-bind:title="'Audio output: ' + profile.sounds.system"
        x-bind:class="{ 'btn-dark': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }">
         <i class="fas fa-inverse fa-volume-up fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_sounds %}
+            Sounds
+            {% else %}
+            {{ profile.get("sounds.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
     <a href="{{ url_prefix }}/settings#handle" class="btn flex-fill p-2"
        x-bind:title="'Intent handling: ' + profile.handle.system"
        x-bind:class="{ 'btn-dark': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy'}">
         <i class="fas fa-inverse fa-bolt fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_handle %}
+            Intent Handling
+            {% else %}
+            {{ profile.get("handle.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
     <a href="{{ url_prefix }}/settings#dialogue" class="btn flex-fill p-2"
        x-bind:title="'Dialogue management: ' + profile.dialogue.system"
        x-bind:class="{ 'btn-dark': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }">
         <i class="fas fa-inverse fa-tasks fa-lg"></i>
+        <br>
+        <span>
+            {% if not has_dialogue %}
+            Dialogue
+            {% else %}
+            {{ profile.get("dialogue.system") }}
+            {% endif %}
+        </span>
 	  </a>
 
 </div>
@@ -74,17 +146,21 @@
             <div class="container">
                 <div class="row">
                     <div class="col">
-                        <button id="wakeup" class="btn btn-warning" onclick="wakeUp()" title="Wake up Rhasspy and listen for a voice command">
+                        <button id="wakeup" class="btn btn-warning" onclick="wakeUp()" title="Wake up Rhasspy and listen for a voice command" {% if not (has_speech_to_text and has_intent) %}disabled {% endif %}>
                             <i class="fas fa-2x fa-exclamation-circle"></i>
                         </button>
                         <span>Wake Up</span>
+                        {% if not (has_speech_to_text and has_intent) %}
+                        <br>
+                        <span class="text-muted">(need <a href="settings#speech">speech to text</a> and <a href="settings#intent">intent</a> systems)</span>
+                        {% endif %}
                     </div>
                     <div class="col">
                         <div class="btn-group w-100">
-                            <button id="play-command" onclick="playCommand()" class="btn btn-success" title="Play the last recorded voice command">
+                            <button id="play-command" onclick="playCommand()" class="btn btn-success" title="Play the last recorded voice command" {% if not has_sounds %}disabled{% endif %}>
                                 <i class="fas fa-2x fa-play"></i>
                             </button>
-                            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split w-25" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split w-25" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" {% if not has_sounds %}disabled{% endif %}>
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <div class="dropdown-menu">
@@ -96,6 +172,10 @@
                         </div>
 
                         <span>Play Recording</span>
+                        {% if not has_sounds %}
+                        <br>
+                        <span class="text-muted">(no <a href="settings#sounds">sound</a> system)</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -104,10 +184,14 @@
     <div class="card test-card">
         <div class="card-body">
             <input id="wav-file" type="file" onchange="uploadWAV()" hidden>
-            <button id="upload" onclick="chooseWAV()" class="btn btn-info" title="Upload WAV voice command and recognize it">
+            <button id="upload" onclick="chooseWAV()" class="btn btn-info" title="Upload WAV voice command and recognize it" {% if not has_speech_to_text %}disabled{% endif %}>
                 <i class="fas fa-2x fa-upload"></i>
             </button>
             <span>Upload WAV File</span>
+            {% if not has_speech_to_text %}
+            <br>
+            <span class="text-muted">(no <a href="settings#speech">speech to text</a> system)</span>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -118,17 +202,24 @@
     <form onsubmit="recognize()">
         <div class="row">
             <div class="col-xs-auto">
-                <button type="submit" id="intent-recognize" title="Recognize an intent from text" class="btn btn-primary">
+                <button type="submit" id="intent-recognize" title="Recognize an intent from text" class="btn btn-primary" {% if not has_intent %}disabled{% endif %}>
                     <i class="fas fa-inverse fa-comment"></i>
                     Recognize
                 </button>
             </div>
+
+            {% if not has_intent %}
+            <div class="col-auto">
+                <span class="text-muted">(no <a href="settings#intent">intent</a> system)</span>
+            </div>
+            {% endif %}
+
             <div class="col">
-                <input type="text" id="intent-text" class="form-control ml-1" placeholder="Text to recognize">
+                <input type="text" id="intent-text" class="form-control ml-1" placeholder="Text to recognize" {% if not has_intent %}readonly{% endif %}>
             </div>
             <div class="col-xs-auto">
-                <input type="checkbox" class="mr-2" id="handle-intent">
-                <label for="handle-intent" class="col-form-label">Handle <i class="fas fa-bolt ml-1"></i> </label>
+                <input type="checkbox" class="mr-2" id="handle-intent" {% if not has_intent %}disabled{% endif %}>
+                <label for="handle-intent" class="col-form-label" title="Send recognized intent to intent handler">Handle <i class="fas fa-bolt ml-1"></i> </label>
             </div>
         </div>
         <div class="row">
@@ -153,20 +244,25 @@
     <form onsubmit="speak()" class="mt-3">
         <div class="row">
             <div class="col-xs-auto">
-                <button type="submit" id="tts-speak" title="Speak a sentence using text to speech" class="btn btn-primary">
+                <button type="submit" id="tts-speak" title="Speak a sentence using text to speech" class="btn btn-info" {% if not has_text_to_speech %}disabled{% endif %}>
                     <i class="fas fa-inverse fa-paper-plane"></i>
                     Speak
                 </button>
             </div>
+            {% if not has_text_to_speech %}
+            <div class="col-auto">
+                <span class="text-muted">(no <a href="settings#tts">text to speech</a> system)</span>
+            </div>
+            {% endif %}
             <div class="col">
-                <input type="text" id="tts-text" class="form-control ml-1" placeholder="Text to speak">
+                <input type="text" id="tts-text" class="form-control ml-1" placeholder="Text to speak" {% if not has_text_to_speech %}readonly{% endif %}>
             </div>
         </div>
     </form>
     <form onsubmit="setVolume()" class="mt-3">
         <div class="row">
             <div class="col-xs-auto">
-                <button type="submit" id="set-volume" title="Set the volume for multiple sites" class="btn btn-info">
+                <button type="submit" id="set-volume" title="Set the volume for multiple sites" class="btn btn-success">
                     <i class="fas fa-inverse fa-volume-up"></i>
                     Set Volume
                 </button>

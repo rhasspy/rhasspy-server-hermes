@@ -93,3 +93,7 @@ div.card-header .fas {
 textarea.code {
     font-family: monospace;
 }
+
+div[disabled] {
+    opacity: 0.5;
+}

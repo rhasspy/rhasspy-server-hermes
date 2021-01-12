@@ -491,7 +491,7 @@
                 <option value="porcupine">Porcupine{% if profile.get("wake.recommended") == "porcupine" %} (Recommended){% endif %}</option>
                 <option value="snowboy">Snowboy{% if profile.get("wake.recommended") == "snowboy" %} (Recommended){% endif %}</option>
                 <option value="precise">Mycroft Precise{% if profile.get("wake.recommended") == "precise" %} (Recommended){% endif %}</option>
-                <option value="pocketsphinx">Pocketsphinx{% if profile.get("wake.recommended") == "pocketsphinx" %} (Recommended){% endif %}</option>
+                <option value="pocketsphinx">Pocketsphinx{% if profile.get("wake.recommended") == "pocketsphinx" %} (Recommended){% elif not profile.get("speech_to_text.pocketsphinx.compatible") %} (Incompatible){% endif %}</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
             </select>
@@ -948,9 +948,9 @@
             </button>
             <select class="ml-2" x-model="profile.speech_to_text.system">
                 <option value="dummy">Disabled</option>
-                <option value="pocketsphinx">Pocketsphinx{% if profile.get("speech_to_text.recommended") == "pocketsphinx" %} (Recommended){% endif %}</option>
-                <option value="kaldi">Kaldi{% if profile.get("speech_to_text.recommended") == "kaldi" %} (Recommended){% endif %}</option>
-                <option value="deepspeech">Mozilla DeepSpeech{% if profile.get("speech_to_text.recommended") == "deepspeech" %} (Recommended){% endif %}</option>
+                <option value="pocketsphinx">Pocketsphinx{% if profile.get("speech_to_text.recommended") == "pocketsphinx" %} (Recommended){% elif not profile.get("speech_to_text.pocketsphinx.compatible") %} (Incompatible){% endif %}</option>
+                <option value="kaldi">Kaldi{% if profile.get("speech_to_text.recommended") == "kaldi" %} (Recommended){% elif not profile.get("speech_to_text.kaldi.compatible") %} (Incompatible){% endif %}</option>
+                <option value="deepspeech">Mozilla DeepSpeech{% if profile.get("speech_to_text.recommended") == "deepspeech" %} (Recommended){% elif not profile.get("speech_to_text.deepspeech.compatible") %} (Incompatible){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1832,14 +1832,14 @@
             </button>
             <select class="ml-2" x-model="profile.text_to_speech.system">
                 <option value="dummy">Disabled</option>
-                <option value="espeak">Espeak{% if profile.get("text_to_speech.recommended") == "espeak" %} (Recommended){% endif %}</option>
-                <option value="picotts">PicoTTS{% if profile.get("text_to_speech.recommended") == "picotts" %} (Recommended){% endif %}</option>
-                <option value="nanotts">NanoTTS{% if profile.get("text_to_speech.recommended") == "nanotts" %} (Recommended){% endif %}</option>
-                <option value="flite">Flite{% if profile.get("text_to_speech.recommended") == "flite" %} (Recommended){% endif %}</option>
+                <option value="espeak">Espeak{% if profile.get("text_to_speech.recommended") == "espeak" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="picotts">PicoTTS{% if profile.get("text_to_speech.recommended") == "picotts" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="nanotts">NanoTTS{% if profile.get("text_to_speech.recommended") == "nanotts" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="flite">Flite{% if profile.get("text_to_speech.recommended") == "flite" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
                 <option value="marytts">MaryTTS</option>
                 <option value="wavenet">Google Wavenet</option>
                 <option value="opentts">OpenTTS</option>
-                <option value="larynx">Larynx{% if profile.get("text_to_speech.recommended") == "larynx" %} (Recommended){% endif %}</option>
+                <option value="larynx">Larynx{% if profile.get("text_to_speech.recommended") == "larynx" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -3055,14 +3055,7 @@
                       false)
             .done(function() {
                 if (window.confirm("Settings saved. Restart Rhasspy?")) {
-                    var needRetrain = ((rhasspy.profile.speech_to_text.system != rhasspy.initialSystems.stt) || (rhasspy.profile.intent.system != rhasspy.initialSystems.intent));
-
-                    rhasspy.restart(!needRetrain).done(function() {
-                        // Automatically re-train if either the speech to text or intent recognition system has changed
-                        if (needRetrain) {
-                            rhasspy.train();
-                        }
-                    });
+                    rhasspy.restart();
                 } else {
                     rhasspy.hideBusy();
                 }

@@ -15,7 +15,7 @@
 	   x-bind:class="{ 'btn-dark': !profile.mqtt.enabled, 'btn-success' : profile.mqtt.enabled }">
 	    <i class="fas fa-inverse fa-network-wired fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not mqtt_external %}
             Internal MQTT
             {% else %}
@@ -29,7 +29,7 @@
 	   x-bind:class="{ 'btn-dark': profile.microphone.system === 'dummy', 'btn-success': profile.microphone.system !== 'dummy' }">
       <i class="fas fa-inverse fa-microphone fa-lg"></i>
       <br>
-      <span>
+      <span class="service-label">
           {% if not has_microphone %}
           Microphone
           {% else %}
@@ -38,12 +38,12 @@
       </span>
     </a>
 
-	  <a href="{{ url_prefix }}/settings#wake" class="btn flex-fill p-2"
+    <a href="{{ url_prefix }}/settings#wake" class="btn flex-fill p-2"
        x-bind:title="'Wake word: ' + profile.wake.system"
        x-bind:class="{ 'btn-dark': profile.wake.system === 'dummy', 'btn-success': profile.wake.system !== 'dummy' }">
         <i class="fas fa-inverse fa-exclamation-circle fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_wake %}
             Wake
             {% else %}
@@ -57,21 +57,21 @@
        x-bind:class="{ 'btn-dark': profile.speech_to_text.system === 'dummy', 'btn-success': profile.speech_to_text.system !== 'dummy' }">
         <i class="fas fa-inverse fa-phone-volume fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_speech_to_text %}
             Speech to Text
             {% else %}
             {{ profile.get("speech_to_text.system") }}
             {% endif %}
         </span>
-	  </a>
+    </a>
 
     <a href="{{ url_prefix }}/settings#intent" class="btn flex-fill p-2"
        x-bind:title="'Intent recognition: ' + profile.intent.system"
        x-bind:class="{ 'btn-dark': profile.intent.system === 'dummy', 'btn-success': profile.intent.system !== 'dummy' }">
         <i class="fas fa-inverse fa-comment fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_intent %}
             Intent Recognition
             {% else %}
@@ -85,7 +85,7 @@
        x-bind:class="{ 'btn-dark': profile.text_to_speech.system === 'dummy', 'btn-success': profile.text_to_speech.system !== 'dummy' }">
         <i class="fas fa-inverse fa-paper-plane fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_text_to_speech %}
             Text to Speech
             {% else %}
@@ -99,7 +99,7 @@
        x-bind:class="{ 'btn-dark': profile.sounds.system === 'dummy', 'btn-success': profile.sounds.system !== 'dummy' }">
         <i class="fas fa-inverse fa-volume-up fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_sounds %}
             Sounds
             {% else %}
@@ -113,7 +113,7 @@
        x-bind:class="{ 'btn-dark': profile.handle.system === 'dummy', 'btn-success': profile.handle.system !== 'dummy'}">
         <i class="fas fa-inverse fa-bolt fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_handle %}
             Intent Handling
             {% else %}
@@ -127,7 +127,7 @@
        x-bind:class="{ 'btn-dark': profile.dialogue.system === 'dummy', 'btn-success': profile.dialogue.system !== 'dummy' }">
         <i class="fas fa-inverse fa-tasks fa-lg"></i>
         <br>
-        <span>
+        <span class="service-label">
             {% if not has_dialogue %}
             Dialogue
             {% else %}

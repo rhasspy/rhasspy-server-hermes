@@ -2204,6 +2204,28 @@ async def api_set_volume() -> str:
 
 
 # -----------------------------------------------------------------------------
+
+
+@app.route("/api/system", methods=["POST"])
+async def api_system():
+    """Run a pre-defined system command from the profile"""
+    assert core is not None
+    command_name = (await request.data).decode().strip()
+    command_list = core.profile.get("system", {}).get(command_name)
+
+    assert command_list, f"No pre-defined command '{command_name}'"
+    _LOGGER.debug("%s: %s", command_name, command_list)
+
+    proc = await asyncio.create_subprocess_exec(*[str(v) for v in command_list])
+    output, error = await proc.communicate()
+
+    if error:
+        raise RuntimeError(error.decode())
+
+    return output or ""
+
+
+# -----------------------------------------------------------------------------
 # WebSocket API
 # -----------------------------------------------------------------------------
 

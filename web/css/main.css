@@ -103,3 +103,10 @@ div[disabled] {
         display: none;
     }
 }
+
+.power-btn {
+    font-size: 1.5rem;
+    width: 100%;
+    height: 100px;
+    margin-bottom: 20px;
+}

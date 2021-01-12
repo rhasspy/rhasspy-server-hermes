@@ -85,6 +85,9 @@
 
                     <button onclick="rhasspy.train()" class="btn btn-success ml-2" title="Train profile">Train</button>
                     <button onclick="rhasspy.restart()" class="btn btn-danger ml-2" title="Restart Rhasspy">Restart</button>
+                    <button onclick="powerOff()" class="btn btn-secondary ml-2" title="Reboot/Shutdown System">
+                        <i class="fas fa-lg fa-inverse fa-power-off" ></i>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -261,6 +264,33 @@
             </div>
         </div>
         <!-- End Log -->
+
+        <!-- Power Modal -->
+        <div class="modal fade" id="power-modal" tabindex="-1" role="dialog" aria-labelledby="powerLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="powerLabel">System Power</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body container">
+                        <div class="row justify-content-center">
+                            <div class="col">
+                                <button class="btn btn-warning power-btn" onclick="restartSystem()">Restart System</button>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col">
+                                <button class="btn btn-danger power-btn" onclick="shutdownSystem()">Shutdown System</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Power Modal -->
 
         <!-- Load Javascript libraries -->
         <script src="{{ url_prefix }}/js/reconnecting-websocket-iife.min.js"></script>
@@ -602,6 +632,20 @@
              }
 
              return true;
+         }
+
+         function powerOff() {
+             $('#power-modal').modal();
+         }
+
+         function restartSystem() {
+             $('#power-modal').modal('hide');
+             rhasspy.postBusy('Restarting System', '/api/system', 'reboot');
+         }
+
+         function shutdownSystem() {
+             $('#power-modal').modal('hide');
+             rhasspy.postBusy('Restarting System', '/api/system', 'shutdown');
          }
 
          $(window).on("load", () => {

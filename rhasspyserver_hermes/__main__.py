@@ -513,6 +513,14 @@ def save_slots(
     """Save static slots"""
     assert core is not None
 
+    # Check if slots directory is accidentally a file instead of a directory
+    if slots_dir.is_file():
+        _LOGGER.warning("Slots directory is a file: %s (removing)", slots_dir)
+        slots_dir.unlink()
+
+        # Re-create as a directory
+        slots_dir.mkdir(parents=True, exist_ok=True)
+
     # Write slots on POST
     if overwrite_all:
         # Remote existing values first

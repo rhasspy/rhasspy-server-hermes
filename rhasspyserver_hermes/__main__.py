@@ -1124,13 +1124,18 @@ async def api_play_wav() -> str:
     if request.content_type == "audio/wav":
         wav_bytes = await request.data
     else:
-        # Interpret as URL
+        # Interpret as URL or path
         data = await request.data
-        url = data.decode()
-        _LOGGER.debug("Loading WAV data from %s", url)
+        url_or_path = data.decode()
+        _LOGGER.debug("Loading WAV data from %s", url_or_path)
 
-        async with get_http_session().get(url, ssl=ssl_context) as response:
-            wav_bytes = await response.read()
+        if url_or_path.startswith("/"):
+            # Interpret as path
+            wav_bytes = Path(url_or_path).read_bytes()
+        else:
+            # Interpret as URL
+            async with get_http_session().get(url_or_path, ssl=ssl_context) as response:
+                wav_bytes = await response.read()
 
     # Play through speakers on each site simultaneously
     _LOGGER.debug("Playing %s byte(s)", len(wav_bytes))

@@ -809,6 +809,9 @@
                                             <i class="fas fa-check" style="display: none;"></i>
                                             Re-record
                                         </button>
+                                        <button class="btn btn-success" title="Play wake word example" onclick="playRavenExample('{{ keyword_name }}', {{ i }}, '{{ raven_template_path }}')">
+                                            <i class="fas fa-play"></i>
+                                        </button>
                                     </td>
                                     {% endfor %}
                                     <td>
@@ -860,7 +863,7 @@
                             <label for="wake-raven-probability-threshold" class="col-form-label">Probability Threshold</label>
                         </div>
                         <div class="col-sm-auto">
-                            <input id="wake-raven-probability-threshold" x-model="profile.wake.raven.probability_threshold" :disabled="profile.wake.system != 'raven'">
+                            <input id="wake-raven-probability-threshold" class="form-control" x-model="profile.wake.raven.probability_threshold" :disabled="profile.wake.system != 'raven'">
                         </div>
                     </div>
                 </div>
@@ -870,7 +873,7 @@
                             <label for="raven-average-templates" class="col-form-label">Average Templates</label>
                         </div>
                         <div class="col">
-                            <input type="checkbox" id="raven-average-templates" x-model="profile.wake.raven.average_templates">
+                            <input type="checkbox" id="raven-average-templates" class="form-control" x-model="profile.wake.raven.average_templates">
                         </div>
                     </div>
                 </div>
@@ -3276,6 +3279,11 @@
      saveProfile(true, false);
  }
 
+ function playRavenExample(wakewordId, i, dirname) {
+     var wavPath = dirname + '/' + wakewordId + '/example-' + i + '.wav';
+     rhasspy.postBusy('Playing ' + wavPath, '/api/play-wav', wavPath);
+ }
+
  function isSpeechCompatible() {
      var speechSystem = rhasspy.profile.speech_to_text.system;
      return rhasspy.profile.speech_to_text[speechSystem].compatible;
@@ -3376,6 +3384,9 @@
 
      // Update audio energies 2x per second
      setInterval(updateEnergies, 500);
+
+     // Firefox really wants to copy the probability threshold into here for some reason
+     $('#wake-raven-keyword-name').val('');
  })
 
 </script>

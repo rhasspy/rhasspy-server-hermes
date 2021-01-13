@@ -776,51 +776,84 @@
                     </div>
                 </div>
 
-                <!-- Examples -->
                 <div class="form-group">
                     <div class="form-row">
-                        <div class="col-auto">
-                            <label for="wake-raven-keyword-name" class="col-form-label">Wakeword Id:</label>
-                        </div>
                         <div class="col">
-                            <input id="wake-raven-keyword-name" type="text" class="form-control" value="default" onchange="resetRavenRecordings()" :disabled="profile.wake.system != 'raven'">
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="deleteHotword()" class="btn btn-danger form-control" title="Delete Raven keyword">Delete</button>
+                            <button id="wake-raven-restart-required" style="display: none;" onclick="saveProfile(true)" class="btn btn-danger mb-3" title="Save all settings and restart Rhasspy">
+                                <i class="fas fa-power-off fa-inverse mr-2"></i>
+                                Save and Restart Required
+                            </button>
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
                     <div class="form-row">
-                        <div class="col-xs-auto">
-                            <label for="wake-raven-hotwords">Available Keywords:</label>
-                        </div>
-                        <div class="col">
-                            <select id="wake-raven-hotwords" onchange="$('#wake-raven-keyword-name').val($('#wake-raven-hotwords').val())" class="form-control">
-                                <option value="" disabled>Select keyword</option>
-                            </select>
-                        </div>
-                        <div class="col-xs-auto">
-                            <button onclick="refreshHotwords('raven')" class="btn btn-primary form-control" title="Refresh Raven keywords">Refresh</button>
-                        </div>
-                    </div>
-                </div>
-                {% for i in range(3): %}
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="col-auto">
-                            <span id="raven-missing-{{ i }}" class="badge badge-info"></span>
-                        </div>
-                        <div class="col-auto">
-                            <tt>Example {{ i + 1 }}</tt>
-                        </div>
-                        <div class="col-auto">
-                            <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord({{ i }}, '{{ raven_template_dir }}')">Record</button>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+                        <table class="table table-striped">
+                            <thead>
+                                <th style="width: 10%;">Enabled</th>
+                                <th style="width: 30%;">Keyword</th>
+                                <th>Example 1</th>
+                                <th>Example 2</th>
+                                <th>Example 3</th>
+                                <th>&nbsp;</th>
+                            </thead>
+                            <tbody>
+                                {% for keyword_name, keyword_settings in profile.get("wake.raven.keywords", {}).items(): %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" x-model="profile.wake.raven.keywords['{{ keyword_name }}'].enabled">
+                                    </td>
 
+                                    <td>{{ keyword_name }}</td>
+                                    {% for i in range(3): %}
+                                    <td>
+                                        <button class="btn btn-info" title="Re-record wake word example" onclick="ravenRecord(this, '{{ keyword_name }}', {{ i }}, '{{ raven_template_dir }}', true)">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                            Re-record
+                                        </button>
+                                    </td>
+                                    {% endfor %}
+                                    <td>
+                                        <button class="btn btn-danger" title="Delete {{ keyword_name }}" onclick="deleteHotword('{{ keyword_name }}')">
+                                            <i class="fas fa-inverse fa-trash mr-2"></i>
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                                <!-- New Keyword -->
+                                <tr>
+                                    <td>
+                                        &nbsp;
+                                    </td>
+                                    <td>
+                                        <input id="wake-raven-keyword-name" type="text" class="form-control" placeholder="new keyword name" :disabled="profile.wake.system != 'raven'">
+                                    </td>
+                                    {% for i in range(3): %}
+                                    <td>
+                                        <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord(this, '', {{ i }}, '{{ raven_template_dir }}')">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                            Record
+                                        </button>
+                                    </td>
+                                    {% endfor %}
+                                    <td>
+                                        <button class="btn btn-primary" title="Save new keyword" onclick="saveRavenKeyword()">
+                                            <i class="fas fa-inverse fa-save mr-2"></i>
+                                            Save
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- End New Keyword -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <div class="form-row">
+                        <h5>Default Settings</h5>
+                    </div>
+                </div>
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">
@@ -3048,14 +3081,25 @@
  var initialSystems = {};
 
  // POST to /api/profile to save and then restart Rhasspy
- function saveProfile() {
+ function saveProfile(reload, confirmRestart) {
+     reload = (reload === undefined) ? false : reload;
+     confirmRestart = (confirmRestart === undefined) ? true : confirmRestart;
      rhasspy.postBusy('Saving profile',
                       '/api/profile',
                       JSON.stringify(rhasspy.profile),
                       false)
             .done(function() {
-                if (window.confirm("Settings saved. Restart Rhasspy?")) {
-                    rhasspy.restart();
+                var doRestart = true;
+                if (confirmRestart) {
+                    doRestart = window.confirm("Settings saved. Restart Rhasspy?");
+                }
+
+                if (doRestart) {
+                    rhasspy.restart().done(function() {
+                        if (reload) {
+                            window.location.reload();
+                        }
+                    });
                 } else {
                     rhasspy.hideBusy();
                 }
@@ -3113,6 +3157,10 @@
 
  // Load available hot words
  function refreshHotwords(wakeSystem, suppressMessage = false) {
+     if (wakeSystem == 'raven') {
+         return;
+     }
+
      var selectId = '#wake-' + wakeSystem + '-hotwords';
      var message = (suppressMessage) ? '' : 'Refreshing hotwords';
      $(selectId + ' option').remove();
@@ -3129,8 +3177,7 @@
  }
 
  // Delete a Raven hot word
- function deleteHotword(hotword, suppressMessage = false) {
-     var wakewordId = $('#wake-raven-keyword-name').val();
+ function deleteHotword(wakewordId, suppressMessage = false) {
      var message = (suppressMessage) ? '' : 'Deleting ' + wakewordId;
 
      if (window.confirm('Really delete ' + wakewordId + '?')) {
@@ -3138,11 +3185,11 @@
                           '/api/delete-wake-word',
                           wakewordId)
                 .done((r) => {
-                    if (window.confirm("Hotword deleted. Restart Rhasspy?")) {
-                        rhasspy.restart();
-                    } else {
-                        rhasspy.hideBusy();
+                    if (wakewordId in rhasspy.profile.wake.raven.keywords) {
+                        delete rhasspy.profile.wake.raven.keywords[wakewordId];
                     }
+
+                    saveProfile(true, false);
                 });
      }
  }
@@ -3169,8 +3216,18 @@
  }
 
  // Record an example for Rhasspy Raven
- function ravenRecord(i, dirname) {
-     var wakewordId = $('#wake-raven-keyword-name').val();
+ function ravenRecord(button, wakewordId, i, dirname, showRestart) {
+     showRestart = (showRestart === undefined) ? false : showRestart;
+
+     if (wakewordId.length == 0) {
+         wakewordId = $('#wake-raven-keyword-name').val();
+     }
+
+     if (wakewordId.length == 0) {
+         alert('No keyword name');
+         return;
+     }
+
      var filename = dirname + '/' + wakewordId + '/example-' + i + '.wav'
 
      var message = 'Speak wake word (' + filename + ')';
@@ -3179,16 +3236,33 @@
      rhasspy.postBusy(message,
                       '/api/record-wake-example?savePath=' + filename)
             .done((r) => {
-                // Change missing label
-                missing.text('Recorded');
+                // Show checkmark
+                $('i', button).show();
+
+                if (showRestart) {
+                    $('#wake-raven-restart-required').show();
+                }
             });
  }
 
- function resetRavenRecordings() {
-     for (var i = 0; i < 3; i++) {
-         var missing = $('#raven-missing-' + i);
-         missing.text('');
+ function enableRavenKeyword(keywordName, enabled) {
+     if (!(keywordName in rhasspy.profile.wake.raven.keywords)) {
+         rhasspy.profile.wake.raven.keywords[keywordName] = {};
      }
+     rhasspy.profile.wake.raven.keywords[keywordName].enabled = enabled;
+ }
+
+ function saveRavenKeyword() {
+     var keywordName = $('#wake-raven-keyword-name').val();
+     if (keywordName.length == 0) {
+         alert('No keyword name');
+         return;
+     }
+
+     enableRavenKeyword(keywordName, true);
+
+     // Examples should already be saved
+     saveProfile(true, false);
  }
 
  function isSpeechCompatible() {

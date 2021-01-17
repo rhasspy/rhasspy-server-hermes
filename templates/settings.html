@@ -796,7 +796,20 @@
                                 <th>&nbsp;</th>
                             </thead>
                             <tbody>
-                                {% for keyword_name, keyword_settings in profile.get("wake.raven.keywords", {}).items(): %}
+                                {% set keywords = profile.get("wake.raven.keywords", {}) %}
+
+                                <!-- Add keywords that aren't in profile yet -->
+                                {% if raven_template_path.is_dir():  %}
+                                    {% for keyword_dir in raven_template_path.iterdir():  %}
+                                        {% if keyword_dir.name not in keywords: %}
+                                            {{ keywords.update({keyword_dir.name: { "enabled": True }}) }}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% for keyword_name, keyword_settings in keywords.items(): %}
+                                {% set keyword_dir = raven_template_path / keyword_name %}
+                                {% if keyword_dir.is_dir(): %}
                                 <tr>
                                     <td>
                                         <input type="checkbox" x-model="profile.wake.raven.keywords['{{ keyword_name }}'].enabled">
@@ -821,6 +834,7 @@
                                         </button>
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
 
                                 <!-- New Keyword -->
@@ -836,6 +850,9 @@
                                         <button class="btn btn-success" title="Record wake word example" onclick="ravenRecord(this, '', {{ i }}, '{{ raven_template_dir }}')">
                                             <i class="fas fa-check" style="display: none;"></i>
                                             Record
+                                        </button>
+                                        <button class="btn btn-success" title="Play wake word example" onclick="playRavenExample('', {{ i }}, '{{ raven_template_path }}')">
+                                            <i class="fas fa-play"></i>
                                         </button>
                                     </td>
                                     {% endfor %}
@@ -3280,6 +3297,10 @@
  }
 
  function playRavenExample(wakewordId, i, dirname) {
+     if (wakewordId.length == 0) {
+         wakewordId = $('#wake-raven-keyword-name').val();
+     }
+
      var wavPath = dirname + '/' + wakewordId + '/example-' + i + '.wav';
      rhasspy.postBusy('Playing ' + wavPath, '/api/play-wav', wavPath);
  }

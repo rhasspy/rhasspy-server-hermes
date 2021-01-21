@@ -48,7 +48,7 @@ from rhasspyhermes.dialogue import DialogueSessionStarted
 from rhasspyhermes.g2p import G2pError, G2pPhonemes, G2pPronounce
 from rhasspyhermes.nlu import (
     NluError,
-    NluIntent,
+    NluIntentParsed,
     NluIntentNotRecognized,
     NluQuery,
     NluTrain,
@@ -482,7 +482,7 @@ class RhasspyCore:
 
     async def recognize_intent(
         self, text: str, intent_filter: typing.Optional[typing.List[str]] = None
-    ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
+    ) -> typing.Union[NluIntentParsed, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
         if self.nlu_system == "dummy":
             raise NluException("No intent system configured")
@@ -501,13 +501,13 @@ class RhasspyCore:
                 _, message = yield
 
                 if isinstance(
-                    message, (NluIntent, NluIntentNotRecognized, NluError)
+                    message, (NluIntentParsed, NluIntentNotRecognized, NluError)
                 ) and (message.session_id == nlu_id):
                     return message
 
         messages = [query]
         message_types: typing.List[typing.Type[Message]] = [
-            NluIntent,
+            NluIntentParsed,
             NluIntentNotRecognized,
             NluError,
         ]
@@ -523,7 +523,7 @@ class RhasspyCore:
             _LOGGER.error(result)
             raise NluException(result.error)
 
-        assert isinstance(result, (NluIntent, NluIntentNotRecognized)), result
+        assert isinstance(result, (NluIntentParsed, NluIntentNotRecognized)), result
         return result
 
     # -------------------------------------------------------------------------
@@ -1059,7 +1059,7 @@ class RhasspyCore:
             self.subscribe(
                 HotwordDetected,
                 AsrTextCaptured,
-                NluIntent,
+                NluIntentParsed,
                 NluIntentNotRecognized,
                 AsrAudioCaptured,
                 AudioSummary,
@@ -1184,7 +1184,7 @@ class RhasspyCore:
                     elif isinstance(message, NluError):
                         # NLU service error
                         self.handle_message(topic, message)
-                    elif isinstance(message, NluIntent):
+                    elif isinstance(message, NluIntentParsed):
                         _LOGGER.debug("<- %s", message)
 
                         # Successful intent recognition
@@ -1227,7 +1227,7 @@ class RhasspyCore:
                     # Check for satellite messages.
                     # This ensures that websocket events are reported on the base
                     # station as well as the satellite.
-                    if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
+                    if isinstance(message, NluIntentNotRecognized) and (
                         site_id in self.satellite_site_ids["intent"]
                     ):
                         # Report satellite message to base websockets

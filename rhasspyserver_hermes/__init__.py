@@ -481,18 +481,23 @@ class RhasspyCore:
     # -------------------------------------------------------------------------
 
     async def recognize_intent(
-        self, text: str, intent_filter: typing.Optional[typing.List[str]] = None
+        self,
+        text: str,
+        intent_filter: typing.Optional[typing.List[str]] = None,
+        site_id: typing.Optional[str] = None,
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
         if self.nlu_system == "dummy":
             raise NluException("No intent system configured")
+
+        site_id = site_id or self.site_id
 
         nlu_id = str(uuid4())
         query = NluQuery(
             id=nlu_id,
             input=text,
             intent_filter=intent_filter,
-            site_id=self.site_id,
+            site_id=site_id,
             session_id=nlu_id,
         )
 
@@ -629,11 +634,13 @@ class RhasspyCore:
         send_audio_captured=True,
         stop_on_silence=False,
         intent_filter: typing.Optional[typing.List[str]] = None,
+        site_id: typing.Optional[str] = None,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
         if self.asr_system == "dummy":
             raise AsrException("No speech to text system configured")
 
+        site_id = site_id or self.site_id
         session_id = str(uuid4())
 
         def handle_captured():
@@ -647,7 +654,7 @@ class RhasspyCore:
 
         def messages():
             yield AsrStartListening(
-                site_id=self.site_id,
+                site_id=site_id,
                 session_id=session_id,
                 stop_on_silence=stop_on_silence,
                 send_audio_captured=send_audio_captured,
@@ -663,11 +670,11 @@ class RhasspyCore:
                     num_bytes_sent += len(wav_chunk)
                     yield (
                         AudioSessionFrame(wav_bytes=wav_chunk),
-                        {"site_id": self.site_id, "session_id": session_id},
+                        {"site_id": site_id, "session_id": session_id},
                     )
 
             _LOGGER.debug("Sent %s byte(s) of WAV data", num_bytes_sent)
-            yield AsrStopListening(site_id=self.site_id, session_id=session_id)
+            yield AsrStopListening(site_id=site_id, session_id=session_id)
 
         message_types: typing.List[typing.Type[Message]] = [AsrTextCaptured, AsrError]
 
@@ -1230,6 +1237,8 @@ class RhasspyCore:
                     if isinstance(message, (NluIntent, NluIntentNotRecognized)) and (
                         site_id in self.satellite_site_ids["intent"]
                     ):
+                        self.handle_message(topic, message)
+
                         # Report satellite message to base websockets
                         for queue in self.message_queues:
                             self.loop.call_soon_threadsafe(
@@ -1238,6 +1247,8 @@ class RhasspyCore:
                     elif isinstance(message, AsrTextCaptured) and (
                         site_id in self.satellite_site_ids["speech_to_text"]
                     ):
+                        self.handle_message(topic, message)
+
                         # Report satellite message to base websockets
                         for queue in self.message_queues:
                             self.loop.call_soon_threadsafe(
@@ -1246,6 +1257,8 @@ class RhasspyCore:
                     elif isinstance(message, HotwordDetected) and (
                         site_id in self.satellite_site_ids["wake"]
                     ):
+                        self.handle_message(topic, message)
+
                         # Report satellite message to base websockets
                         wakeword_id = HotwordDetected.get_wakeword_id(topic)
                         for queue in self.message_queues:

@@ -1383,6 +1383,7 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
     detect_silence = (
         request.args.get("detectSilence", "false").strip().lower() == "true"
     )
+    site_id = request.args.get("siteId")
 
     # Prefer 16-bit 16Khz mono, but will convert with sox if needed
     wav_bytes = await request.data
@@ -1395,7 +1396,9 @@ async def api_speech_to_text() -> typing.Union[Response, str]:
 
     # Transcribe
     start_time = time.perf_counter()
-    result = await core.transcribe_wav(wav_bytes, stop_on_silence=detect_silence)
+    result = await core.transcribe_wav(
+        wav_bytes, stop_on_silence=detect_silence, site_id=site_id
+    )
     end_time = time.perf_counter()
 
     if output_format == "hermes":
@@ -1426,6 +1429,7 @@ async def api_text_to_intent():
     text = data.decode()
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+    site_id = request.args.get("siteId")
 
     intent_filter = request.args.get("intentFilter")
     if intent_filter:
@@ -1453,6 +1457,7 @@ async def api_text_to_intent():
             intent_filter=intent_filter,
             output_format=output_format,
             user_entities=user_entities,
+            site_id=site_id,
         )
         return jsonify(intent_dict)
     finally:
@@ -2698,11 +2703,14 @@ async def text_to_intent_dict(
     intent_filter: typing.Optional[typing.List[str]] = None,
     output_format="rhasspy",
     user_entities=typing.Optional[typing.List[typing.Tuple[str, str]]],
+    site_id: typing.Optional[str] = None,
 ):
     """Convert transcription to either Rhasspy or Hermes JSON format."""
     assert core is not None
     start_time = time.perf_counter()
-    result = await core.recognize_intent(text, intent_filter=intent_filter)
+    result = await core.recognize_intent(
+        text, intent_filter=intent_filter, site_id=site_id
+    )
 
     # Add user-defined entities
     if user_entities and isinstance(result, NluIntent):

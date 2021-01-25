@@ -866,13 +866,22 @@ async def api_listen_for_command() -> Response:
     else:
         intent_filter = None
 
+    model_id = request.args.get("modelId", "default")
+    site_id = request.args.get("siteId", core.site_id)
+    session_id = request.args.get("sessionId")
+    lang = request.args.get("lang")
+
     # Key/value to set in recognized intent
     entity = request.args.get("entity")
     value = request.args.get("value")
 
-    session_id = str(uuid4())
+    core.publish(
+        HotwordDetected(
+            model_id=model_id, site_id=site_id, session_id=session_id, lang=lang
+        ),
+        wakeword_id=model_id,
+    )
 
-    messages: typing.List[typing.Any] = []
     message_types: typing.List[typing.Type[Message]] = []
 
     if no_hass:
@@ -880,68 +889,24 @@ async def api_listen_for_command() -> Response:
         core.publish(HandleToggleOff(site_id=core.site_id))
 
     try:
-        # Start listening and wait for text captured
-        def handle_captured():
-            while True:
-                _, message = yield
-
-                if isinstance(message, (AsrTextCaptured, AsrError)) and (
-                    message.session_id == session_id
-                ):
-                    return message
-
-        message_types = [AsrTextCaptured, AsrError]
-        messages = [
-            AsrStartListening(
-                site_id=core.site_id,
-                session_id=session_id,
-                stop_on_silence=True,
-                send_audio_captured=True,
-                intent_filter=intent_filter,
-            )
-        ]
-
-        # Expecting only a single result
-        _LOGGER.debug("Waiting for transcription (session_id=%s)", session_id)
-        text_captured = None
-        async for response in core.publish_wait(
-            handle_captured(), messages, message_types
-        ):
-            text_captured = response
-
-        if isinstance(text_captured, AsrError):
-            raise RuntimeError(text_captured.error)
-
-        assert isinstance(text_captured, AsrTextCaptured)
-
-        # Send query to NLU system
+        # Wait for NLU response.
+        # Note: this is not guaranteed to catch the right intent if session_id
+        # is not set.
         def handle_intent():
             while True:
                 _, message = yield
 
                 if isinstance(
                     message, (NluIntent, NluIntentNotRecognized, NluError)
-                ) and (message.session_id == session_id):
+                ) and ((session_id is None) or (message.session_id == session_id)):
                     return message
 
         message_types = [NluIntent, NluIntentNotRecognized, NluError]
-        messages = [
-            AsrStopListening(site_id=core.site_id, session_id=session_id),
-            NluQuery(
-                id=session_id,
-                input=text_captured.text,
-                site_id=core.site_id,
-                session_id=session_id,
-                intent_filter=intent_filter,
-            ),
-        ]
 
         # Expecting only a single result
         _LOGGER.debug("Waiting for intent (session_id=%s)", session_id)
         nlu_intent = None
-        async for response in core.publish_wait(
-            handle_intent(), messages, message_types
-        ):
+        async for response in core.publish_wait(handle_intent(), [], message_types):
             nlu_intent = response
 
         if isinstance(nlu_intent, NluError):

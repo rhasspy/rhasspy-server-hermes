@@ -690,6 +690,16 @@
 
             <!-- Mycroft Precise -->
             <div x-show="profile.wake.system == 'precise'" :disabled="initialSystems.wake != 'precise'">
+                {% if not has_cpu_avx: %}
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Precise requires <a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions">AVX instructions</a>, which your CPU does not support.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="form-group">
                     <div class="form-row">
                         <p>
@@ -1227,6 +1237,16 @@
 
             <!-- DeepSpeech -->
             <div x-show="profile.speech_to_text.system == 'deepspeech'" :disabled="initialSystems.stt != 'deepspeech'">
+                {% if not has_cpu_avx: %}
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            DeepSpeech requires <a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions">AVX instructions</a>, which your CPU does not support.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="form-group">
                     <div class="form-row">
                         <p>
@@ -2463,6 +2483,18 @@
 
             <!-- Larynx -->
             <div x-show="profile.text_to_speech.system == 'larynx'" :disabled="initialSystems.tts != 'larynx'">
+
+                {% if not has_cpu_avx: %}
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Larynx requires <a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions">AVX instructions</a>, which your CPU does not support.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="form-group">
                     <div class="form-row">
                         <p>

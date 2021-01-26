@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import os
+import platform
 import re
 import shutil
 import signal
@@ -47,7 +48,6 @@ import rhasspyhermes
 import rhasspysupervisor
 from rhasspyhermes.asr import (
     AsrAudioCaptured,
-    AsrError,
     AsrStartListening,
     AsrStopListening,
     AsrTextCaptured,
@@ -60,7 +60,7 @@ from rhasspyhermes.audioserver import (
 )
 from rhasspyhermes.base import Message
 from rhasspyhermes.handle import HandleToggleOff, HandleToggleOn
-from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized, NluQuery
+from rhasspyhermes.nlu import NluError, NluIntent, NluIntentNotRecognized
 from rhasspyhermes.wake import (
     HotwordDetected,
     HotwordError,
@@ -87,6 +87,18 @@ from .utils import (
 
 _LOGGER = logging.getLogger("rhasspyserver_hermes")
 _LOOP = asyncio.get_event_loop()
+
+_CPU_CAPS = {}
+if platform.machine() == "x86_64":
+    try:
+        # Check for AVX capabilities
+        # See: https://detect-simd.readthedocs.io/en/latest/
+        import detect_simd
+
+        _CPU_CAPS = detect_simd.detect()
+    except Exception:
+        # We will assume AVX support
+        _LOGGER.error("Unable to detect CPU capabilities")
 
 # -----------------------------------------------------------------------------
 
@@ -367,6 +379,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "handle_system": handle_system,
         "dialogue_system": dialogue_system,
         "show_system_button": bool(shutil.which("sudo")),
+        "has_cpu_avx": _CPU_CAPS.get("AVX", 1) == 1,
     }
 
 

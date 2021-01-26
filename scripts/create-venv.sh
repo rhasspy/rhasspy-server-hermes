@@ -29,6 +29,9 @@ echo "Installing Python dependencies"
 pip3 ${PIP_INSTALL} --upgrade pip
 pip3 ${PIP_INSTALL} --upgrade wheel setuptools
 
+# For detect-simd
+pip3 ${PIP_INSTALL} cython
+
 # Install local Rhasspy dependencies if available
 grep '^rhasspy-' "${src_dir}/requirements.txt" | \
     xargs pip3 ${PIP_INSTALL} -f "${download}"

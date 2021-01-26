@@ -1066,6 +1066,19 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <div class="col-auto">
+                            <label for="pocketsphinx-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="pocketsphinx-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.pocketsphinx.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <ul>
                             <li>Base Dictionary: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.base_dictionary") }}</tt> </li>
                             <li>Base Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.pocketsphinx.base_language_model") }}</tt> </li>
@@ -1159,6 +1172,19 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <ul>
                             <li>Base Dictionary: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_dictionary") }}</tt> </li>
                             <li>Base Graph Directory: <tt>{{ maybe_read_path(profile, "speech_to_text.kaldi.base_graph") }}</tt> </li>
@@ -1214,7 +1240,7 @@
                         <ul>
                             <li>Acoustic Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.acoustic_model") }}</tt> </li>
                             <li>Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.language_model") }}</tt> </li>
-                            <li>Trie: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.trie") }}</tt> </li>
+                            <li>Scorer: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.scorer") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1239,9 +1265,22 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <div class="col-auto">
+                            <label for="deepspeech-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="deepspeech-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.deepspeech.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <ul>
                             <li>Base Language Model: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.base_language_model") }}</tt> </li>
-                            <li>Base Trie: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.base_trie") }}</tt> </li>
+                            <li>Base Scorer: <tt>{{ maybe_read_path(profile, "speech_to_text.deepspeech.base_scorer") }}</tt> </li>
                         </ul>
                     </div>
                 </div>
@@ -1318,6 +1357,19 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
+                        <div class="col-auto">
+                            <label for="speech-remote-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="speech-remote-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.remote.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <label for="stt-train-url" class="col-form-label">Training URL</label>
                         <div class="col">
                             <input id="stt-train-url" type="text" class="form-control" x-model="profile.training.speech_to_text.remote.url" :disabled="profile.speech_to_text.system != 'remote'">
@@ -1352,7 +1404,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="speech-command-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="speech-command-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.command.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+
                 <hr>
+
                 <div class="form-group">
                     <div class="form-row">
                         <div class="col-auto">

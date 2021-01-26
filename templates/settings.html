@@ -567,7 +567,7 @@
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
-                            Put models in the <tt>snowboy</tt> directory in your profile
+                            Put models in <tt>{{ profile_dir / "snowboy" }}</tt> </li>
                         </div>
                     </div>
                 </div>
@@ -580,7 +580,9 @@
                             <input id="wake-snowboy-model" x-model="profile.wake.snowboy.model" type="text" class="form-control">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="wake-snowboy-hotwords">Available Models:</label>
                         </div>
@@ -638,7 +640,7 @@
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
-                            Put models in the <tt>porcupine</tt> directory in your profile
+                            Put models in <tt>{{ profile_dir / "porcupine" }}</tt> </li>
                         </div>
                     </div>
                 </div>
@@ -651,7 +653,9 @@
                             <input id="wake-porcupine-keyword-file" x-model="profile.wake.porcupine.keyword_path" type="text" class="form-control">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="wake-porcupine-hotwords">Available Keywords:</label>
                         </div>
@@ -708,7 +712,7 @@
                     </div>
                     <div class="form-row">
                         <div class="col text-muted">
-                            Put models in the <tt>precise</tt> directory in your profile
+                            Put models in <tt>{{ profile_dir / "precise" }}</tt> </li>
                         </div>
                     </div>
                 </div>
@@ -721,7 +725,9 @@
                             <input id="wake-precise-model-file" x-model="profile.wake.precise.model" type="text" class="form-control">
                         </div>
                     </div>
-                    <div class="form-row mt-2">
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
                         <div class="col-xs-auto">
                             <label for="wake-precise-hotwords">Available Models:</label>
                         </div>

@@ -366,6 +366,7 @@ def get_template_args() -> typing.Dict[str, typing.Any]:
         "sounds_system": sounds_system,
         "handle_system": handle_system,
         "dialogue_system": dialogue_system,
+        "show_system_button": bool(shutil.which("sudo")),
     }
 
 

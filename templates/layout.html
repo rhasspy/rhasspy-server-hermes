@@ -85,9 +85,12 @@
 
                     <button onclick="rhasspy.train()" class="btn btn-success ml-2" title="Train profile">Train</button>
                     <button onclick="rhasspy.restart()" class="btn btn-danger ml-2" title="Restart Rhasspy">Restart</button>
+
+                    {% if show_system_button: %}
                     <button onclick="powerOff()" class="btn btn-secondary ml-2" title="Reboot/Shutdown System">
                         <i class="fas fa-lg fa-inverse fa-power-off" ></i>
                     </button>
+                    {% endif %}
                 </div>
             </div>
         </nav>

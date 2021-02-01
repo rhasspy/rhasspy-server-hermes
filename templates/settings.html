@@ -2275,25 +2275,25 @@
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-url" class="col-form-label">URL:</label>
+                        <label for="tts-marytts-url" class="col-form-label">URL:</label>
                         <div class="col">
-                            <input id="marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
+                            <input id="tts-marytts-url" type="text" class="form-control" x-model="profile.text_to_speech.marytts.url" :disabled="profile.text_to_speech.system != 'marytts'">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-locale" class="col-form-label">Locale:</label>
+                        <label for="tts-marytts-lang" class="col-form-label">Locale:</label>
                         <div class="col">
-                            <input id="marytts-locale" type="text" class="form-control" x-model="profile.text_to_speech.marytts.locale" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
+                            <input id="tts-marytts-lang" type="text" class="form-control" x-model="profile.text_to_speech.marytts.locale" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="form-row">
-                        <label for="marytts-voice" class="col-form-label">Voice:</label>
+                        <label for="tts-marytts-voice" class="col-form-label">Voice:</label>
                         <div class="col">
-                            <input id="marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
+                            <input id="tts-marytts-voice" type="text" class="form-control" x-model="profile.text_to_speech.marytts.voice" :disabled="profile.text_to_speech.system != 'marytts'" placeholder="default">
                         </div>
                     </div>
                 </div>
@@ -2313,7 +2313,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <form onsubmit="speak('marytts')">
+                    <form onsubmit="speak('marytts', true)">
                         <div class="form-row">
                             <div class="col-xs-auto">
                                 <button type="submit" title="Speak a sentence using text to speech" class="btn btn-info">
@@ -3465,12 +3465,20 @@
  }
 
  // POST text to /api/text-to-speech to speak sentence with selected voice
- function speak(textId) {
+ function speak(textId, langAndVoice) {
      event.preventDefault();
+     langAndVoice = (langAndVoice === undefined) ? false : langAndVoice;
 
      var text = $('#tts-' + textId + '-text').val() || '';
      if (text.length > 0) {
          var voice = $('#tts-' + textId + '-voice').val() || '';
+         if (langAndVoice) {
+             var lang = $('#tts-' + textId + '-lang').val() || '';
+             if (lang.length > 0) {
+                 voice = lang + '/' + voice;
+             }
+         }
+
          rhasspy.postBusy(text, '/api/text-to-speech?voice=' + voice, text);
      } else {
          alert('No text to speak')

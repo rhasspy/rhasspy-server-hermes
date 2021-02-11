@@ -487,10 +487,10 @@ class RhasspyCore:
         site_id: typing.Optional[str] = None,
     ) -> typing.Union[NluIntent, NluIntentNotRecognized]:
         """Send an NLU query and wait for intent or not recognized"""
-        if self.nlu_system == "dummy":
-            raise NluException("No intent system configured")
-
         site_id = site_id or self.site_id
+
+        if self.nlu_system == "dummy" and (site_id == self.site_id):
+            raise NluException("No intent system configured")
 
         nlu_id = str(uuid4())
         query = NluQuery(
@@ -544,12 +544,12 @@ class RhasspyCore:
         volume: float = 1.0,
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
-        if (self.sound_system == "dummy") and (
-            not self.satellite_site_ids["text_to_speech"]
-        ):
+        site_id = site_id or self.site_id
+
+        # Throw error if trying to speak text on this device with no TTS
+        if (self.sound_system == "dummy") and (site_id == self.site_id):
             raise TtsException("No text to speech system configured")
 
-        site_id = site_id or self.site_id
         tts_id = str(uuid4())
 
         def handle_finished():
@@ -637,10 +637,12 @@ class RhasspyCore:
         site_id: typing.Optional[str] = None,
     ) -> AsrTextCaptured:
         """Transcribe WAV data"""
-        if self.asr_system == "dummy":
+        site_id = site_id or self.site_id
+
+        # Throw error if trying to transcribe audio on this device with no ASR system
+        if (self.asr_system == "dummy") and (site_id == self.site_id):
             raise AsrException("No speech to text system configured")
 
-        site_id = site_id or self.site_id
         session_id = str(uuid4())
 
         def handle_captured():
@@ -698,10 +700,12 @@ class RhasspyCore:
         self, wav_bytes: bytes, site_id: typing.Optional[str] = None
     ) -> AudioPlayFinished:
         """Play WAV data through speakers."""
-        if self.sound_system == "dummy":
+        site_id = site_id or self.site_id
+
+        # Throw error if trying to play audio on this device with no sound system
+        if (self.sound_system == "dummy") and (site_id == self.site_id):
             raise RuntimeError("No audio output system configured")
 
-        site_id = site_id or self.site_id
         request_id = str(uuid4())
 
         def handle_finished():

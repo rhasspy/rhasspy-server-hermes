@@ -1,4 +1,4 @@
-aiohttp==3.6.2
+aiohttp==3.7.4
 detect-simd==0.2
 hypercorn==0.10.1
 networkx==2.4

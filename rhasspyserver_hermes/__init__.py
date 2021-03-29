@@ -547,7 +547,10 @@ class RhasspyCore:
         site_id = site_id or self.site_id
 
         # Throw error if trying to speak text on this device with no TTS
-        if (self.sound_system == "dummy") and (site_id == self.site_id):
+
+        if (self.profile.get("text_to_speech.system", "dummy") == "dummy") and (
+            site_id == self.site_id
+        ):
             raise TtsException("No text to speech system configured")
 
         tts_id = str(uuid4())

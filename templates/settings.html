@@ -1991,12 +1991,12 @@
                 <option value="dummy">Disabled</option>
                 <option value="espeak">Espeak{% if profile.get("text_to_speech.recommended") == "espeak" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
                 <option value="picotts">PicoTTS{% if profile.get("text_to_speech.recommended") == "picotts" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
-                <option value="nanotts">NanoTTS{% if profile.get("text_to_speech.recommended") == "nanotts" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
-                <option value="flite">Flite{% if profile.get("text_to_speech.recommended") == "flite" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="nanotts">NanoTTS{% if profile.get("text_to_speech.recommended") == "nanotts" %} (Recommended){% elif not profile.get("text_to_speech.nanotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="flite">Flite{% if profile.get("text_to_speech.recommended") == "flite" %} (Recommended){% elif not profile.get("text_to_speech.flite.compatible") %} (Incompatible){% endif %}</option>
                 <option value="marytts">MaryTTS</option>
                 <option value="wavenet">Google Wavenet</option>
                 <option value="opentts">OpenTTS</option>
-                <option value="larynx">Larynx{% if profile.get("text_to_speech.recommended") == "larynx" %} (Recommended){% elif not profile.get("text_to_speech.picotts.compatible") %} (Incompatible){% endif %}</option>
+                <option value="larynx">Larynx{% if profile.get("text_to_speech.recommended") == "larynx" %} (Recommended){% elif not profile.get("text_to_speech.larynx.compatible") %} (Incompatible){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -2490,17 +2490,6 @@
             <!-- Larynx -->
             <div x-show="profile.text_to_speech.system == 'larynx'" :disabled="initialSystems.tts != 'larynx'">
 
-                {% if not has_cpu_avx: %}
-                <div class="form-group">
-                    <div class="form-row">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                            Larynx requires <a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions">AVX instructions</a>, which your CPU does not support.
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
                 <div class="form-group">
                     <div class="form-row">
                         <p>
@@ -2512,7 +2501,7 @@
                     <div class="form-row">
                         <label for="tts-larynx-voice" class="col-form-label">Voice:</label>
                         <div class="col">
-                            <input id="tts-larynx-voice" type="text" class="form-control" x-model="profile.text_to_speech.larynx.voice" :disabled="profile.text_to_speech.system != 'larynx'" placeholder="default">
+                            <input id="tts-larynx-voice" type="text" class="form-control" x-model="profile.text_to_speech.larynx.default_voice" :disabled="profile.text_to_speech.system != 'larynx'" placeholder="default">
                         </div>
                     </div>
                 </div>
@@ -2523,11 +2512,24 @@
                         </div>
                         <div class="col">
                             <select id="tts-larynx-voices" x-model="profile.text_to_speech.larynx.default_voice" class="form-control">
-                                <option value="default" selected>Default Voice</option>
                             </select>
                         </div>
                         <div class="col-xs-auto">
                             <button onclick="refreshVoices('larynx')" class="btn btn-primary form-control" title="Refresh Larynx voices">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-xs-auto">
+                            <label for="tts-larynx-vocoder-quality">Vocoder Quality:</label>
+                        </div>
+                        <div class="col">
+                            <select id="tts-larynx-vocoder-quality" x-model="profile.text_to_speech.larynx.vocoder" class="form-control">
+                                <option value="universal_large">High Quality</option>
+                                <option value="vctk_medium">Medium Quality</option>
+                                <option value="vctk_small">Low Quality</option>
+                            </select>
                         </div>
                     </div>
                 </div>

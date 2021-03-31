@@ -1,5 +1,4 @@
 aiohttp==3.7.4
-detect-simd==0.2
 hypercorn==0.10.1
 multidict==4.7.6
 networkx==2.4

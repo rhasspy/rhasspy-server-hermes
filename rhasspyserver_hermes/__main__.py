@@ -1745,9 +1745,9 @@ async def api_slots() -> typing.Union[str, Response]:
 
     if slots_dir.is_dir():
         # Load slot values
-        for slot_file_path in slots_dir.glob("*"):
+        for slot_file_path in slots_dir.rglob("*"):
             if slot_file_path.is_file():
-                slot_name = slot_file_path.name
+                slot_name = str(slot_file_path.relative_to(slots_dir))
                 slots_dict[slot_name] = [
                     line.strip() for line in slot_file_path.read_text().splitlines()
                 ]
@@ -1755,7 +1755,7 @@ async def api_slots() -> typing.Union[str, Response]:
     return jsonify(slots_dict)
 
 
-@app.route("/api/slots/<name>", methods=["GET", "POST"])
+@app.route("/api/slots/<path:name>", methods=["GET", "POST"])
 async def api_slots_by_name(name: str) -> typing.Union[str, Response]:
     """Get or set the values of a slot list."""
     assert core is not None

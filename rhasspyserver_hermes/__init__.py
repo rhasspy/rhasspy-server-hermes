@@ -542,6 +542,7 @@ class RhasspyCore:
         site_id: typing.Optional[str] = None,
         session_id: str = "",
         volume: float = 1.0,
+        say_chars_per_second: typing.Optional[float] = None,
     ) -> typing.Tuple[TtsSayFinished, typing.Optional[AudioPlayBytes]]:
         """Speak a sentence using text to speech."""
         site_id = site_id or self.site_id
@@ -552,6 +553,14 @@ class RhasspyCore:
             site_id == self.site_id
         ):
             raise TtsException("No text to speech system configured")
+
+        timeout_seconds = 60.0
+        if (say_chars_per_second is not None) and (say_chars_per_second > 0):
+            # Estimate timeout based on text length
+            timeout_seconds = max(
+                self.message_timeout_seconds, len(sentence) / say_chars_per_second
+            )
+            _LOGGER.debug("TTS timeout will be %s second(s)", timeout_seconds)
 
         tts_id = str(uuid4())
 
@@ -604,7 +613,7 @@ class RhasspyCore:
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(
-            handle_finished(), messages, message_types
+            handle_finished(), messages, message_types, timeout_seconds=timeout_seconds
         ):
             result = response
 

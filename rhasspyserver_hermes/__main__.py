@@ -1651,6 +1651,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     site_ids = request.args.get("siteId", core.site_id).split(",")
     session_id = request.args.get("sessionId", "")
     volume = float(request.args.get("volume", 1.0))
+    say_chars_per_second = float(request.args.get("sayCharsPerSecond", 33.0))
     data = await request.data
 
     # Repeat last sentence or use incoming plain text
@@ -1674,6 +1675,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
                 site_id=site_id,
                 session_id=session_id,
                 volume=volume,
+                say_chars_per_second=say_chars_per_second,
             )
 
             if isinstance(play_bytes, AudioPlayBytes):

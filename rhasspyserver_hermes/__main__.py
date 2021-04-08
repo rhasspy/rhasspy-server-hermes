@@ -885,13 +885,26 @@ async def api_listen_for_command() -> Response:
     session_id = request.args.get("sessionId")
     lang = request.args.get("lang")
 
-    # Key/value to set in recognized intent
-    entity = request.args.get("entity")
-    value = request.args.get("value")
+    # Custom entities to be passed through dialogue manager
+    entities = request.args.getlist("entity")
+    values = request.args.getlist("value")
 
+    custom_entities: typing.Optional[typing.Dict[str, typing.Any]] = None
+    if entities and values:
+        assert len(entities) == len(
+            values
+        ), "Custom entity/value lists have different lengths"
+
+        custom_entities = dict(zip(entities, values))
+
+    # Simulate a hotword detection
     core.publish(
         HotwordDetected(
-            model_id=model_id, site_id=site_id, session_id=session_id, lang=lang
+            model_id=model_id,
+            site_id=site_id,
+            session_id=session_id,
+            lang=lang,
+            custom_entities=custom_entities,
         ),
         wakeword_id=model_id,
     )
@@ -927,13 +940,6 @@ async def api_listen_for_command() -> Response:
             raise RuntimeError(nlu_intent.error)
 
         assert isinstance(nlu_intent, (NluIntent, NluIntentNotRecognized))
-
-        # Add user-defined entities
-        if entity and isinstance(nlu_intent, NluIntent):
-            nlu_intent.slots = nlu_intent.slots or []
-            nlu_intent.slots.append(
-                rhasspyhermes.intent.Slot(entity=entity, value={"value": value})
-            )
 
         if output_format == "hermes":
             if isinstance(nlu_intent, NluIntent):

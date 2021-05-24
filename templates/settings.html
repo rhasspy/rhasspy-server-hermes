@@ -1020,6 +1020,7 @@
                 <option value="pocketsphinx">Pocketsphinx{% if profile.get("speech_to_text.recommended") == "pocketsphinx" %} (Recommended){% elif not profile.get("speech_to_text.pocketsphinx.compatible") %} (Incompatible){% endif %}</option>
                 <option value="kaldi">Kaldi{% if profile.get("speech_to_text.recommended") == "kaldi" %} (Recommended){% elif not profile.get("speech_to_text.kaldi.compatible") %} (Incompatible){% endif %}</option>
                 <option value="deepspeech">Mozilla DeepSpeech{% if profile.get("speech_to_text.recommended") == "deepspeech" %} (Recommended){% elif not profile.get("speech_to_text.deepspeech.compatible") %} (Incompatible){% endif %}</option>
+                <option value="vosk">Vosk{% if profile.get("speech_to_text.recommended") == "vosk" %} (Recommended){% elif not profile.get("speech_to_text.vosk.compatible") %} (Incompatible){% endif %}</option>
                 <option value="remote">Remote HTTP</option>
                 <option value="command">Local Command</option>
                 <option value="hermes">Hermes MQTT</option>
@@ -1356,6 +1357,59 @@
                 </div>
             </div>
             <!-- End DeepSpeech -->
+
+            <!-- Vosk -->
+            <div x-show="profile.speech_to_text.system == 'vosk'" :disabled="initialSystems.stt != 'vosk'">
+                <div class="form-group">
+                    <div class="form-row">
+                        <p>
+                            Does speech recognition with <a href="https://alphacephei.com/vosk/">Vosk</a>. Fast and accurate for open transcription (<a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#vosk">Documentation</a>)
+                        </p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <ul>
+                            <li>Model Root: <tt>{{ maybe_read_path(profile, "speech_to_text.vosk.model_dir") }}</tt> </li>
+                            <li>Words JSON: <tt>{{ maybe_read_path(profile, "speech_to_text.vosk.words_json") }}</tt> </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="checkbox" id="vosk-open" x-model="profile.speech_to_text.vosk.open_transcription">
+                            <label for="vosk-open" class="col-form-label">
+                                <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#open-transcription">
+                                    Open transcription mode
+                                </a>
+                                (no custom voice commands)
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <span class="fa-stack">
+                                <i class="fas fa-circle fa-stack-2x text-info"></i>
+                                <i class="fas fa-download fa-stack-1x fa-inverse" title="Requires extra download"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="vosk-min-confidence" class="col-form-label">Minimum Confidence:</label>
+                        </div>
+                        <div class="col">
+                            <input id="vosk-min-confidence" type="text" class="form-control" x-model="profile.speech_to_text.vosk.min_confidence">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, 1 is most strict)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Vosk -->
 
             <!-- Remote -->
             <div x-show="profile.speech_to_text.system == 'remote'" :disabled="initialSystems.stt != 'remote'">

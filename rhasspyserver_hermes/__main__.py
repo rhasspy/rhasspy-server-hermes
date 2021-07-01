@@ -226,6 +226,12 @@ def start_rhasspy() -> None:
     """Create new Rhasspy core and start it."""
     global core
 
+    if core is not None:
+        # Preserve the WS queues since they stay alive across restarts 
+        external_queues = core.message_queues
+    else:
+        external_queues = set()
+
     # Load core
     core = RhasspyCore(
         _ARGS.profile,
@@ -239,6 +245,7 @@ def start_rhasspy() -> None:
         certfile=_ARGS.certfile,
         keyfile=_ARGS.keyfile,
         loop=_LOOP,
+        external_queues= external_queues,
     )
 
     # Add profile settings from the command line

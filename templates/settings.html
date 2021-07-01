@@ -1167,6 +1167,42 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col">
+                            <input type="checkbox" id="kaldi-allow-unknown-words" x-model="profile.speech_to_text.kaldi.allow_unknown_words" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                            <label for="kaldi-allow-unknown-words" class="col-form-label">
+                                Replace unknown words with <tt>&lt;unk&gt;</tt> (re-train required)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-unknown-words-probability" class="col-form-label">Unknown Words Probability:</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-unknown-words-probability" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.unknown_words_probability" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-silence-probability" class="col-form-label">Silence Probability:</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-silence-probability" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.silence_probability" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1)
+                        </div>
+                    </div>
+                </div>
 
                 <div class="form-group">
                     <div class="form-row">

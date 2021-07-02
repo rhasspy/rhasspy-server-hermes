@@ -1172,8 +1172,16 @@
                         <div class="col">
                             <input type="checkbox" id="kaldi-allow-unknown-words" x-model="profile.speech_to_text.kaldi.allow_unknown_words" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
                             <label for="kaldi-allow-unknown-words" class="col-form-label">
-                                Replace unknown words with <tt>&lt;unk&gt;</tt> (re-train required)
+                                Replace
+                                <a target="_blank" href="{{ url_prefix }}/docs/speech-to-text/#unknown-words">
+                                    unknown words
+                                </a>
+                                with
+                                <input id="kaldi-unknown-token" type="text" x-model="profile.speech_to_text.kaldi.unknown_token" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
                             </label>
+                        </div>
+                        <div class="col-auto text-muted">
+                            (re-train required)
                         </div>
                     </div>
                 </div>

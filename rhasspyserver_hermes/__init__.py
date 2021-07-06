@@ -117,7 +117,7 @@ class RhasspyCore:
         certfile: typing.Optional[str] = None,
         keyfile: typing.Optional[str] = None,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        external_queues: typing.Set[asyncio.Queue] = None,
+        external_queues: typing.Optional[typing.Set[asyncio.Queue]] = None,
     ):
         self.loop = loop or asyncio.get_event_loop()
 
@@ -251,7 +251,7 @@ class RhasspyCore:
         self.handler_queues: typing.Dict[str, asyncio.Queue] = {}
 
         # External message queues
-        self.message_queues: typing.Set[asyncio.Queue] = external_queues
+        self.message_queues: typing.Set[asyncio.Queue] = external_queues or set()
 
         # Cached wake word IDs for sessions
         # Holds last voice command

@@ -1194,7 +1194,7 @@
                             <input id="kaldi-unknown-words-probability" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.unknown_words_probability" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
                         </div>
                         <div class="col-auto text-muted">
-                            (0-1)
+                            (0-1, default: 1e-5)
                         </div>
                     </div>
                 </div>
@@ -1207,7 +1207,20 @@
                             <input id="kaldi-silence-probability" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.silence_probability" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
                         </div>
                         <div class="col-auto text-muted">
-                            (0-1)
+                            (0-1, default: 0.5)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-max-unknown-words" class="col-form-label">Maximum Unknown Words</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-max-unknown-words" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.max_unknown_words" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (words in longest possible misspoken sentence)
                         </div>
                     </div>
                 </div>
@@ -1220,7 +1233,33 @@
                             <input id="kaldi-max-frequent-words" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.max_frequent_words" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
                         </div>
                         <div class="col-auto text-muted">
-                            (used to catch unknown words)
+                            (used to catch misspoken words)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-cancel-word" class="col-form-label">Cancel Word:</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-cancel-word" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.cancel_word" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (word used to cancel an intent at any time)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="kaldi-cancel-probability" class="col-form-label">Cancel Probability:</label>
+                        </div>
+                        <div class="col">
+                            <input id="kaldi-cancel-probability" type="text" class="form-control" x-model="profile.speech_to_text.kaldi.cancel_probability" :disabled="profile.speech_to_text.kaldi.language_model_type != 'text_fst'">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (0-1, default: 1e-2)
                         </div>
                     </div>
                 </div>
@@ -1799,6 +1838,19 @@
                         <input type="checkbox" id="fsticuffs-fuzzy" x-model="profile.intent.fsticuffs.fuzzy" :disabled="profile.intent.system != 'fsticuffs'">
 
                         <label for="fsticuffs-fuzzy" class="col-form-label">Fuzzy text matching</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-auto">
+                            <label for="fsticuffs-failure-token" class="col-form-label">Failure Token:</label>
+                        </div>
+                        <div class="col">
+                            <input id="fsticuffs-failure-token" type="text" class="form-control" x-model="profile.intent.fsticuffs.failure_token">
+                        </div>
+                        <div class="col-auto text-muted">
+                            (input word that always causes recognition failure)
+                        </div>
                     </div>
                 </div>
                 <hr>

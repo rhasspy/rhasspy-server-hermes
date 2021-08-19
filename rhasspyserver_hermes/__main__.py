@@ -129,7 +129,7 @@ def parse_args():
         "--mqtt-username", type=str, help="Host for MQTT broker", default=None
     )
     parser.add_argument(
-        "--mqtt-password", type=int, help="Port for MQTT broker", default=None
+        "--mqtt-password", type=str, help="Password for MQTT broker", default=None
     )
     parser.add_argument(
         "--local-mqtt-port",

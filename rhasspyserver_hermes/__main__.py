@@ -1421,7 +1421,7 @@ async def api_text_to_intent():
     text = data.decode()
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
-    site_id = request.args.get("siteId")
+    site_id = request.args.get("siteId", core.site_id)
 
     intent_filter = request.args.get("intentFilter")
     if intent_filter:
@@ -1467,6 +1467,8 @@ async def api_speech_to_intent() -> Response:
     assert core is not None
     no_hass = request.args.get("nohass", "false").lower() == "true"
     output_format = request.args.get("outputFormat", "rhasspy").lower()
+    site_id = request.args.get("siteId", core.site_id)
+
     detect_silence = (
         request.args.get("detectSilence", "false").strip().lower() == "true"
     )
@@ -1499,7 +1501,7 @@ async def api_speech_to_intent() -> Response:
         # speech -> text
         _LOGGER.debug("Waiting for transcription")
         transcription = await core.transcribe_wav(
-            wav_bytes, stop_on_silence=detect_silence, intent_filter=intent_filter
+            wav_bytes, stop_on_silence=detect_silence, intent_filter=intent_filter, site_id = site_id
         )
         text = transcription.text
 
@@ -1510,6 +1512,7 @@ async def api_speech_to_intent() -> Response:
             intent_filter=intent_filter,
             output_format=output_format,
             user_entities=user_entities,
+            site_id=site_id,
         )
 
         if output_format == "rhasspy":

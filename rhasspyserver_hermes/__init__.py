@@ -521,7 +521,7 @@ class RhasspyCore:
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(
-            handle_intent(), messages, message_types
+            handle_intent(), messages, message_types, site_id=site_id
         ):
             result = response
 
@@ -614,7 +614,7 @@ class RhasspyCore:
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(
-            handle_finished(), messages, message_types, timeout_seconds=timeout_seconds
+            handle_finished(), messages, message_types, timeout_seconds=timeout_seconds, site_id=site_id
         ):
             result = response
 
@@ -696,7 +696,7 @@ class RhasspyCore:
         # Expecting only a single result
         result = None
         async for response in self.publish_wait(
-            handle_captured(), messages(), message_types
+            handle_captured(), messages(), message_types, site_id=site_id
         ):
             result = response
 
@@ -752,7 +752,7 @@ class RhasspyCore:
             # Expecting only a single result
             result = None
             async for response in self.publish_wait(
-                handle_finished(), messages(), message_types
+                handle_finished(), messages(), message_types, site_id=site_id
             ):
                 result = response
 
@@ -956,6 +956,7 @@ class RhasspyCore:
         ],
         message_types: typing.List[typing.Type[Message]],
         timeout_seconds: typing.Optional[float] = None,
+        site_id: typing.Optional[str] = None,
     ):
         """Publish messages and wait for responses."""
         timeout_seconds = timeout_seconds or self.message_timeout_seconds
@@ -970,7 +971,7 @@ class RhasspyCore:
         self.handler_queues[handler_id] = asyncio.Queue()
 
         # Subscribe to requested message types
-        self.subscribe(*message_types)
+        self.subscribe(*message_types, site_id=site_id)
         for message_type in message_types:
             # Register handler for each message topic
             handler_matcher[message_type.topic()] = handler
@@ -1297,11 +1298,17 @@ class RhasspyCore:
         except Exception:
             _LOGGER.exception("on_message")
 
-    def subscribe(self, *message_types):
+    def subscribe(self, *message_types,
+        site_id: typing.Optional[str] = None,
+    ):
         """Subscribe to one or more Hermes messages."""
         topics: typing.List[str] = []
 
-        if self.site_ids:
+        if site_id:
+           for message_type in message_types:
+                    topics.append(message_type.topic(site_id=site_id))
+                    self.subscribed_types.add(message_type)
+        elif self.site_ids:
             # Specific site_ids
             for site_id in self.site_ids:
                 for message_type in message_types:
@@ -1322,11 +1329,17 @@ class RhasspyCore:
                 self.subscribed_topics.add(topic)
                 _LOGGER.debug("Subscribed to %s", topic)
 
-    def unsubscribe(self, *message_types):
+    def unsubscribe(self, *message_types,
+        site_id: typing.Optional[str] = None,
+    ):
         """Unsubscribe to one or more Hermes messages."""
         topics: typing.List[str] = []
 
-        if self.site_ids:
+        if site_id:
+            for message_type in message_types:
+                    topics.append(message_type.topic(site_id=site_id))
+                    self.subscribed_types.discard(message_type)
+        elif self.site_ids:
             # Specific site_ids
             for site_id in self.site_ids:
                 for message_type in message_types:

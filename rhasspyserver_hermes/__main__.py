@@ -1667,11 +1667,11 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
     # Speak on each site
     async def speak(site_id: str) -> typing.Optional[bytes]:
         assert core is not None
-        capture_audio = site_id == core.site_id
+        capture_audio = site_id == site_ids[0]
 
         if not play:
             # Disable audio output
-            core.publish(AudioToggleOff(site_id=core.site_id))
+            core.publish(AudioToggleOff(site_id=site_ids[0]))
 
         try:
             _, play_bytes = await core.speak_sentence(
@@ -1693,7 +1693,7 @@ async def api_text_to_speech() -> typing.Union[Response, str]:
         finally:
             if not play:
                 # Re-enable audio output
-                core.publish(AudioToggleOn(site_id=core.site_id))
+                core.publish(AudioToggleOn(site_id=site_ids[0]))
 
     aws = [speak(site_id) for site_id in site_ids]
     results = await asyncio.gather(*aws)

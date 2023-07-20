@@ -1,4 +1,4 @@
-aiohttp==3.7.4
+aiohttp==3.8.5
 hypercorn==0.10.1
 multidict==4.7.6
 networkx==2.4
